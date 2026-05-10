@@ -44,8 +44,7 @@ archives:
       - goos: windows
         format: zip
     files:
-      - src: ../../LICENSE
-        dst: LICENSE
+      - LICENSE
       - README.md
 
 checksum:
