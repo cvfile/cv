@@ -28,6 +28,8 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "cbor-extract",
+      "esbuild",
       "onnxruntime-node",
       "protobufjs",
       "sharp"

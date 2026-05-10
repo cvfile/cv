@@ -1,9 +1,13 @@
 packages:
   - 'packages/*'
   - 'docs'
-allowBuilds:
-  cbor-extract: true
-  esbuild: true
-  onnxruntime-node: set this to true or false
-  protobufjs: set this to true or false
-  sharp: set this to true or false
+
+# pnpm 11 hard-fails install when a package has a build script we haven't
+# pre-approved. Listing every native-binary dep we transitively depend on
+# keeps CI green; without these install errors with ERR_PNPM_IGNORED_BUILDS.
+onlyBuiltDependencies:
+  - cbor-extract
+  - esbuild
+  - onnxruntime-node
+  - protobufjs
+  - sharp

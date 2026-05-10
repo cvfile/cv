@@ -1,8 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "astro",
-  "buildCommand": "pnpm --filter @cvfile/viewer-web build && pnpm --filter @cvfile/docs build",
-  "outputDirectory": "dist",
-  "installCommand": "cd .. && pnpm install --frozen-lockfile",
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- ../packages/viewer-web ../spec/cv-1.0.md ../docs && exit 0 || exit 1"
-}
