@@ -1,4 +1,9 @@
-name: deploy cvfile.org
+name: docs build check
+
+# Verifies the docs site still builds on every PR that touches docs, the
+# viewer, or the spec. Vercel handles the actual deployment via cvfile.org —
+# this workflow exists so a broken docs build is caught at PR review time
+# instead of on the next Vercel deploy.
 
 on:
   push:
@@ -8,14 +13,14 @@ on:
       - "spec/cv-1.0.md"
       - "packages/viewer-web/**"
       - ".github/workflows/deploy-docs.yml"
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+  pull_request:
+    paths:
+      - "docs/**"
+      - "spec/cv-1.0.md"
+      - "packages/viewer-web/**"
 
 concurrency:
-  group: pages
+  group: docs-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,21 +36,14 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Build viewer (docs depends on it)
-        run: pnpm --filter @cvfile/viewer-web build
-      - name: Build docs site
-        run: pnpm --filter @cvfile/docs build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs/dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - run: pnpm --filter @cvfile/viewer-web build
+      - run: pnpm --filter @cvfile/docs build
+      - name: Sanity-check the built site
+        working-directory: docs/dist
+        run: |
+          test -f index.html
+          test -f spec/index.html
+          test -f install/index.html
+          test -f view/index.html
+          test -f ecosystem/index.html
+          echo "5/5 expected pages present"
