@@ -44,7 +44,8 @@ archives:
       - goos: windows
         format: zip
     files:
-      - LICENSE*
+      - src: ../../LICENSE
+        dst: LICENSE
       - README.md
 
 checksum:
@@ -109,9 +110,7 @@ nfpms:
       - src: ../../tools/installer-payloads/linux/application-vnd.cv+pdf.xml
         dst: /usr/share/mime/packages/application-vnd.cv+pdf.xml
     scripts:
-      postinstall: |
-        update-mime-database /usr/share/mime || true
-        update-desktop-database /usr/share/applications || true
+      postinstall: scripts/postinstall.sh
 
 release:
   github:
