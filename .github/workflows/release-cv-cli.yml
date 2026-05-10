@@ -1,0 +1,34 @@
+name: release cv CLI
+
+on:
+  push:
+    tags: ["cv-go/v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: sdks/go/go.sum
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: latest
+          args: release --clean
+          workdir: sdks/go
+        env:
+          # Default GITHUB_TOKEN works for releases on this repo. For the
+          # Homebrew tap and Scoop bucket pushes, mint a fine-grained PAT
+          # with contents:write on cvfile/homebrew-tap and cvfile/scoop-bucket
+          # and store as TAP_GITHUB_TOKEN.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          SCOOP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}

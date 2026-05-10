@@ -1,0 +1,65 @@
+{
+  "name": "@cvfile/sdk",
+  "version": "0.1.0",
+  "description": "Reference SDK for the .cv open file format — pack, extract, inspect, validate.",
+  "license": "Apache-2.0",
+  "homepage": "https://cvfile.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cvfile/cv",
+    "directory": "packages/sdk-js"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js",
+      "require": "./dist/node.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "cbor-x": "^1.6.0",
+    "pako": "^2.1.0",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "^5.1.0",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@types/node": "^22.0.0",
+    "@types/pako": "^2.0.3",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": [
+    "cv",
+    "resume",
+    "pdf",
+    "pdfa",
+    "markdown",
+    "embeddings",
+    "rag",
+    "ats"
+  ]
+}

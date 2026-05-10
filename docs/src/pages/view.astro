@@ -1,0 +1,62 @@
+---
+import Page from '../layouts/Page.astro';
+---
+<Page title="Viewer demo — cvfile.org" description="Drop a .cv file on the page and explore its three representations live.">
+  <h1>Live <code>&lt;cv-embed&gt;</code> viewer</h1>
+  <p>
+    Drop any <code>.cv</code> file on the dashed area below. The web component
+    parses the bundle in your browser and lets you flip between the PDF,
+    Markdown, and HTML representations.
+  </p>
+
+  <div
+    id="dropzone"
+    style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; margin: 1.5rem 0;"
+  >
+    <strong>Drop a .cv file here</strong>
+    <div style="color: var(--muted); margin-top: 0.5rem;">or click to choose</div>
+    <input id="picker" type="file" accept=".cv,application/pdf,application/vnd.cv+pdf" hidden />
+  </div>
+
+  <cv-embed id="viewer" view="auto" theme="auto" style="display: none;"></cv-embed>
+
+  <script>
+    import '@cvfile/viewer-web';
+
+    const dz = document.getElementById('dropzone')!;
+    const picker = document.getElementById('picker') as HTMLInputElement;
+    const viewer = document.getElementById('viewer') as HTMLElement & {
+      loadFromBytes(bytes: Uint8Array): Promise<void>;
+    };
+
+    function show(): void {
+      dz.style.display = 'none';
+      viewer.style.display = 'block';
+    }
+
+    async function handle(file: File): Promise<void> {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      show();
+      await viewer.loadFromBytes(buf);
+    }
+
+    dz.addEventListener('click', () => picker.click());
+    picker.addEventListener('change', () => {
+      const file = picker.files?.[0];
+      if (file) void handle(file);
+    });
+    dz.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dz.style.background = 'rgba(127,127,127,0.08)';
+    });
+    dz.addEventListener('dragleave', () => {
+      dz.style.background = '';
+    });
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dz.style.background = '';
+      const file = e.dataTransfer?.files?.[0];
+      if (file) void handle(file);
+    });
+  </script>
+</Page>

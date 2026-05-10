@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=cvfile
+GenericName=Document Viewer
+Comment=Open .cv documents (PDF + Markdown + HTML + embeddings)
+Exec=cvfile %f
+Icon=cvfile
+Terminal=false
+Categories=Office;Viewer;
+MimeType=application/vnd.cv+pdf;application/pdf;
+Keywords=cv;resume;pdf;
+StartupNotify=true
+StartupWMClass=cvfile

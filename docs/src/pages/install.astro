@@ -1,0 +1,100 @@
+---
+import Page from '../layouts/Page.astro';
+---
+<Page title="Install — cvfile.org">
+  <h1>Install</h1>
+  <p>
+    The <code>.cv</code> ecosystem ships in three languages plus a single binary CLI.
+    Pick whichever surface you need; all of them produce and consume the same
+    <a href="/spec/">spec-conformant</a> files.
+  </p>
+
+  <h2>Command-line (<code>cv</code>)</h2>
+  <p>One static binary, no runtime dependency.</p>
+  <pre><code>{`# macOS / Linux (Homebrew tap)
+brew tap cvfile/tap
+brew install cv
+
+# Windows (Scoop)
+scoop bucket add cvfile https://github.com/cvfile/scoop-bucket
+scoop install cv
+
+# Windows (WinGet)
+winget install cvfile.cv
+
+# Anywhere with Go 1.22+
+go install github.com/cvfile/cv-go/cmd/cv@latest`}</code></pre>
+
+  <h2>JavaScript / TypeScript</h2>
+  <pre><code>{`pnpm add @cvfile/sdk
+# Optional embedding generation:
+pnpm add @cvfile/embed
+# Server middleware (Express/Fastify/Hono):
+pnpm add @cvfile/server
+# Drop-in viewer web component:
+pnpm add @cvfile/viewer-web`}</code></pre>
+
+  <pre><code>{`import { pack, extract, validate } from '@cvfile/sdk';
+const cv = await pack({
+  pdf: pdfBytes,
+  markdown: '# Jane Doe\\n\\n…',
+  html: '<!doctype html>…',
+  metadata: {
+    primaryLanguage: 'en',
+    primaryPayload: 'resume.md',
+    integrity: 'sha-256',
+  },
+});
+const file = await extract(cv);`}</code></pre>
+
+  <h2>Python</h2>
+  <pre><code>{`pip install cvfile
+# With BGE-M3 embedding generation:
+pip install "cvfile[embed]"`}</code></pre>
+
+  <pre><code>{`from cvfile import pack, extract, validate
+cv = pack(
+    pdf=pdf_bytes,
+    markdown=md,
+    html=html,
+    metadata={"primary_language": "en", "primary_payload": "resume.md"},
+)
+file = extract(cv)`}</code></pre>
+
+  <h2>Go</h2>
+  <pre><code>{`go get github.com/cvfile/cv-go`}</code></pre>
+
+  <pre><code>{`import cv "github.com/cvfile/cv-go/cv"
+
+file, err := cv.Extract(cvBytes)
+report := cv.Validate(cvBytes, cv.ValidateOptions{Strict: true})`}</code></pre>
+
+  <h2>Web component (drop into any HTML page)</h2>
+  <pre><code>{`<script type="module" src="https://cdn.cvfile.org/embed/1/cv-embed.js"></script>
+<cv-embed src="resume.cv" view="auto" theme="auto"></cv-embed>`}</code></pre>
+
+  <h2>HTTP middleware</h2>
+  <p>
+    Serves a directory of <code>.cv</code> files with full content negotiation —
+    any consumer that asks for <code>text/markdown</code> gets the markdown back,
+    no special-case handling required.
+  </p>
+  <pre><code>{`# Node (Express/Fastify/Hono)
+import express from 'express';
+import { cvHandler } from '@cvfile/server';
+
+const app = express();
+app.use('/cv', cvHandler({ root: './resumes' }));
+
+# Python (FastAPI/Starlette)
+from fastapi import FastAPI
+from cvfile.server.asgi import build_cv_asgi_app
+
+app = FastAPI()
+app.mount("/cv", build_cv_asgi_app(root="./resumes"))
+
+# Go (net/http)
+import "github.com/cvfile/cv-go/middleware"
+h, _ := middleware.Handler(middleware.Options{Root: "./resumes"})
+http.Handle("/cv/", http.StripPrefix("/cv", h))`}</code></pre>
+</Page>

@@ -1,0 +1,43 @@
+Windows Registry Editor Version 5.00
+
+; .cv file association template.
+; Replace __APP_PATH__ with the absolute Windows path to your viewer
+; executable, e.g. C:\\Program Files\\cvfile\\cvfile.exe — note the
+; double-backslashes required by .reg syntax.
+
+[HKEY_CLASSES_ROOT\.cv]
+@="CVFile.Document"
+"Content Type"="application/vnd.cv+pdf"
+"PerceivedType"="document"
+
+[HKEY_CLASSES_ROOT\.cv\OpenWithProgids]
+"CVFile.Document"=""
+
+[HKEY_CLASSES_ROOT\CVFile.Document]
+@="cvfile .cv document"
+"FriendlyTypeName"="cvfile .cv document"
+
+[HKEY_CLASSES_ROOT\CVFile.Document\DefaultIcon]
+@="\"__APP_PATH__\",0"
+
+[HKEY_CLASSES_ROOT\CVFile.Document\shell]
+@="open"
+
+[HKEY_CLASSES_ROOT\CVFile.Document\shell\open]
+
+[HKEY_CLASSES_ROOT\CVFile.Document\shell\open\command]
+@="\"__APP_PATH__\" \"%1\""
+
+; Per-user override so users can change the default opener via
+; Settings > Apps > Default apps without admin rights.
+[HKEY_CURRENT_USER\Software\Classes\.cv]
+@="CVFile.Document"
+
+[HKEY_CURRENT_USER\Software\Classes\.cv\OpenWithProgids]
+"CVFile.Document"=""
+
+; Tell Explorer this is a known content type so Open With prompts include
+; mail/cloud handlers without the user needing to "Choose another app".
+[HKEY_LOCAL_MACHINE\SOFTWARE\Classes\MIME\Database\Content Type\application/vnd.cv+pdf]
+"Extension"=".cv"
+"CLSID"=""

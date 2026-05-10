@@ -1,0 +1,116 @@
+# GoReleaser config for the cv CLI.
+# Cross-compiles to six targets and produces SBOMs + checksums + brew/scoop manifests.
+# Run from sdks/go after tagging:
+#   git tag cv-go/v0.1.0
+#   goreleaser release --clean
+
+version: 2
+
+project_name: cv
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: cv
+    main: ./cmd/cv
+    binary: cv
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }} -X main.date={{ .Date }}
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+
+archives:
+  - id: cv-archive
+    builds: [cv]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "darwin" }}macos
+      {{- else }}{{ .Os }}{{ end }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "arm64" }}arm64
+      {{- end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE*
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+sboms:
+  - artifacts: archive
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: Bug fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Other
+      order: 999
+
+brews:
+  - name: cv
+    repository:
+      owner: cvfile
+      name: homebrew-tap
+      branch: main
+    homepage: "https://cvfile.org"
+    description: "CLI for the .cv open file format (PDF + Markdown + HTML + embeddings)"
+    license: "Apache-2.0"
+    install: |
+      bin.install "cv"
+    test: |
+      assert_match "cv ", shell_output("#{bin}/cv version")
+
+scoops:
+  - name: cv
+    repository:
+      owner: cvfile
+      name: scoop-bucket
+      branch: main
+    homepage: "https://cvfile.org"
+    description: "CLI for the .cv open file format"
+    license: "Apache-2.0"
+
+nfpms:
+  - id: cv-deb-rpm
+    builds: [cv]
+    package_name: cvfile
+    vendor: cvfile.org
+    homepage: "https://cvfile.org"
+    description: "CLI for the .cv open file format"
+    license: "Apache-2.0"
+    formats: [deb, rpm, apk]
+    contents:
+      - src: ../../tools/installer-payloads/linux/cvfile.desktop
+        dst: /usr/share/applications/cvfile.desktop
+      - src: ../../tools/installer-payloads/linux/application-vnd.cv+pdf.xml
+        dst: /usr/share/mime/packages/application-vnd.cv+pdf.xml
+    scripts:
+      postinstall: |
+        update-mime-database /usr/share/mime || true
+        update-desktop-database /usr/share/applications || true
+
+release:
+  github:
+    owner: cvfile
+    name: cv
+  draft: true
+  prerelease: auto
