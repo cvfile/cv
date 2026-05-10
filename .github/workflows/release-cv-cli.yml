@@ -18,6 +18,16 @@ jobs:
         with:
           go-version: "1.22"
           cache-dependency-path: sdks/go/go.sum
+      - name: Extract semver from cv-go/v* tag and re-tag for GoReleaser
+        # GoReleaser's monorepo support is Pro-only; OSS GoReleaser only
+        # accepts plain `vX.Y.Z` tags. Strip the `cv-go/` prefix and apply
+        # a local semver tag pointing at the same commit so GoReleaser sees
+        # the version it needs. The temp tag is never pushed.
+        run: |
+          full="${GITHUB_REF##refs/tags/}"
+          version="${full#cv-go/}"
+          echo "Releasing $version (from $full)"
+          git tag "$version"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -25,10 +35,6 @@ jobs:
           args: release --clean
           workdir: sdks/go
         env:
-          # Default GITHUB_TOKEN works for releases on this repo. For the
-          # Homebrew tap and Scoop bucket pushes, mint a fine-grained PAT
-          # with contents:write on cvfile/homebrew-tap and cvfile/scoop-bucket
-          # and store as TAP_GITHUB_TOKEN.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
           SCOOP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
