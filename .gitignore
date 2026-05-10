@@ -64,3 +64,4 @@ src-tauri/target/
 *.pid
 *.seed
 *.tgz
+.vercel
