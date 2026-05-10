@@ -76,6 +76,10 @@ brews:
       owner: cvfile
       name: homebrew-tap
       branch: main
+      # Force the cross-repo PAT explicitly. Without this, GoReleaser falls
+      # back to GITHUB_TOKEN, which in Actions only has write access to the
+      # repo running the workflow — the cross-repo PUT then 403s.
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: "https://cvfile.org"
     description: "CLI for the .cv open file format (PDF + Markdown + HTML + embeddings)"
     license: "Apache-2.0"
@@ -90,6 +94,7 @@ scoops:
       owner: cvfile
       name: scoop-bucket
       branch: main
+      token: "{{ .Env.SCOOP_GITHUB_TOKEN }}"
     homepage: "https://cvfile.org"
     description: "CLI for the .cv open file format"
     license: "Apache-2.0"
