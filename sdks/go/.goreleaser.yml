@@ -8,6 +8,11 @@ version: 2
 
 project_name: cv
 
+# Tag prefix lets us release this binary independently of the npm packages
+# and Python wheel that share the monorepo (each has its own tag prefix).
+monorepo:
+  tag_prefix: cv-go/
+
 before:
   hooks:
     - go mod tidy
