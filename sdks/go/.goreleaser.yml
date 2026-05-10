@@ -8,10 +8,10 @@ version: 2
 
 project_name: cv
 
-# Tag prefix lets us release this binary independently of the npm packages
-# and Python wheel that share the monorepo (each has its own tag prefix).
-monorepo:
-  tag_prefix: cv-go/
+# We tag this binary as `cv-go/vX.Y.Z` to share the monorepo with the
+# npm/python packages, but GoReleaser's monorepo support is Pro-only. The
+# release-cv-cli.yml workflow extracts the trailing semver and creates a
+# temporary `vX.Y.Z` tag that GoReleaser consumes here.
 
 before:
   hooks:
