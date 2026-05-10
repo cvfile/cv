@@ -18,6 +18,11 @@ jobs:
         with:
           go-version: "1.22"
           cache-dependency-path: sdks/go/go.sum
+      - name: Install syft for SBOM generation
+        # GoReleaser shells out to syft for software-bill-of-materials
+        # generation (the sboms: stanza in .goreleaser.yml). Anchore ships
+        # an official installer that drops the binary into /usr/local/bin.
+        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
       - name: Extract semver from cv-go/v* tag and re-tag for GoReleaser
         # GoReleaser's monorepo support is Pro-only; OSS GoReleaser only
         # accepts plain `vX.Y.Z` tags. Strip the `cv-go/` prefix and apply
