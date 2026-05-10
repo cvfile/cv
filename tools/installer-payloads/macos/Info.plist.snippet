@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Splice these two arrays into your bundle's Info.plist (inside the top-level
+  <dict>). They register the .cv file type with the OS and declare a UTI
+  that conforms to com.adobe.pdf, so existing PDF tooling treats .cv as a
+  PDF until your viewer is the user's chosen default.
+-->
+<dict>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>cvfile.cv document</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>org.cvfile.cv</string>
+      </array>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>cv</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>cv.icns</string>
+    </dict>
+  </array>
+
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>org.cvfile.cv</string>
+      <key>UTTypeDescription</key>
+      <string>cvfile .cv document</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>com.adobe.pdf</string>
+        <string>public.composite-content</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array>
+          <string>cv</string>
+        </array>
+        <key>public.mime-type</key>
+        <array>
+          <string>application/vnd.cv+pdf</string>
+          <string>application/pdf</string>
+        </array>
+      </dict>
+      <key>UTTypeIconFile</key>
+      <string>cv.icns</string>
+    </dict>
+  </array>
+</dict>

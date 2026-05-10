@@ -1,0 +1,29 @@
+name: publish PyPI
+
+on:
+  push:
+    tags: ["cvfile-py/v*"]
+
+permissions:
+  contents: read
+  # Required for PyPI Trusted Publisher (no token needed once configured at
+  # https://pypi.org/manage/project/cvfile/settings/publishing/).
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build tools
+        run: pipx install build
+      - name: Build wheel + sdist
+        working-directory: sdks/python
+        run: python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdks/python/dist

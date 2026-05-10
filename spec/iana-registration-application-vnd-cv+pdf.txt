@@ -1,0 +1,96 @@
+MIME media type registration template for application/vnd.cv+pdf
+================================================================
+
+This is the application body for IANA media-type registration of
+`application/vnd.cv+pdf`. Submit by emailing media-types@iana.org with the
+subject "Media Type Registration: application/vnd.cv+pdf" and the body
+below. IANA usually replies within 2-6 weeks.
+
+Per RFC 6838 §3.2 (Vendor Tree), no review by an IETF working group is
+required for vendor-tree subtypes, but the +pdf structured suffix
+(RFC 8081) is reviewed.
+
+----- BEGIN APPLICATION -----
+
+Type name:
+  application
+
+Subtype name:
+  vnd.cv+pdf
+
+Required parameters:
+  None.
+
+Optional parameters:
+  None.
+
+Encoding considerations:
+  binary
+
+Security considerations:
+  application/vnd.cv+pdf is a PDF/A-3u file with additional embedded
+  payloads (Markdown, HTML, optional JSON, optional CBOR-encoded
+  embeddings) carried via PDF Associated Files (/AF, ISO 32000-2 §14.13).
+
+  Files MUST NOT contain:
+    * PDF JavaScript actions (/JS, /JavaScript)
+    * /Launch, /ImportData actions
+    * /SubmitForm actions targeting non-mailto URIs
+    * /Encrypt dictionaries
+    * External /F filespec references
+
+  Renderers MUST sandbox embedded HTML payloads in iframes without
+  allow-scripts, MUST disable raw HTML by default when rendering
+  Markdown payloads, and MUST cap decompressed payload size at 16 MiB
+  by default. See section 7 of the cvfile.org/spec/cv-1.0.md
+  specification for the full security model.
+
+  XML inside the file (XMP packets) MUST be parsed without DTD
+  resolution and without external entity resolution.
+
+Interoperability considerations:
+  application/vnd.cv+pdf is a strict subset of application/pdf; any
+  PDF reader can open it. The additional structure is discoverable via
+  PDF's standard Associated Files mechanism. Producers ship at least
+  one of resume.md (text/markdown) or resume.html (text/html); a
+  consumer that does not recognize the .cv structure can still render
+  the visual PDF.
+
+Published specification:
+  https://cvfile.org/spec/cv-1.0.md (also at
+  https://github.com/cvfile/cv/blob/main/spec/cv-1.0.md)
+
+Applications that use this media type:
+  cvfile reference SDKs in JavaScript, Python, and Go; cvfile reference
+  CLI; cv-embed web component; cvfile desktop viewer; HTTP middleware
+  adapters for Express/Fastify/Hono/FastAPI/Flask/Django/net/http.
+
+Fragment identifier considerations:
+  Same as application/pdf (RFC 3778 §3): named-destination and
+  page-number fragments are supported. Future versions of this spec
+  MAY define a `payload=` fragment for direct selection of an embedded
+  payload by name.
+
+Additional information:
+  Deprecated alias: none.
+  Magic number(s):     %PDF-1. or %PDF-2. at byte offset 0
+  File extension(s):   .cv
+  Macintosh file type code(s): none
+  Object identifier(s) or OID(s): none
+
+Person & email address to contact for further information:
+  cvfile.org maintainers <spec@cvfile.org>
+
+Intended usage:
+  COMMON
+
+Restrictions on usage:
+  None.
+
+Author:
+  cvfile.org
+
+Change controller:
+  cvfile.org
+
+----- END APPLICATION -----

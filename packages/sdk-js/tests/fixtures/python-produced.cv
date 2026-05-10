@@ -1,0 +1,266 @@
+%PDF-1.3
+%‚„œ”
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+/AF [ 6 0 R 8 0 R 10 0 R ]
+/Metadata 11 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 3 0 R ]
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Resources <<
+>>
+/MediaBox [ 0.0 0.0 300 400 ]
+/Parent 2 0 R
+>>
+endobj
+4 0 obj
+<<
+/Producer (pypdf)
+>>
+endobj
+5 0 obj
+<<
+/Type /EmbeddedFile
+/Subtype /text#2Fmarkdown
+/Length 152
+/Params <<
+/CreationDate (D\07220260510105821Z)
+/ModDate (D\07220260510105821Z)
+/Size 152
+>>
+>>
+stream
+# Marie Curie
+
+Physicist and chemist  ¬∑  Paris, France
+
+## Notable
+
+* Discovered polonium and radium
+* Two Nobel Prizes (Physics 1903, Chemistry 1911)
+
+endstream
+endobj
+6 0 obj
+<<
+/Type /Filespec
+/F (resume\056md)
+/UF (resume\056md)
+/Desc (Markdown representation)
+/AFRelationship /Alternative
+/EF <<
+/F 5 0 R
+/UF 5 0 R
+>>
+>>
+endobj
+7 0 obj
+<<
+/Type /EmbeddedFile
+/Subtype /text#2Fhtml
+/Length 163
+/Params <<
+/CreationDate (D\07220260510105821Z)
+/ModDate (D\07220260510105821Z)
+/Size 163
+>>
+>>
+stream
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Marie Curie</title></head>
+<body><h1>Marie Curie</h1><p>Physicist and chemist.</p></body></html>
+endstream
+endobj
+8 0 obj
+<<
+/Type /Filespec
+/F (resume\056html)
+/UF (resume\056html)
+/Desc (HTML representation)
+/AFRelationship /Alternative
+/EF <<
+/F 7 0 R
+/UF 7 0 R
+>>
+>>
+endobj
+9 0 obj
+<<
+/Type /EmbeddedFile
+/Subtype /application#2Fjson
+/Length 47
+/Params <<
+/CreationDate (D\07220260510105821Z)
+/ModDate (D\07220260510105821Z)
+/Size 47
+>>
+>>
+stream
+{
+  "basics": {
+    "name": "Marie Curie"
+  }
+}
+endstream
+endobj
+10 0 obj
+<<
+/Type /Filespec
+/F (resume\056json)
+/UF (resume\056json)
+/Desc (JSON Resume representation)
+/AFRelationship /Alternative
+/EF <<
+/F 9 0 R
+/UF 9 0 R
+>>
+>>
+endobj
+11 0 obj
+<<
+/Type /Metadata
+/Subtype /XML
+/Length 6563
+>>
+stream
+<?xpacket begin="Ôªø" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="cvfile-py 0.1">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+      xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/">
+      <pdfaid:part>3</pdfaid:part>
+      <pdfaid:conformance>U</pdfaid:conformance>
+    </rdf:Description>
+    <rdf:Description rdf:about=""
+      xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <dc:format>application/pdf</dc:format>
+    </rdf:Description>
+    <rdf:Description rdf:about=""
+      xmlns:xmp="http://ns.adobe.com/xap/1.0/">
+      <xmp:CreateDate>2026-05-10T10:58:21Z</xmp:CreateDate>
+      <xmp:ModifyDate>2026-05-10T10:58:21Z</xmp:ModifyDate>
+      <xmp:CreatorTool>cvfile-py-examples/marie-curie</xmp:CreatorTool>
+    </rdf:Description>
+    <rdf:Description rdf:about=""
+      xmlns:cv="http://ns.cvfile.org/cv/1.0/">
+      <cv:version>0.1</cv:version>
+      <cv:created>2026-05-10T10:58:21Z</cv:created>
+      <cv:modified>2026-05-10T10:58:21Z</cv:modified>
+      <cv:primaryLanguage>en</cv:primaryLanguage>
+      <cv:primaryPayload>resume.md</cv:primaryPayload>
+      <cv:generator>cvfile-py-examples/marie-curie</cv:generator>
+      <cv:alternates>[{&quot;payload&quot;: &quot;resume.html&quot;, &quot;language&quot;: &quot;en&quot;, &quot;mimeType&quot;: &quot;text/html&quot;}, {&quot;payload&quot;: &quot;resume.json&quot;, &quot;language&quot;: &quot;en&quot;, &quot;mimeType&quot;: &quot;application/json&quot;}]</cv:alternates>
+      <cv:integrity>[{&quot;payload&quot;: &quot;resume.md&quot;, &quot;algorithm&quot;: &quot;sha-256&quot;, &quot;digest&quot;: &quot;b1dc699435f207a626edad8fcb8aadf413894a0fe0790c446e3749654ba438fa&quot;}, {&quot;payload&quot;: &quot;resume.html&quot;, &quot;algorithm&quot;: &quot;sha-256&quot;, &quot;digest&quot;: &quot;65f07777f1abe52777ea7e28df567fcb3930ad210be658278063ed28ed003ecd&quot;}, {&quot;payload&quot;: &quot;resume.json&quot;, &quot;algorithm&quot;: &quot;sha-256&quot;, &quot;digest&quot;: &quot;842ccdfe493eaf03550c9ed54135de3b53b4f29cad393372e3317af986989380&quot;}]</cv:integrity>
+    </rdf:Description>
+    <rdf:Description rdf:about=""
+      xmlns:pdfaExtension="http://www.aiim.org/pdfa/ns/extension/"
+      xmlns:pdfaSchema="http://www.aiim.org/pdfa/ns/schema#"
+      xmlns:pdfaProperty="http://www.aiim.org/pdfa/ns/property#">
+      <pdfaExtension:schemas>
+        <rdf:Bag>
+          <rdf:li rdf:parseType="Resource">
+            <pdfaSchema:namespaceURI>http://ns.cvfile.org/cv/1.0/</pdfaSchema:namespaceURI>
+            <pdfaSchema:prefix>cv</pdfaSchema:prefix>
+            <pdfaSchema:schema>cvfile.org cv namespace</pdfaSchema:schema>
+            <pdfaSchema:property>
+              <rdf:Seq>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>version</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>cvfile.org format version (MAJOR.MINOR)</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>created</pdfaProperty:name>
+                  <pdfaProperty:valueType>Date</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>When the .cv file was created</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>modified</pdfaProperty:name>
+                  <pdfaProperty:valueType>Date</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>When the .cv file was last modified</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>primaryLanguage</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>BCP-47 tag of the canonical content language</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>primaryPayload</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Filename of the canonical text payload</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>generator</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Identifier of the producer</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>alternates</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Alternate payload descriptors (JSON-encoded array)</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>integrity</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Per-payload digest entries (JSON-encoded array)</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType="Resource">
+                  <pdfaProperty:name>embeddings</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Embedding-space summaries (JSON-encoded array)</pdfaProperty:description>
+                </rdf:li>
+              </rdf:Seq>
+            </pdfaSchema:property>
+          </rdf:li>
+        </rdf:Bag>
+      </pdfaExtension:schemas>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>
+endstream
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000108 00000 n 
+0000000167 00000 n 
+0000000261 00000 n 
+0000000300 00000 n 
+0000000642 00000 n 
+0000000806 00000 n 
+0000001155 00000 n 
+0000001319 00000 n 
+0000001557 00000 n 
+0000001729 00000 n 
+trailer
+<<
+/Size 12
+/Root 1 0 R
+/Info 4 0 R
+/ID [ <4230344634463935343833343638414132443934343033363237363735414330> <4230344634463935343833343638414132443934343033363237363735414330> ]
+>>
+startxref
+8375
+%%EOF

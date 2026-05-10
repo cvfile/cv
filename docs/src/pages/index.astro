@@ -1,0 +1,110 @@
+---
+import Page from '../layouts/Page.astro';
+---
+<Page title="cvfile.org — the .cv open file format">
+  <section style="margin-bottom: 3rem">
+    <h1 style="font-size: 2.4rem; line-height: 1.15; margin: 0 0 1rem">
+      One file. Three audiences. Real semantic search.
+    </h1>
+    <p style="font-size: 1.15rem; color: var(--muted); max-width: 60ch">
+      <code>.cv</code> bundles a designed PDF, a clean Markdown copy, a self-contained
+      HTML rendering, and pre-computed BGE-M3 embeddings into a single PDF/A-3u file
+      that opens everywhere on day one.
+    </p>
+    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap">
+      <a href="/install/" style="background: var(--accent); color: #fff; padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600">
+        Install the CLI
+      </a>
+      <a href="/spec/" style="border: 1px solid var(--border); padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; color: inherit">
+        Read the spec
+      </a>
+      <a href="/view/" style="border: 1px solid var(--border); padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; color: inherit">
+        Try the viewer
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why .cv exists</h2>
+    <p>
+      Today a person sends three different artifacts to three different audiences: a
+      polished PDF to recruiters, a Markdown copy to ATS systems, a web bio for their
+      site. They drift out of sync within weeks. AI tools re-embed the same documents
+      over and over.
+    </p>
+    <p>
+      <code>.cv</code> fixes all three: one file, one source of truth, opens in any PDF
+      reader on day one. Bots that ask for <code>text/markdown</code> get the markdown
+      back. RAG pipelines that recognize the format read pre-computed BGE-M3 vectors
+      directly instead of re-embedding.
+    </p>
+  </section>
+
+  <section>
+    <h2>What ships today</h2>
+    <ul>
+      <li>Stable spec at <a href="/spec/">cv-1.0</a>.</li>
+      <li>Reference SDKs in <strong>JavaScript</strong>, <strong>Python</strong>, <strong>Go</strong>.</li>
+      <li>Single-binary CLI (<code>cv extract / inspect / validate / search</code>).</li>
+      <li><code>&lt;cv-embed&gt;</code> web component (Lit, ~10 KB shell, lazy PDF.js worker).</li>
+      <li>Server middleware for Express, Fastify, Hono, FastAPI, Flask, Django, Go <code>net/http</code>.</li>
+      <li>Optional BGE-M3 embedding generation (<code>@cvfile/embed</code>, <code>cvfile[embed]</code>).</li>
+      <li>LangChain and LlamaIndex document loaders.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Hello, .cv</h2>
+    <pre><code>{`# Build a .cv from a markdown CV
+cv pack \\
+  --pdf resume.pdf \\
+  --md resume.md \\
+  --html resume.html \\
+  --lang en \\
+  -o resume.cv
+
+# Read it back any way you like
+cv extract resume.cv --format md      # markdown stream
+cv inspect resume.cv --json           # XMP + payload metadata
+cv validate resume.cv --strict        # PDF/A-3u + cv-strict gate
+cv search  resume.cv "kubernetes"     # semantic search via BGE-M3`}</code></pre>
+  </section>
+
+  <section>
+    <h2>The killer property</h2>
+    <p>
+      A producer ships <strong>one</strong> <code>.cv</code> file. The HTTP middleware
+      makes the wrapper invisible to consumers:
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+      <thead>
+        <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+          <th style="padding: 0.5rem 0">Consumer Accept header</th>
+          <th>Sees</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem 0"><code>text/html, */*</code> (LLM crawlers, browsers)</td>
+          <td>Extracted <code>resume.html</code></td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem 0"><code>text/markdown</code> (newer agents, our SDK)</td>
+          <td>Extracted <code>resume.md</code></td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem 0"><code>application/pdf</code></td>
+          <td>The visual PDF</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem 0">No <code>Accept</code> header</td>
+          <td>The visual PDF (renders in built-in viewer)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The bot never needs to know <code>.cv</code> exists. The format is producer-side
+      convenience; consumer-side it is invisible.
+    </p>
+  </section>
+</Page>

@@ -1,0 +1,16 @@
+{
+  "name": "@cvfile/docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "cvfile.org — landing page, spec, install instructions, live cv-embed demo",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@cvfile/viewer-web": "workspace:*",
+    "astro": "^5.0.0"
+  }
+}
