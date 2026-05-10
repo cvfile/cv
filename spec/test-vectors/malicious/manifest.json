@@ -1,0 +1,40 @@
+{
+  "note": "Each fixture is a valid .cv file with exactly one forbidden construct injected. SDK security tests assert that validate() returns ok=false and includes the listed error code.",
+  "fixtures": [
+    {
+      "filename": "js-action.cv",
+      "expectedCode": "javascript-action",
+      "description": "OpenAction is an /Action dict with subtype /JavaScript carrying inline /JS."
+    },
+    {
+      "filename": "launch-action.cv",
+      "expectedCode": "launch-action",
+      "description": "OpenAction launches an external program."
+    },
+    {
+      "filename": "import-data-action.cv",
+      "expectedCode": "import-data-action",
+      "description": "OpenAction imports form data from an external file."
+    },
+    {
+      "filename": "submit-form-external.cv",
+      "expectedCode": "submit-form-external",
+      "description": "OpenAction posts form data to a non-mailto URL."
+    },
+    {
+      "filename": "encrypted.cv",
+      "expectedCode": "encrypted-document",
+      "description": "Trailer declares an /Encrypt dictionary."
+    },
+    {
+      "filename": "external-filespec.cv",
+      "expectedCode": "external-filespec",
+      "description": "A /Filespec entry in /AF references an outside URL with no /EF stream."
+    },
+    {
+      "filename": "js-names-tree.cv",
+      "expectedCode": "javascript-names-tree",
+      "description": "Catalog /Names tree exposes a /JavaScript leaf."
+    }
+  ]
+}

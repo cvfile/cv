@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>cv-embed demo</title>
+    <style>
+      :root {
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        color-scheme: light dark;
+        --bg: #fafaf9;
+        --fg: #1a1a1a;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #111; --fg: #f3f3f3; }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        min-height: 100vh;
+      }
+      header {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 1.5rem;
+      }
+      h1 { font-weight: 700; letter-spacing: -0.02em; font-size: 2.4rem; margin: 0; }
+      header p { opacity: 0.75; margin-top: 0.5rem; max-width: 60ch; line-height: 1.6; }
+      main { max-width: 920px; margin: 0 auto; padding: 1rem 1.5rem 4rem; }
+      .drop {
+        border: 2px dashed rgba(127, 127, 127, 0.4);
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        text-align: center;
+        transition: background 150ms, border-color 150ms;
+      }
+      .drop.over { background: rgba(127, 127, 127, 0.08); border-color: currentColor; }
+      .drop strong { font-size: 1.1rem; }
+      .drop button {
+        margin-top: 1rem;
+        font: inherit;
+        appearance: none;
+        background: currentColor;
+        color: var(--bg);
+        border: 0;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .viewer { margin-top: 2rem; }
+      footer {
+        max-width: 920px;
+        margin: 2rem auto;
+        padding: 1rem 1.5rem;
+        opacity: 0.55;
+        font-size: 0.85rem;
+      }
+      footer code { background: rgba(127,127,127,0.15); padding: 0.1rem 0.4rem; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>.cv viewer</h1>
+      <p>
+        Drop a <code>.cv</code> file to see the PDF, Markdown, and HTML representations
+        side by side. Same file, three audiences. Browser only, no upload.
+      </p>
+    </header>
+    <main>
+      <div class="drop" id="drop">
+        <div><strong>Drop a .cv file here</strong></div>
+        <div style="opacity: 0.6; margin-top: 0.5rem;">or pick one from disk</div>
+        <input type="file" id="file" accept=".cv,application/pdf,application/vnd.cv+pdf" hidden />
+        <button type="button" id="pick">Choose file</button>
+      </div>
+
+      <div class="viewer" id="viewer-mount" hidden>
+        <cv-embed id="embed"></cv-embed>
+      </div>
+
+      <p style="margin-top: 2rem; opacity: 0.7; text-align: center;">
+        No <code>.cv</code> file handy?
+        <a href="#" id="load-sample">Load the sample</a>
+      </p>
+    </main>
+    <footer>
+      <span>cvfile.org · open standard · MIT spec, Apache-2.0 SDKs</span>
+    </footer>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

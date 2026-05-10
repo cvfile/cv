@@ -1,0 +1,9 @@
+packages:
+  - 'packages/*'
+  - 'docs'
+allowBuilds:
+  cbor-extract: true
+  esbuild: true
+  onnxruntime-node: set this to true or false
+  protobufjs: set this to true or false
+  sharp: set this to true or false

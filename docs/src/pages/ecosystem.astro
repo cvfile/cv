@@ -1,0 +1,53 @@
+---
+import Page from '../layouts/Page.astro';
+---
+<Page title="Ecosystem — cvfile.org">
+  <h1>Ecosystem</h1>
+  <p>The packages that ship in this repo and how they fit together.</p>
+
+  <h2>SDKs</h2>
+  <ul>
+    <li><strong><code>@cvfile/sdk</code></strong> — JavaScript / TypeScript pack/extract/inspect/validate. Browser + Node.</li>
+    <li><strong><code>cvfile</code></strong> — Python equivalent. Same API surface, idiomatic naming.</li>
+    <li><strong><code>cv-go</code></strong> — Go equivalent. Reader path complete; pack writer landing in v0.2.</li>
+  </ul>
+
+  <h2>CLI</h2>
+  <ul>
+    <li><strong><code>cv</code></strong> — single Go binary. Subcommands: <code>extract</code>, <code>inspect</code>, <code>validate</code>, <code>search</code>.</li>
+  </ul>
+
+  <h2>Embeddings</h2>
+  <ul>
+    <li><strong><code>@cvfile/embed</code></strong> — JS chunker + transformers.js + HF Inference backends. Default model <code>BAAI/bge-m3</code> (1024-dim, MIT, multilingual).</li>
+    <li><strong><code>cvfile[embed]</code></strong> — Python equivalent.</li>
+  </ul>
+
+  <h2>Viewer</h2>
+  <ul>
+    <li><strong><code>@cvfile/viewer-web</code></strong> — Lit web component (<code>&lt;cv-embed&gt;</code>) with PDF/MD/HTML tabs, lazy PDF.js worker, dark/light theming, keyboard nav, mobile layout.</li>
+  </ul>
+
+  <h2>Server middleware</h2>
+  <ul>
+    <li><strong><code>@cvfile/server</code></strong> — Node Express/Fastify/Hono adapters + vanilla <code>http</code> handler.</li>
+    <li><strong><code>cvfile.server</code></strong> — Python ASGI (FastAPI/Starlette) and WSGI (Flask/Django).</li>
+    <li><strong><code>cv-go/middleware</code></strong> — Go <code>net/http</code> handler.</li>
+  </ul>
+
+  <h2>AI tooling integrations</h2>
+  <ul>
+    <li><strong><code>cvfile.integrations.langchain</code></strong> — <code>CvFileLoader</code> emits LangChain Documents, optionally one per embedding chunk.</li>
+    <li><strong><code>cvfile.integrations.llamaindex</code></strong> — <code>CvFileReader</code> emits LlamaIndex Documents with <code>.embedding</code> populated.</li>
+  </ul>
+
+  <h2>Compatibility verified</h2>
+  <p>The same <code>.cv</code> file built by any SDK reads byte-identically in the others. The embeddings.cbor payload survives a round trip through CBOR encoders/decoders in JS, Python, and Go. Server middleware in three languages negotiates the same Accept header to the same response.</p>
+
+  <h2>Production gates</h2>
+  <ul>
+    <li><strong>veraPDF</strong> — every shipped fixture passes PDF/A-3u conformance. CI runs the gate via the <code>tools/verapdf-runner/</code> Docker image.</li>
+    <li><strong>Malicious corpus</strong> — 7 mutated fixtures under <code>spec/test-vectors/malicious/</code>. All three SDK validators reject every one with the same documented error code.</li>
+    <li><strong>Cross-SDK interop</strong> — the producer/consumer matrix is exercised on every PR.</li>
+  </ul>
+</Page>

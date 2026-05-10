@@ -1,0 +1,92 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js:
+    name: JS / TS (sdk + embed + server + viewer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - name: Test (skip live HF when no token)
+        run: pnpm -r test
+        env:
+          # Set HF_TOKEN as a repo secret to enable the live BGE-M3 round-trip
+          # in @cvfile/embed; otherwise that single test self-skips.
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+  python:
+    name: Python (cvfile + cvfile.embed + cvfile.server)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install uv
+        run: pipx install uv
+      - name: Install package + dev extras
+        working-directory: sdks/python
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+      - name: Run tests
+        working-directory: sdks/python
+        run: .venv/bin/pytest -q
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+  go:
+    name: Go (cv-go + cv CLI + middleware)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: sdks/go/go.sum
+      - working-directory: sdks/go
+        run: go test ./...
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+  verapdf:
+    name: PDF/A-3u conformance gate (veraPDF)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build sample fixture
+        run: |
+          cd packages/sdk-js
+          pnpm build
+          npx tsx examples/build-jane-doe.ts
+      - name: Run veraPDF
+        run: |
+          docker run --rm -v "$PWD:/work" verapdf/cli /work/packages/sdk-js/examples/out/jane-doe.cv -f 3u

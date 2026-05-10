@@ -1,0 +1,66 @@
+# Build output
+dist/
+build/
+out/
+.next/
+.astro/
+.turbo/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+.pnpm-store/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.tox/
+*.egg-info/
+
+# Go
+vendor/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test artefacts
+coverage/
+.nyc_output/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+hf_*
+
+# Don't ignore generated fixtures — committing them keeps tests green on a
+# fresh clone (no need to rebuild jane-doe.cv before running cross-SDK
+# interop / security / search tests).
+
+# Tauri
+src-tauri/target/
+
+# Misc
+*.pid
+*.seed
+*.tgz

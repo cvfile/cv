@@ -1,0 +1,19 @@
+---
+import Page from '../layouts/Page.astro';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const specPath = join(here, '..', '..', '..', 'spec', 'cv-1.0.md');
+const specSource = readFileSync(specPath, 'utf8');
+---
+<Page title="Specification — cvfile.org" description="The .cv format normative spec, version 1.0.">
+  <article style="max-width: 760px;">
+    <p style="color: var(--muted)">
+      Source of truth: <a href="https://github.com/cvfile/cv/blob/main/spec/cv-1.0.md">spec/cv-1.0.md</a>.
+      Spec licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>.
+    </p>
+    <pre style="white-space: pre-wrap; word-wrap: break-word; line-height: 1.55; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 0.85rem; background: var(--code-bg); color: #e2e8f0; padding: 1.5rem; border-radius: 8px;"><code>{specSource}</code></pre>
+  </article>
+</Page>
