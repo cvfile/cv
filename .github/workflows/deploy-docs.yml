@@ -35,6 +35,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # @cvfile/viewer-web imports types from @cvfile/sdk; build sdk first
+      # so the .d.ts files exist when tsup runs its DTS step.
+      - run: pnpm --filter @cvfile/sdk build
       - run: pnpm --filter @cvfile/viewer-web build
       - run: pnpm --filter @cvfile/docs build
       - name: Sanity-check the built site
