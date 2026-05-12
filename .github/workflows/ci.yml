@@ -84,5 +84,7 @@ jobs:
           pnpm build
           npx tsx examples/build-jane-doe.ts
       - name: Run veraPDF
+        # `--nonpdfext` allows the .cv extension; without it veraPDF refuses
+        # to scan files whose names don't end in .pdf.
         run: |
-          docker run --rm -v "$PWD:/work" verapdf/cli /work/packages/sdk-js/examples/out/jane-doe.cv -f 3u
+          docker run --rm -v "$PWD:/work" verapdf/cli --nonpdfext /work/packages/sdk-js/examples/out/jane-doe.cv -f 3u
