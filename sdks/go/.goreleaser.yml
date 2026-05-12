@@ -59,7 +59,10 @@ snapshot:
   version_template: "{{ incpatch .Version }}-next"
 
 changelog:
-  use: github
+  # `github` uses the compare API, which needs both tags on the remote.
+  # Our workflow only pushes `sdks/go/vX.Y.Z`; the stripped `vX.Y.Z` tag is
+  # local-only, so the compare endpoint 404s. Use git log instead.
+  use: git
   sort: asc
   groups:
     - title: Features
