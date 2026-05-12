@@ -1,17 +1,18 @@
 # GoReleaser config for the cv CLI.
 # Cross-compiles to six targets and produces SBOMs + checksums + brew/scoop manifests.
 # Run from sdks/go after tagging:
-#   git tag cv-go/v0.1.0
+#   git tag sdks/go/v0.1.1
 #   goreleaser release --clean
 
 version: 2
 
 project_name: cv
 
-# We tag this binary as `cv-go/vX.Y.Z` to share the monorepo with the
-# npm/python packages, but GoReleaser's monorepo support is Pro-only. The
-# release-cv-cli.yml workflow extracts the trailing semver and creates a
-# temporary `vX.Y.Z` tag that GoReleaser consumes here.
+# We tag this binary as `sdks/go/vX.Y.Z` so the same tag also serves as the
+# canonical Go module tag for github.com/cvfile/cv/sdks/go (pkg.go.dev picks
+# it up automatically). GoReleaser's monorepo support is Pro-only, so the
+# release-cv-cli.yml workflow strips the `sdks/go/` prefix and applies a
+# local semver tag that GoReleaser consumes here.
 
 before:
   hooks:

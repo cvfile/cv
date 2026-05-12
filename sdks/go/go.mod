@@ -1,4 +1,4 @@
-module github.com/cvfile/cv-go
+module github.com/cvfile/cv/sdks/go
 
 go 1.26.3
 

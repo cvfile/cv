@@ -17,7 +17,7 @@ pnpm add @cvfile/sdk
 pip install cvfile
 
 # Go
-go get github.com/cvfile/cv-go
+go get github.com/cvfile/cv/sdks/go
 
 # Web component
 <script type="module" src="https://cdn.cvfile.org/embed/1/cv-embed.js"></script>
