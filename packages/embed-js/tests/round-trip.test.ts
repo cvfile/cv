@@ -23,15 +23,16 @@ Master of Science in Computer Science, 2018.
 `;
 
 // Real BGE-M3 via the Hugging Face Inference API. No local model download.
-// Requires HF_TOKEN in the environment.
-const HF_BACKEND = createHuggingFaceBackend({
-  model: 'BAAI/bge-m3',
-  dimension: 1024,
-});
+// Requires HF_TOKEN in the environment. The test suite skips when the token
+// is absent (CI on PRs from forks, contributors without an HF account) so
+// the rest of the embed-js tests still run.
+const HAS_HF_TOKEN = Boolean(process.env.HF_TOKEN ?? process.env.HUGGINGFACE_TOKEN);
 
-describe('embed round trip with BGE-M3 (Hugging Face Inference API)', () => {
+describe.skipIf(!HAS_HF_TOKEN)('embed round trip with BGE-M3 (Hugging Face Inference API)', () => {
+  const hfBackend = HAS_HF_TOKEN ? createHuggingFaceBackend({ model: 'BAAI/bge-m3', dimension: 1024 }) : null;
+
   it('embeds, encodes, decodes, and ranks the relevant section first', async () => {
-    const payload = await embed(sample, { backend: HF_BACKEND });
+    const payload = await embed(sample, { backend: hfBackend! });
     expect(payload.spaces).toHaveLength(1);
     const space = payload.spaces[0]!;
     expect(space.model).toBe('BAAI/bge-m3');
@@ -58,12 +59,12 @@ describe('embed round trip with BGE-M3 (Hugging Face Inference API)', () => {
 
     // Two directional queries: each should rank the section that matches
     // it semantically above the section that doesn't.
-    const k8sQuery = await HF_BACKEND.embed(['kubernetes multi-region replication infrastructure']);
+    const k8sQuery = await hfBackend!.embed(['kubernetes multi-region replication infrastructure']);
     const k8sHits = searchSemantic(decoded, k8sQuery.vectors[0]!, { k: space.chunks.length });
     const k8sScores = Object.fromEntries(k8sHits.map((h) => [h.chunkId, h.score]));
     expect(k8sScores.experience).toBeGreaterThan(k8sScores.education!);
 
-    const eduQuery = await HF_BACKEND.embed(['masters degree academic studies']);
+    const eduQuery = await hfBackend!.embed(['masters degree academic studies']);
     const eduHits = searchSemantic(decoded, eduQuery.vectors[0]!, { k: space.chunks.length });
     const eduScores = Object.fromEntries(eduHits.map((h) => [h.chunkId, h.score]));
     expect(eduScores.education).toBeGreaterThan(eduScores.skills!);
