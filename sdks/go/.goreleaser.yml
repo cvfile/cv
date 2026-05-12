@@ -102,6 +102,10 @@ scoops:
       name: scoop-bucket
       branch: main
       token: "{{ .Env.SCOOP_GITHUB_TOKEN }}"
+    # Standard Scoop community bucket layout puts manifests under bucket/.
+    # Without this, GoReleaser writes the manifest to the repo root, which
+    # Scoop also accepts but is non-standard.
+    directory: bucket
     homepage: "https://cvfile.org"
     description: "CLI for the .cv open file format"
     license: "Apache-2.0"
