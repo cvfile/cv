@@ -2,10 +2,6 @@ packages:
   - 'packages/*'
   - 'docs'
 
-allowBuilds:
-  cbor-extract: set this to true or false
-  esbuild: set this to true or false
-
 # pnpm 11 hard-fails install when a package has a build script we haven't
 # pre-approved. Listing every native-binary dep we transitively depend on
 # keeps CI green; without these install errors with ERR_PNPM_IGNORED_BUILDS.
