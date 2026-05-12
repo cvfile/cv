@@ -2,7 +2,7 @@ name: release cv CLI
 
 on:
   push:
-    tags: ["cv-go/v*"]
+    tags: ["sdks/go/v*"]
 
 permissions:
   contents: write
@@ -23,14 +23,18 @@ jobs:
         # generation (the sboms: stanza in .goreleaser.yml). Anchore ships
         # an official installer that drops the binary into /usr/local/bin.
         run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-      - name: Extract semver from cv-go/v* tag and re-tag for GoReleaser
+      - name: Extract semver from sdks/go/v* tag and re-tag for GoReleaser
         # GoReleaser's monorepo support is Pro-only; OSS GoReleaser only
-        # accepts plain `vX.Y.Z` tags. Strip the `cv-go/` prefix and apply
+        # accepts plain `vX.Y.Z` tags. Strip the `sdks/go/` prefix and apply
         # a local semver tag pointing at the same commit so GoReleaser sees
         # the version it needs. The temp tag is never pushed.
+        #
+        # `sdks/go/vX.Y.Z` is also the canonical Go module tag format for
+        # submodules at github.com/cvfile/cv/sdks/go, so the same tag drives
+        # both pkg.go.dev indexing and the CLI binary release.
         run: |
           full="${GITHUB_REF##refs/tags/}"
-          version="${full#cv-go/}"
+          version="${full#sdks/go/}"
           echo "Releasing $version (from $full)"
           git tag "$version"
       - name: Run GoReleaser

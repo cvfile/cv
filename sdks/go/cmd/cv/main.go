@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	cv "github.com/cvfile/cv-go/cv"
+	cv "github.com/cvfile/cv/sdks/go/cv"
 )
 
 const usage = `cv — the .cv open file format CLI (v0.1)

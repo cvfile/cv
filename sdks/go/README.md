@@ -5,7 +5,7 @@ Reference Go SDK for the [`.cv`](https://cvfile.org) open file format. Read and 
 ## Install
 
 ```bash
-go get github.com/cvfile/cv-go
+go get github.com/cvfile/cv/sdks/go
 ```
 
 ## Pack
@@ -16,7 +16,7 @@ package main
 import (
     "os"
 
-    cv "github.com/cvfile/cv-go/cv"
+    cv "github.com/cvfile/cv/sdks/go/cv"
 )
 
 func main() {
@@ -47,7 +47,7 @@ md, _ := cv.ExtractMarkdown(cvBytes, "")
 ## CLI
 
 ```bash
-go install github.com/cvfile/cv-go/cmd/cv@latest
+go install github.com/cvfile/cv/sdks/go/cmd/cv@latest
 
 cv pack    --pdf resume.pdf --md resume.md -o resume.cv
 cv extract resume.cv --format md
