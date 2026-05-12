@@ -1,0 +1,51 @@
+# WinGet default locale manifest. Filed at
+# `manifests/c/cvfile/cv/__VERSION__/cvfile.cv.locale.en-US.yaml` in the
+# microsoft/winget-pkgs repository. Only __VERSION__ needs substituting at
+# release time; the rest of the metadata is stable across releases.
+
+PackageIdentifier: cvfile.cv
+PackageVersion: __VERSION__
+PackageLocale: en-US
+Publisher: cvfile.org
+PublisherUrl: https://cvfile.org
+PublisherSupportUrl: https://github.com/cvfile/cv/issues
+Author: cvfile contributors
+PackageName: cv
+PackageUrl: https://cvfile.org
+License: Apache-2.0
+LicenseUrl: https://github.com/cvfile/cv/blob/main/LICENSE
+Copyright: Copyright (c) cvfile contributors
+ShortDescription: CLI for the .cv open file format. Extract, inspect, validate, and semantic search across resume files.
+Description: |-
+  The cv command line interface reads and writes files in the .cv open file
+  format. A .cv file is a valid PDF/A-3u document that also carries a clean
+  Markdown copy, an optional HTML copy, and pre computed BGE M3 semantic
+  vectors as PDF Associated Files. One file opens visually in any PDF
+  reader, parses cleanly in any applicant tracking system, embeds on any
+  webpage, and answers semantic queries from any retrieval pipeline.
+
+  v0.1 ships the reader path: extract a payload, inspect XMP metadata,
+  validate against the cv 1.0 specification, and run semantic search over
+  the embedded vectors using the Hugging Face Inference API. Pack support
+  is planned for v0.2.
+
+  The full specification, the JavaScript and Python SDKs, the web
+  component, and the LangChain and LlamaIndex integrations live at
+  https://github.com/cvfile/cv.
+Moniker: cv
+Tags:
+  - cv
+  - cvfile
+  - resume
+  - cli
+  - pdf
+  - pdfa
+  - ats
+  - embeddings
+  - semantic
+  - search
+  - rag
+  - ai
+ReleaseNotesUrl: https://github.com/cvfile/cv/releases/tag/sdks%2Fgo%2Fv__VERSION__
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

@@ -1,0 +1,10 @@
+# WinGet version manifest. Pins the default locale and schema version for
+# this package release. Filed alongside the installer and locale manifests
+# at `manifests/c/cvfile/cv/__VERSION__/cvfile.cv.yaml` in the
+# microsoft/winget-pkgs repository.
+
+PackageIdentifier: cvfile.cv
+PackageVersion: __VERSION__
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0

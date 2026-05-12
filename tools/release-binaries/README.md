@@ -13,11 +13,11 @@ GoReleaser config lives at `sdks/go/.goreleaser.yml` and produces:
 
 ## Per-release checklist
 
-1. Tag from `sdks/go`:
+1. Tag from the repo root (the prefix `sdks/go/` doubles as the Go module
+   tag and the trigger for the `release-cv-cli` workflow):
    ```sh
-   cd sdks/go
-   git tag cv-go/v0.1.0
-   git push origin cv-go/v0.1.0
+   git tag sdks/go/v0.1.1
+   git push origin sdks/go/v0.1.1
    ```
 2. Run GoReleaser locally (or via CI):
    ```sh
@@ -25,15 +25,26 @@ GoReleaser config lives at `sdks/go/.goreleaser.yml` and produces:
    ```
    Requires `GITHUB_TOKEN` (with repo scope) and (for code signing
    on macOS) `MACOS_CERTIFICATE` / `MACOS_CERTIFICATE_PWD`.
-3. **WinGet** is *not* automated. After release:
-   - Copy `winget/installer-template.yaml` and `winget/manifest-template.yaml`
-     to a new `manifests/c/cvfile/cv/<version>/` directory in a fork of
-     [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs).
-   - Substitute `__VERSION__`, `__URL_X64__`, `__SHA256_X64__`,
-     `__URL_ARM64__`, `__SHA256_ARM64__` with the GitHub release URLs and
-     checksums GoReleaser printed.
-   - Open a PR. WinGet's bots usually merge within a day if the manifests
-     pass `winget validate`.
+3. **WinGet** is *not* automated. The three manifest templates in
+   `winget/` follow Microsoft's canonical filenames (`cvfile.cv.yaml`,
+   `cvfile.cv.installer.yaml`, `cvfile.cv.locale.en-US.yaml`), so they
+   drop straight into a winget-pkgs PR. After release:
+   - Fork [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs)
+     and create the directory `manifests/c/cvfile/cv/<version>/`.
+   - Copy all three files from `winget/` into that directory.
+   - In every file, replace `__VERSION__` with the release version
+     (without the `v` prefix, e.g. `0.1.1`). In the installer manifest,
+     also replace `__RELEASE_DATE__` (ISO 8601), `__URL_X64__`,
+     `__SHA256_X64__`, `__URL_ARM64__`, `__SHA256_ARM64__` with the
+     values from the GitHub release page.
+   - Validate locally with `winget validate <dir>` (Windows only). If
+     `wingetcreate update cvfile.cv` is available it does this in one
+     command.
+   - Open a PR. Microsoft's validation bots usually merge within a day.
+
+   The full `https://github.com/cvfile/cv/releases/tag/sdks%2Fgo%2FvX.Y.Z`
+   download URLs already encode the slash; copy them verbatim from the
+   release page's "Assets" section.
 
 ## Required external accounts (one-time)
 
