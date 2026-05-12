@@ -1,0 +1,77 @@
+"""Smoke tests for the Haystack CVFileToDocument converter."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+from haystack import Document
+from haystack.dataclasses import ByteStream
+
+from haystack_integrations.components.converters.cvfile import CVFileToDocument
+
+FIXTURE = Path(__file__).parents[3] / "packages" / "sdk-js" / "tests" / "fixtures" / "python-produced.cv"
+
+
+@pytest.fixture(scope="module")
+def converter() -> CVFileToDocument:
+    if not FIXTURE.exists():
+        pytest.skip(f"fixture not found: {FIXTURE}")
+    return CVFileToDocument()
+
+
+def test_run_returns_documents(converter: CVFileToDocument) -> None:
+    result = converter.run(sources=[FIXTURE])
+    docs = result["documents"]
+    assert len(docs) >= 1
+    assert all(isinstance(d, Document) for d in docs)
+
+
+def test_each_document_has_required_meta(converter: CVFileToDocument) -> None:
+    docs = converter.run(sources=[FIXTURE])["documents"]
+    for doc in docs:
+        for key in ("source", "payload", "mime_type", "relationship", "language", "primary", "cv_version"):
+            assert key in doc.meta, f"missing meta key {key} on {doc.meta.get('payload')}"
+
+
+def test_exactly_one_primary_document(converter: CVFileToDocument) -> None:
+    docs = converter.run(sources=[FIXTURE])["documents"]
+    primaries = [d for d in docs if d.meta["primary"]]
+    assert len(primaries) == 1
+
+
+def test_primary_only_emits_just_the_primary() -> None:
+    if not FIXTURE.exists():
+        pytest.skip(f"fixture not found: {FIXTURE}")
+    primary_only = CVFileToDocument(primary_only=True)
+    docs = primary_only.run(sources=[FIXTURE])["documents"]
+    assert len(docs) == 1
+    assert docs[0].meta["primary"] is True
+    assert docs[0].content.strip()
+
+
+def test_extra_meta_is_merged() -> None:
+    if not FIXTURE.exists():
+        pytest.skip(f"fixture not found: {FIXTURE}")
+    converter = CVFileToDocument()
+    docs = converter.run(sources=[FIXTURE], meta={"candidate_id": "abc123"})["documents"]
+    assert docs, "expected at least one document"
+    assert all(d.meta.get("candidate_id") == "abc123" for d in docs)
+
+
+def test_accepts_bytestream() -> None:
+    if not FIXTURE.exists():
+        pytest.skip(f"fixture not found: {FIXTURE}")
+    stream = ByteStream(data=FIXTURE.read_bytes(), meta={"file_name": "jane.cv"})
+    converter = CVFileToDocument()
+    docs = converter.run(sources=[stream])["documents"]
+    assert docs
+    assert docs[0].meta["source"] == "jane.cv"
+
+
+def test_unreadable_source_is_skipped(tmp_path: Path) -> None:
+    converter = CVFileToDocument()
+    not_a_cv = tmp_path / "garbage.cv"
+    not_a_cv.write_bytes(b"not a real cv file")
+    result = converter.run(sources=[not_a_cv])
+    assert result["documents"] == []
