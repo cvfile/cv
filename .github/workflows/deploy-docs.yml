@@ -18,6 +18,7 @@ on:
       - "docs/**"
       - "spec/cv-1.0.md"
       - "packages/viewer-web/**"
+  workflow_dispatch:
 
 concurrency:
   group: docs-${{ github.ref }}
