@@ -57,8 +57,8 @@ Interoperability considerations:
   the visual PDF.
 
 Published specification:
-  https://cvfile.org/spec/cv-1.0.md (also at
-  https://github.com/cvfile/cv/blob/main/spec/cv-1.0.md)
+  https://cvfile.org/spec/ (rendered)
+  https://github.com/cvfile/cv/blob/main/spec/cv-1.0.md (canonical source)
 
 Applications that use this media type:
   cvfile reference SDKs in JavaScript, Python, and Go; cvfile reference

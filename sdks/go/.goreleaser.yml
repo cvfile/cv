@@ -80,6 +80,9 @@ brews:
       # back to GITHUB_TOKEN, which in Actions only has write access to the
       # repo running the workflow — the cross-repo PUT then 403s.
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    # Homebrew searches `Formula/`, `HomebrewFormula/`, and the repo root.
+    # Pin to Formula/ so the layout matches every other community tap.
+    directory: Formula
     homepage: "https://cvfile.org"
     description: "CLI for the .cv open file format (PDF + Markdown + HTML + embeddings)"
     license: "Apache-2.0"
