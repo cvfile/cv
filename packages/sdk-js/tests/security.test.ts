@@ -1,9 +1,17 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PDFDocument } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { pack, validate } from '../src/index.js';
 import { DEFAULT_MAX_PAYLOAD_BYTES } from '../src/validate.js';
+
+async function makeMinimalPdf(): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([612, 792]);
+  page.drawText('cv-security-test');
+  return doc.save();
+}
 
 const here = dirname(fileURLToPath(import.meta.url));
 const malDir = join(here, '..', '..', '..', 'spec', 'test-vectors', 'malicious');
@@ -42,9 +50,7 @@ describe('security: payload size cap', () => {
   it('rejects payloads larger than the configured cap', async () => {
     // 5 MiB markdown — under default cap, over a 1 MiB override.
     const bigMarkdown = '# Big\n\n' + 'x'.repeat(5 * 1024 * 1024);
-    const baseFile = await readFile(join(here, '..', 'examples', 'out', 'jane-doe.cv'));
-    const baseDoc = await readFile(join(here, '..', 'examples', 'out', 'jane-doe.pdf'));
-    void baseFile;
+    const baseDoc = await makeMinimalPdf();
 
     const repacked = await pack({
       pdf: baseDoc,
