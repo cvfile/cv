@@ -15,7 +15,7 @@ This is the **operational** plan. The architectural decisions live in [`PLAN.md`
 3. Six surfaces ship as version `1.0.0` in lockstep:
    - `@cvfile/sdk` on npm
    - `cvfile` on PyPI
-   - `github.com/cvfile/cv-go` library + tagged release
+   - `github.com/cvfile/cv/sdks/go` library + tagged release
    - `cv` CLI binary distributed via Homebrew, Scoop, WinGet
    - `cvfile.org/view` web viewer with `<cv-embed>` web component on a CDN
    - Native desktop viewers (macOS notarized .dmg, Windows MSI signed, Linux .deb/.rpm/AppImage) with `.cv` file association
@@ -58,7 +58,7 @@ Already shipped in this monorepo:
 | 1.4 | **Python SDK** `cvfile` 0.1.0 on PyPI: `pack`, `extract`, `extract_markdown`, `inspect`, `validate` | mirrors JS API; uses pypdf with internal abstraction |
 | 1.5 | **Cross-SDK interop matrix** (`interop/`) | `producers × consumers × fixtures = 3×3×5 = 45 combos` green in CI |
 | 1.6 | **Install Go via Homebrew**, scaffold `sdks/go/` | `go test ./...` passes empty harness |
-| 1.7 | **Go SDK** `github.com/cvfile/cv-go` 0.1.0 with same API surface | round-trip with JS- and Python-produced fixtures |
+| 1.7 | **Go SDK** `github.com/cvfile/cv/sdks/go` 0.1.0 with same API surface | round-trip with JS- and Python-produced fixtures |
 | 1.8 | **Go `cv` CLI** at `sdks/go/cmd/cv` with `pack`, `extract`, `inspect` | binary built for darwin-arm64, runs |
 
 ### Business actions
@@ -67,7 +67,7 @@ Already shipped in this monorepo:
 | --- | --- | --- |
 | 1.B1 | **Reserve domain `cvfile.org`** (and `.com` defensively) | DNS configured, parked landing |
 | 1.B2 | **Reserve GitHub org `cvfile`** | `cvfile/cv` repo created, code pushed |
-| 1.B3 | **Reserve npm scope `@cvfile`**, PyPI name `cvfile`, Go module path `github.com/cvfile/cv-go` | placeholder 0.0.1 published if name-squatting risk is non-trivial |
+| 1.B3 | **Reserve npm scope `@cvfile`**, PyPI name `cvfile`, Go module path `github.com/cvfile/cv/sdks/go` | placeholder 0.0.1 published if name-squatting risk is non-trivial |
 | 1.B4 | **Reserve Homebrew tap `cvfile/tap`**, Scoop bucket `cvfile`, WinGet manifest space | tap repo `cvfile/homebrew-tap` created |
 
 ### Phase 1 exit gate

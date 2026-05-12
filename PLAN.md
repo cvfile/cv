@@ -48,7 +48,7 @@ We are creating a new open standard, `.cv`, for documents (initially CVs, but th
 ├── sdks/
 │   ├── python/                    cvfile on PyPI (uv + hatchling)
 │   │   ├── src/cvfile/, tests/, examples/, pyproject.toml
-│   └── go/                        github.com/cvfile/cv-go
+│   └── go/                        github.com/cvfile/cv/sdks/go
 │       ├── cv/                    library
 │       ├── cmd/cv/                canonical CLI binary (Go, distributed via brew/winget/scoop)
 │       ├── middleware/            net/http + chi adapters
@@ -227,7 +227,7 @@ isCvFile(buffer): Promise<boolean>
 
 Same surface, idiomatic naming, in:
 - **Python `cvfile`** (PyPI): `pack()`, `extract()`, `extract_markdown()`, `extract_embeddings()`, `inspect()`, `validate()`. pypdf under the hood (with internal `_pdf.py` abstraction so we can swap to pikepdf if PDF/A-3 conformance demands it). uv + hatchling, Python 3.10+.
-- **Go `github.com/cvfile/cv-go`**: `Pack()`, `Extract()`, `ExtractMarkdown()`, `ExtractEmbeddings()`, `Inspect()`, `Validate()`. pdfcpu under the hood, isolated behind an internal interface. Streaming readers throughout. Go 1.22+.
+- **Go `github.com/cvfile/cv/sdks/go`**: `Pack()`, `Extract()`, `ExtractMarkdown()`, `ExtractEmbeddings()`, `Inspect()`, `Validate()`. pdfcpu under the hood, isolated behind an internal interface. Streaming readers throughout. Go 1.22+.
 
 **Naming consistency:** `pack`/`extract`/`extractMarkdown`/`inspect`/`validate` everywhere — same words, idiomatic casing. No `unpack`, `read`, `parse`.
 

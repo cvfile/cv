@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	cv "github.com/cvfile/cv-go/cv"
+	cv "github.com/cvfile/cv/sdks/go/cv"
 )
 
 // Loader is the pluggable source of `.cv` bytes for a given URL path.
