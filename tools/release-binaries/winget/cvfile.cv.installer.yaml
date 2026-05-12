@@ -1,0 +1,40 @@
+# WinGet installer manifest. Drop this file into
+# `manifests/c/cvfile/cv/__VERSION__/` in a fork of microsoft/winget-pkgs
+# and substitute the placeholders below with the values printed by
+# GoReleaser (or read from the GitHub release page).
+#
+# Required substitutions:
+#   __VERSION__         e.g. 0.1.1
+#   __RELEASE_DATE__    ISO 8601 date, e.g. 2026-05-12
+#   __URL_X64__         download URL for cv_<VERSION>_windows_x86_64.zip
+#   __SHA256_X64__      SHA 256 of the x64 zip (from checksums.txt)
+#   __URL_ARM64__       download URL for cv_<VERSION>_windows_arm64.zip
+#   __SHA256_ARM64__    SHA 256 of the arm64 zip (from checksums.txt)
+
+PackageIdentifier: cvfile.cv
+PackageVersion: __VERSION__
+MinimumOSVersion: 10.0.17763.0
+InstallerType: zip
+NestedInstallerType: portable
+Scope: user
+InstallModes:
+  - interactive
+  - silent
+  - silentWithProgress
+NestedInstallerFiles:
+  - RelativeFilePath: cv.exe
+    PortableCommandAlias: cv
+Commands:
+  - cv
+FileExtensions:
+  - cv
+ReleaseDate: __RELEASE_DATE__
+Installers:
+  - Architecture: x64
+    InstallerUrl: __URL_X64__
+    InstallerSha256: __SHA256_X64__
+  - Architecture: arm64
+    InstallerUrl: __URL_ARM64__
+    InstallerSha256: __SHA256_ARM64__
+ManifestType: installer
+ManifestVersion: 1.6.0
