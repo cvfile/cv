@@ -1,0 +1,117 @@
+---
+title: "CVFileLoader integration"
+description: "Load .cv files (PDF/A-3u with embedded Markdown/HTML/JSON payloads) using LangChain Python."
+---
+
+This page covers the `CVFileLoader` [document loader](https://python.langchain.com/docs/concepts/document_loaders) for the [`.cv`](https://cvfile.org) open file format. A `.cv` file is a PDF/A-3u that carries a Markdown copy of the same content (plus optional HTML and JSON Resume) as PDF Associated Files. Instead of OCRing the visual PDF layer, this loader pulls the embedded text payloads directly.
+
+## Overview
+
+### Integration details
+
+| Class | Package | Local | Serializable | JS support |
+| :--- | :--- | :---: | :---: | :---: |
+| `CVFileLoader` | `langchain-cvfile` | ✅ | ❌ | ❌ |
+
+### Loader features
+
+| Source | Document Lazy Loading | Native Async Support | Extract Images | Extract Tables |
+| :---: | :---: | :---: | :---: | :---: |
+| `CVFileLoader` | ✅ | ❌ | ❌ | ❌ |
+
+## Setup
+
+### Credentials
+
+No credentials are required to use `CVFileLoader`.
+
+### Installation
+
+```python
+%pip install -qU langchain-cvfile
+```
+
+## Initialization
+
+```python
+from langchain_cvfile import CVFileLoader
+
+loader = CVFileLoader("resume.cv")
+```
+
+## Load
+
+`load()` returns one `Document` per textual payload found in the `.cv` file. A typical `.cv` produced by the reference SDK contains three: `resume.md`, `resume.html`, and `resume.json` (the JSON Resume copy).
+
+```python
+docs = loader.load()
+len(docs)
+```
+
+```text
+3
+```
+
+```python
+import pprint
+primary = next(d for d in docs if d.metadata["primary"])
+pprint.pp(primary.metadata)
+```
+
+```text
+{'source': 'resume.cv',
+ 'mime_type': 'text/markdown',
+ 'payload': 'resume.md',
+ 'relationship': 'Alternative',
+ 'language': 'en',
+ 'primary': True,
+ 'cv_version': '0.1',
+ 'cv_generator': 'cvfile-py-examples/marie-curie'}
+```
+
+```python
+print(primary.page_content[:120])
+```
+
+```text
+# Marie Curie
+
+Physicist and chemist  ·  Paris, France
+
+## Notable
+
+* Discovered polonium and radium
+```
+
+The payload declared as `cv:primaryPayload` in the file's XMP metadata is the one flagged `metadata["primary"] = True`. Downstream chunking code can keep just the primary document and drop the alternates, or index every payload separately if cross-format retrieval is useful.
+
+## Lazy load
+
+```python
+for doc in loader.lazy_load():
+    print(doc.metadata["payload"], doc.metadata["mime_type"], len(doc.page_content))
+```
+
+```text
+resume.md text/markdown 1573
+resume.html text/html 2104
+resume.json application/json 612
+```
+
+## Metadata fields
+
+| Key | Description |
+| :--- | :--- |
+| `source` | The file path you passed to the loader |
+| `payload` | Name of the embedded file (e.g. `resume.md`) |
+| `mime_type` | MIME of the payload (`text/markdown`, `text/html`, `application/json`) |
+| `relationship` | PDF Associated Files relationship (`Alternative` for primary alternates) |
+| `language` | BCP 47 language tag for this payload |
+| `primary` | `True` for the payload declared as primary in the file's XMP metadata |
+| `cv_version` | Version of the `.cv` spec the file conforms to |
+| `cv_generator` | Tool that produced the file, if recorded |
+
+## API reference
+
+* Source: https://github.com/cvfile/cv/tree/main/integrations/langchain-cvfile
+* `.cv` format spec: https://cvfile.org/spec/
