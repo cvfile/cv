@@ -21,58 +21,58 @@ We are creating a new open standard, `.cv`, for documents (initially CVs, but th
 
 ## Repository layout (pnpm + Turborepo monorepo)
 
+Layout as actually shipped today. Items in *italics* are planned but not yet built.
+
 ```
 /Users/ilan/Projects/cv/
 ├── package.json, pnpm-workspace.yaml, turbo.json, tsconfig.base.json
 ├── LICENSE (Apache-2.0 for code; spec is CC-BY-4.0)
-├── README.md, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
-├── .github/workflows/   ci.yml, interop.yml, verapdf.yml, release.yml
+├── README.md, PLAN.md, ROADMAP.md, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md
+├── .github/workflows/   ci, deploy-docs, publish-{npm,pypi,langchain,llama-index,haystack,cv-detector-{pypi,npm}}, release-cv-cli
 │
 ├── spec/
-│   ├── cv-1.0.md                  the normative spec (RFC-2119 keywords)
-│   ├── cv-xmp-vocabulary.md       XMP namespace reference
-│   ├── cv-embeddings.md           embeddings payload spec
-│   ├── examples/                  minimal.cv, multilang.cv, full.cv
-│   └── test-vectors/              canonical fixtures used by every SDK
+│   ├── cv-1.0.md                  the normative spec (RFC 2119 keywords)
+│   ├── iana-registration-application-vnd-cv+pdf.txt   submitted to media-types@iana.org 2026-05-16
+│   └── test-vectors/              canonical fixtures, including malicious corpus
 │
 ├── packages/                      JS/TS workspace
 │   ├── sdk-js/                    @cvfile/sdk
-│   ├── cli/                       @cvfile/cli (thin npm wrapper around the Go binary)
-│   ├── viewer-core/               framework-agnostic UI logic
-│   ├── viewer-web/                <cv-embed> web component + cvfile.org/view
-│   ├── viewer-desktop/            Tauri 2 app
+│   ├── embed-js/                  @cvfile/embed (BGE-M3 via HF Inference + transformers.js)
 │   ├── server-middleware-node/    @cvfile/server (Express/Fastify/Hono)
-│   ├── embed-js/                  @cvfile/embed (optional, transformers.js + ONNX)
-│   └── eslint-config/
+│   └── viewer-web/                @cvfile/viewer-web — <cv-embed> + cvfile.org/view
+│   # planned: viewer-desktop (Tauri 2), viewer-core (extracted UI logic), cli (npm wrapper)
 │
 ├── sdks/
-│   ├── python/                    cvfile on PyPI (uv + hatchling)
-│   │   ├── src/cvfile/, tests/, examples/, pyproject.toml
+│   ├── python/                    cvfile on PyPI (uv + hatchling); ASGI + WSGI middleware
 │   └── go/                        github.com/cvfile/cv/sdks/go
 │       ├── cv/                    library
-│       ├── cmd/cv/                canonical CLI binary (Go, distributed via brew/winget/scoop)
+│       ├── cmd/cv/                canonical `cv` CLI binary (GoReleaser → 6 targets)
 │       ├── middleware/            net/http + chi adapters
-│       ├── embed/                 optional embedding subpackage
-│       └── examples/
+│       └── embed/                 embedding subpackage
 │
-├── interop/                       cross-SDK round-trip matrix
-│   ├── corpus/, matrix.yaml, runner-{node,python,go}.{ts,py,go}, compare.ts
+├── integrations/
+│   ├── langchain-cvfile/          LangChain document loader (PyPI)
+│   ├── llama-index-readers-cvfile/   LlamaIndex reader (PyPI)
+│   └── cvfile-haystack/           Haystack 2.x converter (PyPI)
 │
-├── docs/                          cvfile.org (Astro)
-│   └── src/pages/   index.mdx, spec.mdx, view.tsx, tutorial/hello-cv.mdx, ecosystem.mdx
+├── interop/                       cross-SDK round-trip matrix (3 producers × 3 consumers)
+│
+├── docs/                          cvfile.org (Astro): index, spec, view, tutorial, ecosystem
 │
 └── tools/
-    ├── verapdf-runner/            Docker wrapper for PDF/A-3u conformance
-    ├── release-binaries/          GoReleaser config
-    └── installer-payloads/        macOS UTI plist, Windows .reg, Linux .desktop + MIME XML
+    ├── verapdf-runner/            Docker wrapper for PDF/A-3u conformance gate
+    ├── release-binaries/          GoReleaser config + Homebrew, Scoop, WinGet manifests
+    ├── installer-payloads/        macOS UTI plist, Windows .reg, Linux .desktop + MIME XML
+    └── cv-detector/               cvfile-cv-detector reference sniffer (Python, Go, TypeScript)
 ```
 
 **Boundary rationale:**
 - `packages/` = everything published to npm; shares pnpm + Turbo cache.
 - `sdks/python` and `sdks/go` are siblings (their toolchains do not compose with Turbo) and have their own CI jobs.
-- `viewer-core` is split from `viewer-web` so the Tauri desktop app and the `<cv-embed>` web component share rendering logic. **Single biggest leverage point in the project.**
-- The CLI is a Go binary at `sdks/go/cmd/cv` so users get `brew install cvfile/tap/cv` with no Node/Python prerequisite. `packages/cli` is a tiny npm wrapper that downloads the matching binary on `postinstall` for `npx cv`.
+- `integrations/` is sibling to `packages/` and `sdks/` because each integration's release cadence and dependency footprint differs from the core SDKs and from one another.
+- The CLI is a Go binary at `sdks/go/cmd/cv` so users get `brew install cvfile/tap/cv` with no Node/Python prerequisite.
 - `spec/test-vectors/` is the source of truth every SDK test suite consumes — prevents drift.
+- `viewer-core` (planned) would extract the framework agnostic UI state out of `viewer-web` once the Tauri desktop app starts; today the web viewer carries that logic itself.
 
 ---
 

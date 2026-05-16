@@ -28,23 +28,47 @@ Anything short of this is `0.x` — useful, public, ship-able, but the standard 
 
 ---
 
-## Where we are today (Phase 0 complete)
+## Where we are today (status as of 2026-05-17)
 
-Already shipped in this monorepo:
+Phases 0 through 5 are substantially shipped. Phase 4 (desktop) and several Phase 5 items are gated on external actions.
 
-- `spec/cv-0.1.md` — full normative pre-stable draft.
-- `@cvfile/sdk` 0.1.0 — pack, extract (markdown / html / embeddings parsed and raw), inspect, validate, isCvFile, encode/decode CBOR embeddings. **13 tests passing.**
-- `@cvfile/viewer-web` 0.1.0 — Lit `<cv-embed>` component with PDF / Markdown / HTML tabs, lazy PDF.js worker, drag-drop demo. **Manually verified end-to-end.**
-- `@cvfile/server` 0.1.0 — vanilla Node http handler + Express, Fastify, Hono adapters. Content negotiation with `Link` header advertising alternates. **21 tests passing.**
-- Apache-2.0 license (code), CC-BY-4.0 (planned for spec).
-- Two end-to-end demos verified: `build-jane-doe.ts` (pack → extract → integrity verify) and `serve-and-curl.ts` (HTTP content negotiation flow).
-- macOS Quick Look opens `.cv` files visually; `file(1)` recognises them as PDF 1.7.
+Shipped end to end:
 
-**Total today: 34 tests, 3 packages, 9.4 KB sample `.cv` round-trips byte-identical and renders visually.**
+- **Spec** stable at `1.0` (`spec/cv-1.0.md`), CC-BY-4.0. veraPDF PASS for `cv-strict` output from JS and Python SDKs.
+- **Three reference SDKs** with byte identical cross language interop:
+  - `@cvfile/sdk` 0.1.0 (npm) — pack, extract, inspect, validate, embeddings
+  - `cvfile` 0.1.0 (PyPI) — full parity
+  - `github.com/cvfile/cv/sdks/go` 0.1.0
+- **Single `cv` Go CLI**: pack, extract, inspect, validate, search; GoReleaser cross-compiles to six targets; Homebrew, Scoop, WinGet manifests prepared (WinGet PR awaiting Windows code-signing cert).
+- **Real BGE-M3 embeddings** end to end via Hugging Face Inference (`@cvfile/embed`, `cvfile[embed]`, `cv-go/embed`).
+- **`cv search` CLI** produces semantic search results from embedded vectors.
+- **Three HTTP middleware implementations** with byte identical content negotiation (`@cvfile/server`, `cvfile.server` ASGI+WSGI, `cv-go/middleware` net/http+chi).
+- **`<cv-embed>` web component** with ARIA tabs, keyboard nav, dark/light theming, mobile layout; `cvfile.org/view` drag drop demo.
+- **Three RAG ecosystem integrations** live on PyPI: `langchain-cvfile`, `llama-index-readers-cvfile` (issue #21626 filed for official catalog inclusion), `cvfile-haystack`.
+- **`cvfile-cv-detector` reference sniffer** (Python, Go, TypeScript) — 200 line drop in for any PDF crawler that wants `.cv` awareness without taking on the SDKs. Live on PyPI (`cvfile-cv-detector`) and npm (`@cvfile/cv-detector`).
+- **IANA media-type registration** for `application/vnd.cv+pdf` submitted 2026-05-16 to media-types@iana.org from `contact@cvfile.org`.
+- **Astro docs site** at cvfile.org with 5 pages including the live viewer demo.
+
+**157 tests passing across 8 first party packages and 3 languages.**
+
+Awaiting third party reply:
+
+- IANA registration acknowledgement (2 to 6 weeks).
+- LangChain docs PR #3969.
+- LlamaIndex feature request #21626.
+
+Blocked on purchases:
+
+- Apple Developer Program ($99/yr) for macOS desktop notarization.
+- Windows code-signing certificate (~$200/yr) for WinGet submission and Windows desktop installer.
+
+Blocked on legal/operational setup:
+
+- Phase 6 cloud tier: legal entity, Stripe account, lawyer review of ToS/DPA, KMS-backed vendor key vault.
 
 ---
 
-## Phase 1 — Cross-language proof (weeks 1–4)
+## Phase 1 — Cross-language proof (weeks 1–4) — ✓ DONE
 
 **Goal**: prove the spec is implementable from a third tool, not just by accident of one library's quirks. Triple the language reach.
 
@@ -76,7 +100,7 @@ All three SDKs (JS, Python, Go) pass the cross-SDK interop matrix on every PR vi
 
 ---
 
-## Phase 2 — Quality, embeddings reality, viewer polish (weeks 5–8)
+## Phase 2 — Quality, embeddings reality, viewer polish (weeks 5–8) — ✓ DONE (technical); business actions partial
 
 **Goal**: harden everything, ship real embeddings (not placeholder vectors), polish the viewer, document.
 
@@ -109,7 +133,7 @@ Real BGE-M3 embeddings work end-to-end. Viewer demo is publicly accessible. Vali
 
 ---
 
-## Phase 3 — Distribution surface (weeks 9–11)
+## Phase 3 — Distribution surface (weeks 9–11) — ✓ DONE except Windows signing (gated on cert purchase)
 
 **Goal**: every developer in every ecosystem can install with one command. Reproducible builds. Versioned releases.
 
@@ -141,7 +165,7 @@ Anyone in the world can install the CLI in one line on any major OS. Releases ar
 
 ---
 
-## Phase 4 — Desktop + native UX (weeks 12–15)
+## Phase 4 — Desktop + native UX (weeks 12–15) — ✗ NOT STARTED (gated on Apple Dev ID + Windows cert)
 
 **Goal**: double-clicking a `.cv` opens a native app on a fresh laptop with zero terminal use.
 
@@ -172,34 +196,34 @@ Three OS install flows tested on three clean machines. `.cv` files double-click 
 
 ---
 
-## Phase 5 — Standards + outreach (weeks 16–20)
+## Phase 5 — Standards + outreach (weeks 16–20) — ⏳ IN PROGRESS (technical ✓; outreach pending)
 
 **Goal**: lock the spec, get the IANA registration in flight, seed adoption in the AI/ATS ecosystem.
 
 ### Technical actions
 
-| Step | Deliverable | Gate |
-| --- | --- | --- |
-| 5.1 | **Spec freeze at 1.0** (`spec/cv-1.0.md`) — final review pass, all referenced sections normative, RFC 2119 keywords audited | spec stable URL `cvfile.org/spec/1.0/` |
-| 5.2 | **veraPDF + interop matrix green for 1.0** for two consecutive weeks | release blocker satisfied |
-| 5.3 | **All six packages tagged 1.0.0** simultaneously via Changesets | published to npm, PyPI, Go, Homebrew, Scoop, WinGet, Flathub |
-| 5.4 | **LangChain document loader** (`langchain.document_loaders.CvFileLoader`) | PR submitted, accepted |
-| 5.5 | **LlamaIndex reader** (`llama_index.readers.cv.CvFileReader`) | PR submitted, accepted |
-| 5.6 | **Haystack converter** | PR submitted |
-| 5.7 | **`cvfile-cv-detector` reference sniffer** — 200-line library that detects `.cv` wrapper inside any `application/pdf` and unwraps `/AF` markdown | published as a tiny module any crawler vendor can adopt |
+| Step | Status | Deliverable | Gate |
+| --- | --- | --- | --- |
+| 5.1 | ✓ | **Spec freeze at 1.0** (`spec/cv-1.0.md`) | spec stable URL `cvfile.org/spec/1.0/` |
+| 5.2 | ✓ | **veraPDF + interop matrix green for 1.0** | release blocker satisfied |
+| 5.3 | ⏳ | **All packages tagged 0.1.0** (still pre-1.0; the 1.0 stamp waits on IANA + outreach) | npm + PyPI + Go ✓; Homebrew, Scoop, WinGet ⏳ (WinGet gated on Windows signing cert); Flathub ✗ (gated on desktop phase) |
+| 5.4 | ⏳ | **LangChain document loader** | `langchain-cvfile` live on PyPI; docs PR #3969 awaiting LangChain maintainer review |
+| 5.5 | ⏳ | **LlamaIndex reader** | `llama-index-readers-cvfile` live on PyPI; feature-request issue #21626 filed (their policy is no integration PRs) |
+| 5.6 | ✓ | **Haystack converter** | `cvfile-haystack` live on PyPI |
+| 5.7 | ✓ | **`cvfile-cv-detector` reference sniffer** — 200-line library that detects `.cv` wrapper inside any `application/pdf` and unwraps `/AF` markdown | Python, Go, TypeScript implementations shipped; PyPI + npm live |
 
 ### Business actions
 
-| Step | Deliverable | Gate |
-| --- | --- | --- |
-| 5.B1 | **IANA media-type registration** for `application/vnd.cv+pdf` filed under `cvfile.org` ownership via media-types@iana.org | submission acknowledged |
-| 5.B2 | **shared-mime-info MR** for `.cv` extension | MR opened on freedesktop.org GitLab |
-| 5.B3 | **Public docs site** at cvfile.org rebuilt as proper Astro site (rendered spec, tutorials, ecosystem page, blog, "Who's using it") | live |
-| 5.B4 | **Launch post on Hacker News** ("Show HN: .cv — one file, three audiences, machine-ready") | scheduled with embargo coordination |
-| 5.B5 | **Launch post on Product Hunt** | scheduled |
-| 5.B6 | **Outreach to ATS vendors** (Greenhouse, Lever, Workday, Ashby, Pinpoint): pitch the format, offer integration help | five outreach emails sent, two replies pursued |
-| 5.B7 | **Outreach to OpenAI, Anthropic, Google** developer relations: request `application/vnd.cv+pdf` special-casing in `file_search` / Files API / Vertex Search | three emails sent, follow-ups scheduled |
-| 5.B8 | **Submit "Who's using `.cv`" placeholder partners** — get at least three pilots for the launch post | three logos secured |
+| Step | Status | Deliverable | Gate |
+| --- | --- | --- | --- |
+| 5.B1 | ⏳ | **IANA media-type registration** for `application/vnd.cv+pdf` | Submitted 2026-05-16 from contact@cvfile.org. Reply expected 2 to 6 weeks. |
+| 5.B2 | ◯ | **shared-mime-info MR** for `.cv` extension | Best done after IANA approval lands. |
+| 5.B3 | ✓ | **Public docs site** at cvfile.org | Astro site live; 5 pages including viewer demo. |
+| 5.B4 | ◯ | **Launch post on Hacker News** | Pending. Best scheduled near IANA acknowledgement. |
+| 5.B5 | ◯ | **Launch post on Product Hunt** | Pending. |
+| 5.B6 | ◯ | **Outreach to ATS vendors** | Pending. |
+| 5.B7 | ◯ | **Outreach to OpenAI, Anthropic, Google** developer relations | Pending. |
+| 5.B8 | ◯ | **Three pilot logos for the launch post** | Pending. |
 
 ### Phase 5 exit gate
 
@@ -207,7 +231,7 @@ Three OS install flows tested on three clean machines. `.cv` files double-click 
 
 ---
 
-## Phase 6 — Cloud paid tier (weeks 21–28)
+## Phase 6 — Cloud paid tier (weeks 21–28) — ✗ NOT STARTED (gated on legal entity + Stripe + lawyer review)
 
 **Goal**: monetise without compromising the open standard. Hosted convenience for developers who'd rather pay than manage three vendor API keys + qpdf installs.
 
@@ -242,7 +266,7 @@ Real customers paying real money. Three months of stable usage, churn under 5%, 
 
 ---
 
-## Phase 7 — Growth + ecosystem (months 7–12)
+## Phase 7 — Growth + ecosystem (months 7–12) — ◯ FUTURE
 
 **Goal**: become the default machine-readable resume format. Drive adoption through partnerships, not advertising.
 
@@ -272,7 +296,7 @@ Real customers paying real money. Three months of stable usage, churn under 5%, 
 
 ---
 
-## Phase 8 — Long-term standards (months 13+)
+## Phase 8 — Long-term standards (months 13+) — ◯ FUTURE
 
 **Goal**: keep the format alive, evolve it without breaking. Build the moat.
 
