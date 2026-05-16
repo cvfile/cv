@@ -1,0 +1,32 @@
+name: publish cvfile-cv-detector (npm)
+
+on:
+  push:
+    tags: ["cvfile-cv-detector-ts/v*"]
+
+permissions:
+  contents: read
+  # Required for npm OIDC provenance attestations.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Install dependencies
+        working-directory: tools/cv-detector/typescript
+        run: pnpm install --frozen-lockfile --ignore-workspace
+      - name: Build
+        working-directory: tools/cv-detector/typescript
+        run: pnpm build
+      - name: Publish
+        working-directory: tools/cv-detector/typescript
+        run: pnpm publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
