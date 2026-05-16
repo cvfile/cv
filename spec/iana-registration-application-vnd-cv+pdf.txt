@@ -79,7 +79,7 @@ Additional information:
   Object identifier(s) or OID(s): none
 
 Person & email address to contact for further information:
-  cvfile.org maintainers <spec@cvfile.org>
+  cvfile.org maintainers <contact@cvfile.org>
 
 Intended usage:
   COMMON
