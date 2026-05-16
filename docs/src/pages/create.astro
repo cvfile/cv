@@ -81,6 +81,13 @@ const jsonLd = graph([
     <span id="status" style="color: var(--muted); font-size: 0.92rem;"></span>
   </div>
 
+  <p style="color: var(--muted); font-size: 0.9rem; margin-top: 2rem;">
+    Want to add BGE-M3 semantic embeddings? Install the CLI
+    (<a href="/install/"><code>brew install cvfile/tap/cv</code></a>) and run
+    <code>cv pack --embed-with bge-m3</code>. The model is ~285 MB so it
+    runs once locally on your machine, not on every visitor's browser.
+  </p>
+
   <style is:global>
     .cv-fieldset {
       border: 1px solid var(--border);
@@ -243,27 +250,11 @@ ${body}
         const title = firstHeading(md);
         const html = renderHtml(md, title, lang);
 
-        setStatus('Loading embedding model…');
-        const { embed, createTransformersBackend } = await import('@cvfile/embed');
-        // all-MiniLM-L6-v2: 384-dim, q8 quantised, runs locally in the
-        // browser. The .cv spec records model + revision so consumers can
-        // match it at query time.
-        const backend = createTransformersBackend({
-          model: 'Xenova/all-MiniLM-L6-v2',
-          modelRevision: 'main',
-          dimension: 384,
-          metric: 'cosine',
-          dtype: 'q8',
-        });
-        setStatus('Embedding your resume…');
-        const embeddings = await embed(md, { backend, chunking: 'section' });
-
         setStatus('Packing .cv…');
         const cvBytes = await pack({
           pdf: pdfBytes,
           markdown: md,
           html,
-          embeddings,
           metadata: {
             primaryLanguage: lang,
             primaryPayload: 'resume.md',
@@ -274,7 +265,7 @@ ${body}
 
         const name = (filenameInput.value.trim() || 'resume.cv').replace(/[^a-zA-Z0-9._-]/g, '_');
         downloadBytes(cvBytes, name.endsWith('.cv') ? name : `${name}.cv`);
-        setStatus(`Done — packed PDF + Markdown + HTML + ${embeddings.spaces[0]!.chunks.length} vectors into ${(cvBytes.length / 1024).toFixed(1)} KB.`);
+        setStatus(`Done — packed PDF + Markdown + HTML into ${(cvBytes.length / 1024).toFixed(1)} KB.`);
       } catch (e) {
         setStatus(`Failed: ${(e as Error).message}`);
       } finally {
