@@ -1,7 +1,22 @@
 ---
 import Page from '../layouts/Page.astro';
+import { graph, ORGANIZATION, WEBSITE, SOFTWARE_APPLICATION, breadcrumbs } from '../lib/structured-data';
+
+const jsonLd = graph([
+  ORGANIZATION,
+  WEBSITE,
+  SOFTWARE_APPLICATION,
+  breadcrumbs([
+    { name: 'cvfile.org', url: 'https://cvfile.org/' },
+    { name: 'Install', url: 'https://cvfile.org/install/' },
+  ]),
+]);
 ---
-<Page title="Install — cvfile.org">
+<Page
+  title="Install the .cv CLI and SDKs — cvfile.org"
+  description="Install the cv CLI on macOS, Linux, Windows; or pull the @cvfile/sdk (npm), cvfile (PyPI), or cv-go (Go) SDKs. Web component and server middleware also one command away."
+>
+  <script type="application/ld+json" slot="head" set:html={jsonLd} />
   <h1>Install</h1>
   <p>
     The <code>.cv</code> ecosystem ships in three languages plus a single binary CLI.

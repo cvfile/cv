@@ -1,17 +1,41 @@
 ---
 import Page from '../layouts/Page.astro';
+import { graph, ORGANIZATION, WEBSITE, breadcrumbs } from '../lib/structured-data';
+
+const jsonLd = graph([
+  ORGANIZATION,
+  WEBSITE,
+  breadcrumbs([
+    { name: 'cvfile.org', url: 'https://cvfile.org/' },
+    { name: 'Demo', url: 'https://cvfile.org/view/' },
+  ]),
+]);
 ---
-<Page title="Viewer demo — cvfile.org" description="Drop a .cv file on the page and explore its three representations live.">
+<Page
+  title="Live .cv viewer — cvfile.org"
+  description="Drop a .cv file or load the sample to see all three payloads (PDF, Markdown, HTML) and the XMP metadata side by side, rendered entirely in your browser."
+>
+  <script type="application/ld+json" slot="head" set:html={jsonLd} />
+
   <h1>Live <code>&lt;cv-embed&gt;</code> viewer</h1>
   <p>
-    Drop any <code>.cv</code> file on the dashed area below. The web component
-    parses the bundle in your browser and lets you flip between the PDF,
-    Markdown, and HTML representations.
+    Drop any <code>.cv</code> file below or load the sample. The web component
+    parses the bundle entirely in your browser and lets you flip between the
+    PDF, Markdown, and HTML representations.
   </p>
+
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 1.25rem 0 1.5rem;">
+    <button id="load-sample" type="button" style="background: var(--accent); color: #fff; padding: 0.55rem 1.1rem; border: 0; border-radius: 8px; font-weight: 600; cursor: pointer;">
+      Load sample .cv
+    </button>
+    <a href="/samples/jane-doe.cv" download="jane-doe.cv" style="border: 1px solid var(--border); padding: 0.55rem 1.1rem; border-radius: 8px; text-decoration: none; color: inherit;">
+      Download sample
+    </a>
+  </div>
 
   <div
     id="dropzone"
-    style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; margin: 1.5rem 0;"
+    style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; margin: 0 0 1.5rem;"
   >
     <strong>Drop a .cv file here</strong>
     <div style="color: var(--muted); margin-top: 0.5rem;">or click to choose</div>
@@ -25,6 +49,7 @@ import Page from '../layouts/Page.astro';
 
     const dz = document.getElementById('dropzone')!;
     const picker = document.getElementById('picker') as HTMLInputElement;
+    const loadSample = document.getElementById('load-sample') as HTMLButtonElement;
     const viewer = document.getElementById('viewer') as HTMLElement & {
       loadFromBytes(bytes: Uint8Array): Promise<void>;
     };
@@ -34,7 +59,7 @@ import Page from '../layouts/Page.astro';
       viewer.style.display = 'block';
     }
 
-    async function handle(file: File): Promise<void> {
+    async function handle(file: File | Blob): Promise<void> {
       const buf = new Uint8Array(await file.arrayBuffer());
       show();
       await viewer.loadFromBytes(buf);
@@ -57,6 +82,19 @@ import Page from '../layouts/Page.astro';
       dz.style.background = '';
       const file = e.dataTransfer?.files?.[0];
       if (file) void handle(file);
+    });
+
+    loadSample.addEventListener('click', async () => {
+      loadSample.disabled = true;
+      loadSample.textContent = 'Loading sample…';
+      try {
+        const res = await fetch('/samples/jane-doe.cv');
+        const blob = await res.blob();
+        await handle(blob);
+      } finally {
+        loadSample.disabled = false;
+        loadSample.textContent = 'Load sample .cv';
+      }
     });
   </script>
 </Page>

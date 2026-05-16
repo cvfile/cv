@@ -1,7 +1,21 @@
 ---
 import Page from '../layouts/Page.astro';
+import { graph, ORGANIZATION, WEBSITE, breadcrumbs } from '../lib/structured-data';
+
+const jsonLd = graph([
+  ORGANIZATION,
+  WEBSITE,
+  breadcrumbs([
+    { name: 'cvfile.org', url: 'https://cvfile.org/' },
+    { name: 'Ecosystem', url: 'https://cvfile.org/ecosystem/' },
+  ]),
+]);
 ---
-<Page title="Ecosystem — cvfile.org">
+<Page
+  title=".cv ecosystem: SDKs, CLI, viewer, middleware, integrations — cvfile.org"
+  description="Every package that ships in the cvfile/cv monorepo: three reference SDKs (JS, Python, Go), the cv CLI, <cv-embed> web component, HTTP middleware for 7 frameworks, BGE-M3 embedding generators, and RAG integrations for LangChain, LlamaIndex, Haystack."
+>
+  <script type="application/ld+json" slot="head" set:html={jsonLd} />
   <h1>Ecosystem</h1>
   <p>The packages that ship in this repo and how they fit together.</p>
 
@@ -37,8 +51,10 @@ import Page from '../layouts/Page.astro';
 
   <h2>AI tooling integrations</h2>
   <ul>
-    <li><strong><code>cvfile.integrations.langchain</code></strong> — <code>CvFileLoader</code> emits LangChain Documents, optionally one per embedding chunk.</li>
-    <li><strong><code>cvfile.integrations.llamaindex</code></strong> — <code>CvFileReader</code> emits LlamaIndex Documents with <code>.embedding</code> populated.</li>
+    <li><strong><code>langchain-cvfile</code></strong> (PyPI) — <code>CVFileLoader</code> emits LangChain Documents, optionally one per embedding chunk.</li>
+    <li><strong><code>llama-index-readers-cvfile</code></strong> (PyPI) — <code>CVFileReader</code> emits LlamaIndex Documents with <code>.embedding</code> populated.</li>
+    <li><strong><code>cvfile-haystack</code></strong> (PyPI) — Haystack 2.x <code>CVFileToDocument</code> converter component.</li>
+    <li><strong><code>cvfile-cv-detector</code></strong> (PyPI / npm / Go) — 200 line reference sniffer that detects <code>.cv</code> wrapping inside any <code>application/pdf</code> and unwraps the <code>/AF</code> markdown payload. Designed for crawler vendors who want <code>.cv</code> awareness without adopting an SDK.</li>
   </ul>
 
   <h2>Compatibility verified</h2>
