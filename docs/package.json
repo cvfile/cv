@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.2",
+    "@cvfile/embed": "^0.1.0",
     "@cvfile/sdk": "^0.1.0",
     "@cvfile/viewer-web": "workspace:*",
     "astro": "^5.0.0",
+    "marked": "^14.1.4",
     "pdf-lib": "^1.17.1"
   }
 }
