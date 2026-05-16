@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0b0d"/>
+      <stop offset="100%" stop-color="#1f1d3a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g transform="translate(80,80)">
+    <text x="0" y="0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="32" fill="#9ca3af" font-weight="500">cvfile.org</text>
+  </g>
+
+  <g transform="translate(80,200)">
+    <text x="0" y="0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="84" font-weight="700" fill="#f3f4f6">
+      <tspan x="0" dy="0">One file.</tspan>
+      <tspan x="0" dy="100">Three audiences.</tspan>
+      <tspan x="0" dy="100" fill="url(#accent)">Real semantic search.</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(80,540)">
+    <text x="0" y="0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="24" fill="#9ca3af">PDF + Markdown + HTML + BGE-M3 vectors, all inside one PDF/A-3u.</text>
+  </g>
+
+  <g transform="translate(1080,80)" opacity="0.85">
+    <rect x="-40" y="-40" width="80" height="100" rx="6" fill="none" stroke="#818cf8" stroke-width="3"/>
+    <text x="0" y="20" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="36" font-weight="700" fill="#818cf8" text-anchor="middle">.cv</text>
+  </g>
+</svg>

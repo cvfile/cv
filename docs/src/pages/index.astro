@@ -1,25 +1,118 @@
 ---
 import Page from '../layouts/Page.astro';
+import {
+  ORGANIZATION,
+  WEBSITE,
+  SOFTWARE_APPLICATION,
+  breadcrumbs,
+  faqPage,
+  graph,
+} from '../lib/structured-data';
+
+const FAQS = [
+  {
+    question: 'What is the .cv file format?',
+    answer:
+      '.cv is an open file format for resumes. It is a valid PDF/A-3u file that bundles a designed PDF, a clean Markdown copy, a self-contained HTML rendering, and optional pre-computed BGE-M3 embeddings inside one file. Any PDF reader opens it visually; ATS systems and AI agents read the embedded Markdown directly.',
+  },
+  {
+    question: 'How is .cv different from JSON Resume, FRESH, or Europass?',
+    answer:
+      'Those are pure data schemas (JSON or XML) that drop the visual artifact and require the consumer to render. .cv keeps the designer-controlled PDF intact and travels the JSON/Markdown/HTML alongside it as PDF Associated Files (ISO 32000-2 §14.13). A recruiter still opens a polished PDF; an ATS or LLM still reads clean text; both come from the same file.',
+  },
+  {
+    question: 'Do I need a special viewer to open a .cv file?',
+    answer:
+      'No. A .cv is a valid PDF. Preview, Adobe Reader, Chrome, every PDF reader shipped in the last fifteen years opens it normally and shows the visual layer. The additional payloads (Markdown, HTML, embeddings) are discoverable via standard PDF Associated Files mechanism.',
+  },
+  {
+    question: 'Why are pre-computed embeddings inside the file?',
+    answer:
+      'So that any third-party RAG pipeline indexing the file (LangChain, LlamaIndex, Haystack, custom vector DB) can skip the embedding API call entirely. Default model is BAAI BGE-M3 (MIT licensed, multilingual, 1024-dim, free). Producers may also ship vectors in proprietary spaces (OpenAI text-embedding-3-large, Voyage-3, Gemini-text-004) when they target a specific downstream stack.',
+  },
+  {
+    question: 'What MIME type does a .cv file use?',
+    answer:
+      'application/vnd.cv+pdf, registered (pending) with IANA per RFC 6838 vendor tree and RFC 8081 structured suffix +pdf. Until IANA approves, servers safely emit application/pdf alongside a Link header advertising the .cv alternates. A 200-line reference sniffer (cvfile-cv-detector, available in Python, Go, and TypeScript) detects .cv wrapping inside any application/pdf bytes.',
+  },
+  {
+    question: 'Is the format and tooling free?',
+    answer:
+      'Yes. The spec is CC-BY-4.0. The CLI, the three SDKs (JavaScript, Python, Go), the web component, the server middleware, and the RAG integrations (langchain-cvfile, llama-index-readers-cvfile, cvfile-haystack) are Apache-2.0. There is no vendor lock-in. A planned cvfile.org/cloud paid tier exists for hosted convenience but is non-essential.',
+  },
+  {
+    question: 'Can a job seeker create a .cv file?',
+    answer:
+      'Two paths. (1) Use the in-browser builder at cvfile.org/create — fill a form, download a .cv with PDF + Markdown payloads ready. (2) Install the CLI (brew install cvfile/tap/cv) and run cv pack with your existing PDF + Markdown.',
+  },
+  {
+    question: 'How can an ATS or LLM read the inside of a .cv file?',
+    answer:
+      'Several options. (a) Use one of the published reference SDKs (npm: @cvfile/sdk, PyPI: cvfile, Go: github.com/cvfile/cv/sdks/go). (b) Use one of the RAG integrations (langchain-cvfile, llama-index-readers-cvfile, cvfile-haystack). (c) Use the 200-line cvfile-cv-detector reference sniffer that depends only on the PDF parser the host already trusts. (d) Send an Accept: text/markdown header to a server running the @cvfile/server middleware; you receive the Markdown payload directly.',
+  },
+];
+
+const jsonLd = graph([
+  ORGANIZATION,
+  WEBSITE,
+  SOFTWARE_APPLICATION,
+  breadcrumbs([{ name: 'cvfile.org', url: 'https://cvfile.org/' }]),
+  faqPage(FAQS),
+]);
 ---
-<Page title="cvfile.org — the .cv open file format">
+<Page
+  title="cvfile.org — the .cv open file format"
+  description="One file packs a designed PDF, a clean Markdown copy, an HTML rendering, and pre-computed BGE-M3 embeddings inside a single PDF/A-3u. Apache-2.0 spec and SDKs in JavaScript, Python, and Go."
+>
+  <script type="application/ld+json" slot="head" set:html={jsonLd} />
+
   <section style="margin-bottom: 3rem">
     <h1 style="font-size: 2.4rem; line-height: 1.15; margin: 0 0 1rem">
       One file. Three audiences. Real semantic search.
     </h1>
     <p style="font-size: 1.15rem; color: var(--muted); max-width: 60ch">
-      <code>.cv</code> bundles a designed PDF, a clean Markdown copy, a self-contained
-      HTML rendering, and pre-computed BGE-M3 embeddings into a single PDF/A-3u file
-      that opens everywhere on day one.
+      <code>.cv</code> is the open file format for resumes. One file packs a
+      designed PDF, a clean Markdown copy, a self-contained HTML rendering, and
+      pre-computed BGE-M3 vectors inside a single PDF/A-3u that opens
+      everywhere on day one.
     </p>
     <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap">
-      <a href="/install/" style="background: var(--accent); color: #fff; padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; font-weight: 600">
+      <a href="/create/" style="background: var(--accent); color: #fff; padding: 0.65rem 1.3rem; border-radius: 8px; text-decoration: none; font-weight: 600">
+        Create your .cv in the browser
+      </a>
+      <a href="/install/" style="border: 1px solid var(--border); padding: 0.65rem 1.3rem; border-radius: 8px; text-decoration: none; color: inherit">
         Install the CLI
       </a>
-      <a href="/spec/" style="border: 1px solid var(--border); padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; color: inherit">
+      <a href="/spec/" style="border: 1px solid var(--border); padding: 0.65rem 1.3rem; border-radius: 8px; text-decoration: none; color: inherit">
         Read the spec
       </a>
-      <a href="/view/" style="border: 1px solid var(--border); padding: 0.6rem 1.2rem; border-radius: 8px; text-decoration: none; color: inherit">
-        Try the viewer
+    </div>
+  </section>
+
+  <section>
+    <h2>Pick the path that matches your role</h2>
+    <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 1rem;">
+      <a href="/create/" style="display: block; padding: 1.25rem; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: inherit;">
+        <strong>I'm writing my resume.</strong>
+        <p style="margin: 0.5rem 0 0; color: var(--muted); font-size: 0.95rem">
+          Fill a form. Download a <code>.cv</code> file. Upload it to Workday,
+          Greenhouse, Lever, LinkedIn, your site. One file, every audience.
+        </p>
+      </a>
+      <a href="/ecosystem/" style="display: block; padding: 1.25rem; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: inherit;">
+        <strong>I'm building a RAG / AI tool.</strong>
+        <p style="margin: 0.5rem 0 0; color: var(--muted); font-size: 0.95rem">
+          Use the LangChain, LlamaIndex, or Haystack loader. Or the 200-line
+          <code>cvfile-cv-detector</code> sniffer. Skip OCR, skip re-embedding.
+        </p>
+      </a>
+      <a href="/install/" style="display: block; padding: 1.25rem; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: inherit;">
+        <strong>I run an ATS or job board.</strong>
+        <p style="margin: 0.5rem 0 0; color: var(--muted); font-size: 0.95rem">
+          Use the server middleware (Express, Fastify, Hono, FastAPI, Django,
+          Go <code>net/http</code>). Content negotiation makes the wrapper
+          invisible to existing crawlers.
+        </p>
       </a>
     </div>
   </section>
@@ -27,17 +120,54 @@ import Page from '../layouts/Page.astro';
   <section>
     <h2>Why .cv exists</h2>
     <p>
-      Today a person sends three different artifacts to three different audiences: a
-      polished PDF to recruiters, a Markdown copy to ATS systems, a web bio for their
-      site. They drift out of sync within weeks. AI tools re-embed the same documents
-      over and over.
+      Today a person sends three different artifacts to three different
+      audiences: a polished PDF to recruiters, a Markdown copy to ATS systems,
+      a web bio for their site. They drift out of sync within weeks. AI tools
+      re-embed the same documents over and over.
     </p>
     <p>
-      <code>.cv</code> fixes all three: one file, one source of truth, opens in any PDF
-      reader on day one. Bots that ask for <code>text/markdown</code> get the markdown
-      back. RAG pipelines that recognize the format read pre-computed BGE-M3 vectors
-      directly instead of re-embedding.
+      <code>.cv</code> fixes all three: one file, one source of truth, opens in
+      any PDF reader on day one. Bots that ask for <code>text/markdown</code>
+      get the markdown back. RAG pipelines that recognize the format read
+      pre-computed BGE-M3 vectors directly instead of re-embedding.
     </p>
+  </section>
+
+  <section>
+    <h2>How is this different from JSON Resume or Europass?</h2>
+    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+      <thead>
+        <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+          <th style="padding: 0.5rem 0">Format</th>
+          <th>Visual PDF</th>
+          <th>Clean ATS text</th>
+          <th>Pre-computed vectors</th>
+          <th>Opens in any PDF reader</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem 0"><code>.cv</code></td>
+          <td>yes</td><td>yes</td><td>yes</td><td>yes</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem 0">JSON Resume / FRESH</td>
+          <td>no (data only)</td><td>yes</td><td>no</td><td>no</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem 0">Europass XML</td>
+          <td>no (data only)</td><td>yes</td><td>no</td><td>no</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border)">
+          <td style="padding: 0.5rem 0">HR-XML / HR Open</td>
+          <td>no (data only)</td><td>yes</td><td>no</td><td>no</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem 0">Plain PDF</td>
+          <td>yes</td><td>no (OCR)</td><td>no</td><td>yes</td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <section>
@@ -49,7 +179,8 @@ import Page from '../layouts/Page.astro';
       <li><code>&lt;cv-embed&gt;</code> web component (Lit, ~10 KB shell, lazy PDF.js worker).</li>
       <li>Server middleware for Express, Fastify, Hono, FastAPI, Flask, Django, Go <code>net/http</code>.</li>
       <li>Optional BGE-M3 embedding generation (<code>@cvfile/embed</code>, <code>cvfile[embed]</code>).</li>
-      <li>LangChain and LlamaIndex document loaders.</li>
+      <li>LangChain, LlamaIndex, and Haystack document loaders.</li>
+      <li>200-line reference sniffer (<code>cvfile-cv-detector</code>) for crawler vendors.</li>
     </ul>
   </section>
 
@@ -106,5 +237,15 @@ cv search  resume.cv "kubernetes"     # semantic search via BGE-M3`}</code></pre
       The bot never needs to know <code>.cv</code> exists. The format is producer-side
       convenience; consumer-side it is invisible.
     </p>
+  </section>
+
+  <section>
+    <h2>Frequently asked questions</h2>
+    {FAQS.map(({ question, answer }) => (
+      <details style="margin: 0.75rem 0; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px;">
+        <summary style="cursor: pointer; font-weight: 600;">{question}</summary>
+        <p style="margin: 0.75rem 0 0; color: var(--muted)">{answer}</p>
+      </details>
+    ))}
   </section>
 </Page>
