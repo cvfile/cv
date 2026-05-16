@@ -76,21 +76,6 @@ const jsonLd = graph([
     </div>
   </section>
 
-  <section class="cv-fieldset">
-    <h2 style="margin: 0 0 0.5rem;">4 · Embeddings <span style="font-size: 0.85rem; font-weight: 400; color: var(--muted)">optional</span></h2>
-    <p style="color: var(--muted); margin: 0 0 0.75rem;">
-      Add pre-computed semantic vectors so AI tools that recognise
-      <code>.cv</code> can search your resume without re-embedding. The model
-      downloads once into your browser cache (about 30 MB) and then runs
-      locally on your machine. Your resume <strong>never leaves the
-      browser</strong>.
-    </p>
-    <label class="cv-checkbox">
-      <input id="emb-toggle" type="checkbox" />
-      Add embeddings (downloads ~30 MB AI model once, fully local)
-    </label>
-  </section>
-
   <div class="cv-actions">
     <button type="button" id="build" class="primary-btn">Build .cv</button>
     <span id="status" style="color: var(--muted); font-size: 0.92rem;"></span>
@@ -160,8 +145,6 @@ const jsonLd = graph([
 
     const langInput = document.getElementById('lang') as HTMLInputElement;
     const filenameInput = document.getElementById('filename') as HTMLInputElement;
-    const embToggle = document.getElementById('emb-toggle') as HTMLInputElement;
-
     const status = document.getElementById('status')!;
     const buildBtn = document.getElementById('build') as HTMLButtonElement;
 
@@ -260,30 +243,27 @@ ${body}
         const title = firstHeading(md);
         const html = renderHtml(md, title, lang);
 
-        let embeddings;
-        if (embToggle.checked) {
-          setStatus('Loading embedding model (one-time ~30 MB download)…');
-          const { embed, createTransformersBackend } = await import('@cvfile/embed');
-          // all-MiniLM-L6-v2: 384-dim, ~7 MB quantised, English-dominant but
-          // works well enough for resume semantic search. The spec records
-          // the model id so consumers can match it at query time.
-          const backend = createTransformersBackend({
-            model: 'Xenova/all-MiniLM-L6-v2',
-            modelRevision: 'main',
-            dimension: 384,
-            metric: 'cosine',
-            dtype: 'q8',
-          });
-          setStatus('Embedding your resume locally…');
-          embeddings = await embed(md, { backend, chunking: 'section' });
-        }
+        setStatus('Loading embedding model…');
+        const { embed, createTransformersBackend } = await import('@cvfile/embed');
+        // all-MiniLM-L6-v2: 384-dim, q8 quantised, runs locally in the
+        // browser. The .cv spec records model + revision so consumers can
+        // match it at query time.
+        const backend = createTransformersBackend({
+          model: 'Xenova/all-MiniLM-L6-v2',
+          modelRevision: 'main',
+          dimension: 384,
+          metric: 'cosine',
+          dtype: 'q8',
+        });
+        setStatus('Embedding your resume…');
+        const embeddings = await embed(md, { backend, chunking: 'section' });
 
         setStatus('Packing .cv…');
         const cvBytes = await pack({
           pdf: pdfBytes,
           markdown: md,
           html,
-          ...(embeddings ? { embeddings } : {}),
+          embeddings,
           metadata: {
             primaryLanguage: lang,
             primaryPayload: 'resume.md',
@@ -294,9 +274,7 @@ ${body}
 
         const name = (filenameInput.value.trim() || 'resume.cv').replace(/[^a-zA-Z0-9._-]/g, '_');
         downloadBytes(cvBytes, name.endsWith('.cv') ? name : `${name}.cv`);
-        const parts = ['PDF', 'Markdown', 'HTML'];
-        if (embeddings) parts.push(`${embeddings.spaces[0]!.chunks.length} BGE-M3 vectors`);
-        setStatus(`Done — packed ${parts.join(' + ')} into ${(cvBytes.length / 1024).toFixed(1)} KB.`);
+        setStatus(`Done — packed PDF + Markdown + HTML + ${embeddings.spaces[0]!.chunks.length} vectors into ${(cvBytes.length / 1024).toFixed(1)} KB.`);
       } catch (e) {
         setStatus(`Failed: ${(e as Error).message}`);
       } finally {
