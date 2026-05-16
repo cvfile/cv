@@ -13,59 +13,88 @@ const jsonLd = graph([
 ---
 <Page
   title="Create your .cv file in the browser — cvfile.org"
-  description="Fill a short form and download a spec-conformant .cv file with a designed PDF, Markdown copy, and HTML rendering bundled. No account, no upload, runs entirely in your browser."
+  description="Drop your existing PDF resume and Markdown copy. Get a spec-conformant .cv with PDF + Markdown + HTML + optional BGE-M3 embeddings. Runs entirely in your browser. No upload, no account."
 >
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
 
-  <h1>Create your .cv in the browser</h1>
-  <p style="color: var(--muted)">
-    Fill the form. Nothing leaves your browser. Click <strong>Download .cv</strong>
-    to get a spec-conformant file you can upload to Workday, Greenhouse,
-    Lever, LinkedIn, your site, or email to a recruiter.
+  <h1>Make your .cv</h1>
+  <p style="color: var(--muted); max-width: 65ch">
+    Drop your <strong>PDF resume</strong> and your resume in <strong>Markdown</strong>.
+    We pack them into one <code>.cv</code> file along with a clean HTML
+    rendering and, if you want, semantic embeddings for AI search. Nothing
+    leaves your browser. No account, no upload.
   </p>
 
-  <form id="cv-form" autocomplete="on">
-    <fieldset class="cv-fieldset">
-      <legend>Identity</legend>
-      <label>Full name <input name="name" required placeholder="Jane Doe" /></label>
-      <label>Headline <input name="headline" placeholder="Senior Software Engineer" /></label>
-      <label>Email <input name="email" type="email" placeholder="jane@example.com" /></label>
-      <label>Location <input name="location" placeholder="Lyon, France" /></label>
-      <label>Website <input name="website" placeholder="https://janedoe.dev" /></label>
-      <label>Primary language (BCP-47) <input name="lang" value="en" required /></label>
-    </fieldset>
-
-    <fieldset class="cv-fieldset">
-      <legend>Summary</legend>
-      <label><textarea name="summary" rows="3" placeholder="One paragraph about you and what you're looking for."></textarea></label>
-    </fieldset>
-
-    <fieldset class="cv-fieldset">
-      <legend>Experience <button type="button" id="add-exp" class="add-btn">+ Add role</button></legend>
-      <div id="experience-list"></div>
-    </fieldset>
-
-    <fieldset class="cv-fieldset">
-      <legend>Education <button type="button" id="add-edu" class="add-btn">+ Add education</button></legend>
-      <div id="education-list"></div>
-    </fieldset>
-
-    <fieldset class="cv-fieldset">
-      <legend>Skills</legend>
-      <label>Comma-separated <input name="skills" placeholder="Python, Kubernetes, Distributed systems, French (native), English (fluent)" /></label>
-    </fieldset>
-
-    <div class="cv-actions">
-      <button type="button" id="download" class="primary-btn">Download .cv</button>
-      <button type="button" id="preview" class="secondary-btn">Preview Markdown</button>
-      <span id="status" style="color: var(--muted); font-size: 0.9rem;"></span>
-    </div>
-  </form>
-
-  <details id="preview-wrap" style="margin-top: 1.5rem; display: none;">
-    <summary style="cursor: pointer; font-weight: 600;">Generated Markdown</summary>
-    <pre id="preview-md" style="margin-top: 0.75rem; white-space: pre-wrap;"></pre>
+  <details style="margin: 1.25rem 0; padding: 0.85rem 1.1rem; border: 1px solid var(--border); border-radius: 8px;">
+    <summary style="cursor: pointer; font-weight: 600;">Don't have a Markdown copy yet? Ask ChatGPT or Claude.</summary>
+    <p style="margin-top: 0.75rem;">
+      Upload your PDF to ChatGPT or Claude, then paste this prompt:
+    </p>
+    <pre style="white-space: pre-wrap; font-size: 0.85rem;"><code>Convert this resume to clean Markdown that an ATS or LLM can parse perfectly. Keep every section, every role, every date, every bullet. Use # for the name, ## for section headers (Summary, Experience, Education, Skills, etc.), ### for individual roles or schools. Italicise dates with *. No tables. No emojis. No commentary. Output only the Markdown, nothing else.</code></pre>
+    <p style="color: var(--muted); font-size: 0.92rem;">
+      Save the output as <code>resume.md</code> or paste it into the box
+      below.
+    </p>
   </details>
+
+  <section class="cv-fieldset">
+    <h2 style="margin: 0 0 0.5rem;">1 · PDF</h2>
+    <div id="pdf-drop" class="dropzone">
+      <strong id="pdf-label">Drop your PDF here</strong>
+      <div style="color: var(--muted); margin-top: 0.4rem;">or click to choose</div>
+      <input id="pdf-picker" type="file" accept="application/pdf,.pdf" hidden />
+    </div>
+  </section>
+
+  <section class="cv-fieldset">
+    <h2 style="margin: 0 0 0.5rem;">2 · Markdown</h2>
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="paste">Paste</button>
+      <button type="button" class="tab" data-tab="drop">Drop a .md file</button>
+    </div>
+    <div id="md-paste" class="tab-panel">
+      <textarea id="md-text" rows="10" placeholder="# Jane Doe&#10;&#10;## Experience&#10;&#10;### Senior Engineer · Acme Inc.&#10;*Jan 2023 — present*&#10;&#10;Led the platform team..."></textarea>
+    </div>
+    <div id="md-drop-panel" class="tab-panel" hidden>
+      <div id="md-drop" class="dropzone">
+        <strong id="md-label">Drop your .md here</strong>
+        <div style="color: var(--muted); margin-top: 0.4rem;">or click to choose</div>
+        <input id="md-picker" type="file" accept=".md,text/markdown,text/plain" hidden />
+      </div>
+    </div>
+  </section>
+
+  <section class="cv-fieldset">
+    <h2 style="margin: 0 0 0.5rem;">3 · Metadata</h2>
+    <div class="row">
+      <label>Primary language (BCP-47)
+        <input id="lang" value="en" />
+      </label>
+      <label>Output filename
+        <input id="filename" value="resume.cv" />
+      </label>
+    </div>
+  </section>
+
+  <section class="cv-fieldset">
+    <h2 style="margin: 0 0 0.5rem;">4 · Embeddings <span style="font-size: 0.85rem; font-weight: 400; color: var(--muted)">optional</span></h2>
+    <p style="color: var(--muted); margin: 0 0 0.75rem;">
+      Add pre-computed semantic vectors so AI tools that recognise
+      <code>.cv</code> can search your resume without re-embedding. The model
+      downloads once into your browser cache (about 30 MB) and then runs
+      locally on your machine. Your resume <strong>never leaves the
+      browser</strong>.
+    </p>
+    <label class="cv-checkbox">
+      <input id="emb-toggle" type="checkbox" />
+      Add embeddings (downloads ~30 MB AI model once, fully local)
+    </label>
+  </section>
+
+  <div class="cv-actions">
+    <button type="button" id="build" class="primary-btn">Build .cv</button>
+    <span id="status" style="color: var(--muted); font-size: 0.92rem;"></span>
+  </div>
 
   <style is:global>
     .cv-fieldset {
@@ -74,275 +103,136 @@ const jsonLd = graph([
       padding: 1rem 1.25rem 1.25rem;
       margin: 1.25rem 0;
     }
-    .cv-fieldset legend {
-      padding: 0 0.5rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    .cv-fieldset h2 { font-size: 1.05rem; font-weight: 600; }
     .cv-fieldset label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      margin-top: 0.75rem;
-      font-size: 0.92rem;
-      color: var(--muted);
+      display: flex; flex-direction: column; gap: 0.25rem;
+      margin-top: 0.5rem; font-size: 0.92rem; color: var(--muted);
+    }
+    .cv-fieldset label.cv-checkbox {
+      flex-direction: row; align-items: center; gap: 0.5rem;
+      color: var(--fg); font-size: 0.95rem;
     }
     .cv-fieldset input,
     .cv-fieldset textarea {
-      padding: 0.55rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg);
-      color: var(--fg);
-      font: inherit;
-      width: 100%;
+      padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg); color: var(--fg); font: inherit; width: 100%;
     }
-    .cv-fieldset input:focus,
-    .cv-fieldset textarea:focus {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
+    .cv-fieldset textarea { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88rem; }
+    .cv-fieldset input:focus, .cv-fieldset textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+    .dropzone {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 1.75rem;
+      text-align: center; cursor: pointer; transition: background 120ms;
     }
-    .add-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.25rem 0.6rem;
-      font-size: 0.85rem;
-      cursor: pointer;
-      color: var(--fg);
+    .dropzone.over { background: rgba(127,127,127,0.08); }
+    .dropzone.loaded { border-style: solid; border-color: var(--accent); }
+    .tabs { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+    .tab {
+      background: transparent; border: 0; border-bottom: 2px solid transparent;
+      padding: 0.55rem 0.85rem; cursor: pointer; color: var(--muted);
+      font: inherit; font-size: 0.92rem;
     }
-    .remove-btn {
-      background: transparent;
-      border: 0;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.85rem;
-      padding: 0.25rem 0.5rem;
-    }
-    .remove-btn:hover { color: #ef4444; }
-    .entry {
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      margin-top: 1rem;
-    }
-    .entry-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.25rem;
-    }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-    @media (max-width: 600px) {
-      .row { grid-template-columns: 1fr; }
-    }
-    .cv-actions {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-top: 1.5rem;
-    }
+    .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+    .tab-panel[hidden] { display: none; }
+    .cv-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-top: 1.5rem; }
     .primary-btn {
-      background: var(--accent);
-      color: #fff;
-      border: 0;
-      padding: 0.65rem 1.3rem;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      font: inherit;
+      background: var(--accent); color: #fff; border: 0;
+      padding: 0.7rem 1.4rem; border-radius: 8px; font-weight: 600;
+      cursor: pointer; font: inherit;
     }
     .primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .secondary-btn {
-      background: transparent;
-      color: inherit;
-      border: 1px solid var(--border);
-      padding: 0.65rem 1.3rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font: inherit;
-    }
   </style>
 
   <script>
     import { pack } from '@cvfile/sdk';
-    import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+    import { marked } from 'marked';
 
-    interface Experience {
-      role: string;
-      company: string;
-      dates: string;
-      description: string;
-    }
-    interface Education {
-      degree: string;
-      school: string;
-      dates: string;
-    }
+    const pdfDrop = document.getElementById('pdf-drop')!;
+    const pdfPicker = document.getElementById('pdf-picker') as HTMLInputElement;
+    const pdfLabel = document.getElementById('pdf-label')!;
+    let pdfBytes: Uint8Array | null = null;
 
-    const expList = document.getElementById('experience-list')!;
-    const eduList = document.getElementById('education-list')!;
+    const mdDrop = document.getElementById('md-drop')!;
+    const mdPicker = document.getElementById('md-picker') as HTMLInputElement;
+    const mdLabel = document.getElementById('md-label')!;
+    const mdText = document.getElementById('md-text') as HTMLTextAreaElement;
 
-    function expEntry(): HTMLElement {
-      const div = document.createElement('div');
-      div.className = 'entry';
-      div.innerHTML = `
-        <div class="entry-header">
-          <strong style="font-size: 0.92rem; color: var(--muted)">Role</strong>
-          <button type="button" class="remove-btn">remove</button>
-        </div>
-        <div class="row">
-          <label>Title <input data-field="role" placeholder="Senior Software Engineer" /></label>
-          <label>Company <input data-field="company" placeholder="Acme Inc." /></label>
-        </div>
-        <label>Dates <input data-field="dates" placeholder="Jan 2023 — present" /></label>
-        <label>What you did <textarea data-field="description" rows="3" placeholder="Two or three bullet-style lines."></textarea></label>
-      `;
-      div.querySelector('.remove-btn')!.addEventListener('click', () => div.remove());
-      return div;
+    const langInput = document.getElementById('lang') as HTMLInputElement;
+    const filenameInput = document.getElementById('filename') as HTMLInputElement;
+    const embToggle = document.getElementById('emb-toggle') as HTMLInputElement;
+
+    const status = document.getElementById('status')!;
+    const buildBtn = document.getElementById('build') as HTMLButtonElement;
+
+    function bindDrop(zone: HTMLElement, picker: HTMLInputElement, onFile: (f: File) => void): void {
+      zone.addEventListener('click', () => picker.click());
+      picker.addEventListener('change', () => { const f = picker.files?.[0]; if (f) onFile(f); });
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('over');
+        const f = e.dataTransfer?.files?.[0];
+        if (f) onFile(f);
+      });
     }
 
-    function eduEntry(): HTMLElement {
-      const div = document.createElement('div');
-      div.className = 'entry';
-      div.innerHTML = `
-        <div class="entry-header">
-          <strong style="font-size: 0.92rem; color: var(--muted)">Education</strong>
-          <button type="button" class="remove-btn">remove</button>
-        </div>
-        <div class="row">
-          <label>Degree / programme <input data-field="degree" placeholder="MSc Computer Science" /></label>
-          <label>School <input data-field="school" placeholder="ENS Lyon" /></label>
-        </div>
-        <label>Dates <input data-field="dates" placeholder="2018 — 2021" /></label>
-      `;
-      div.querySelector('.remove-btn')!.addEventListener('click', () => div.remove());
-      return div;
+    bindDrop(pdfDrop, pdfPicker, async (file) => {
+      pdfBytes = new Uint8Array(await file.arrayBuffer());
+      pdfLabel.textContent = `${file.name} (${(pdfBytes.length / 1024).toFixed(1)} KB)`;
+      pdfDrop.classList.add('loaded');
+    });
+
+    bindDrop(mdDrop, mdPicker, async (file) => {
+      const text = await file.text();
+      mdText.value = text;
+      mdLabel.textContent = `${file.name} (${text.length} chars)`;
+      mdDrop.classList.add('loaded');
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('.tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        const which = tab.dataset.tab;
+        (document.getElementById('md-paste') as HTMLElement).hidden = which !== 'paste';
+        (document.getElementById('md-drop-panel') as HTMLElement).hidden = which !== 'drop';
+      });
+    });
+
+    function renderHtml(md: string, title: string, lang: string): string {
+      const body = marked.parse(md, { async: false }) as string;
+      const safeTitle = title.replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!
+      );
+      return `<!doctype html>
+<html lang="${lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${safeTitle}</title>
+<style>
+:root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.65; }
+body { max-width: 720px; margin: 2.5rem auto; padding: 0 1.5rem; color: #111; background: #fff; }
+@media (prefers-color-scheme: dark) { body { color: #f3f4f6; background: #0b0b0d; } }
+h1 { font-size: 2.2rem; margin: 0 0 0.5rem; }
+h2 { margin-top: 2rem; padding-bottom: 0.25rem; border-bottom: 1px solid currentColor; }
+h3 { margin-top: 1.25rem; }
+em { color: inherit; opacity: 0.75; }
+ul { padding-left: 1.25rem; }
+</style>
+</head>
+<body>
+${body}
+</body>
+</html>
+`;
     }
 
-    document.getElementById('add-exp')!.addEventListener('click', () => expList.appendChild(expEntry()));
-    document.getElementById('add-edu')!.addEventListener('click', () => eduList.appendChild(eduEntry()));
-
-    expList.appendChild(expEntry());
-    eduList.appendChild(eduEntry());
-
-    function getString(name: string): string {
-      const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
-      return el ? el.value.trim() : '';
-    }
-
-    function collect(listEl: HTMLElement, fields: string[]): Array<Record<string, string>> {
-      const out: Array<Record<string, string>> = [];
-      for (const entry of Array.from(listEl.children)) {
-        const obj: Record<string, string> = {};
-        for (const f of fields) {
-          const el = entry.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[data-field="${f}"]`);
-          obj[f] = el ? el.value.trim() : '';
-        }
-        if (Object.values(obj).some((v) => v)) out.push(obj);
-      }
-      return out;
-    }
-
-    function buildMarkdown(): { md: string; name: string; lang: string } {
-      const name = getString('name') || 'Untitled';
-      const headline = getString('headline');
-      const email = getString('email');
-      const location = getString('location');
-      const website = getString('website');
-      const lang = getString('lang') || 'en';
-      const summary = getString('summary');
-      const skills = getString('skills');
-      const experience = collect(expList, ['role', 'company', 'dates', 'description']) as Experience[];
-      const education = collect(eduList, ['degree', 'school', 'dates']) as Education[];
-
-      const lines: string[] = [`# ${name}`];
-      if (headline) lines.push('', `*${headline}*`);
-      const contact = [email, location, website].filter(Boolean).join(' · ');
-      if (contact) lines.push('', contact);
-      if (summary) lines.push('', '## Summary', '', summary);
-      if (experience.length) {
-        lines.push('', '## Experience');
-        for (const e of experience) {
-          const heading = [e.role, e.company].filter(Boolean).join(' · ');
-          if (heading) lines.push('', `### ${heading}`);
-          if (e.dates) lines.push(`*${e.dates}*`);
-          if (e.description) lines.push('', e.description);
-        }
-      }
-      if (education.length) {
-        lines.push('', '## Education');
-        for (const e of education) {
-          const heading = [e.degree, e.school].filter(Boolean).join(' · ');
-          if (heading) lines.push('', `### ${heading}`);
-          if (e.dates) lines.push(`*${e.dates}*`);
-        }
-      }
-      if (skills) lines.push('', '## Skills', '', skills);
-      return { md: lines.join('\n') + '\n', name, lang };
-    }
-
-    async function renderPDF(md: string): Promise<Uint8Array> {
-      const doc = await PDFDocument.create();
-      const font = await doc.embedFont(StandardFonts.Helvetica);
-      const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-      const italic = await doc.embedFont(StandardFonts.HelveticaOblique);
-
-      const margin = 56;
-      const pageWidth = 595.28;
-      const pageHeight = 841.89;
-      const maxWidth = pageWidth - margin * 2;
-      let page = doc.addPage([pageWidth, pageHeight]);
-      let y = pageHeight - margin;
-
-      const wrap = (text: string, size: number, f = font): string[] => {
-        const words = text.split(/\s+/);
-        const lines: string[] = [];
-        let cur = '';
-        for (const w of words) {
-          const tryLine = cur ? `${cur} ${w}` : w;
-          if (f.widthOfTextAtSize(tryLine, size) > maxWidth && cur) {
-            lines.push(cur);
-            cur = w;
-          } else {
-            cur = tryLine;
-          }
-        }
-        if (cur) lines.push(cur);
-        return lines;
-      };
-
-      const draw = (text: string, size: number, f = font, gap = 4): void => {
-        for (const line of wrap(text, size, f)) {
-          if (y - size < margin) {
-            page = doc.addPage([pageWidth, pageHeight]);
-            y = pageHeight - margin;
-          }
-          page.drawText(line, { x: margin, y: y - size, size, font: f, color: rgb(0.07, 0.07, 0.08) });
-          y -= size + gap;
-        }
-      };
-
-      const spacer = (h: number): void => { y -= h; };
-
-      for (const raw of md.split('\n')) {
-        const line = raw.trimEnd();
-        if (!line) { spacer(6); continue; }
-        if (line.startsWith('# ')) { draw(line.slice(2), 26, bold, 6); spacer(4); }
-        else if (line.startsWith('## ')) { spacer(8); draw(line.slice(3), 16, bold, 4); spacer(2); }
-        else if (line.startsWith('### ')) { spacer(4); draw(line.slice(4), 12, bold, 3); }
-        else if (line.startsWith('*') && line.endsWith('*')) { draw(line.slice(1, -1), 11, italic, 3); }
-        else { draw(line, 11, font, 3); }
-      }
-
-      return doc.save();
+    function firstHeading(md: string): string {
+      const m = md.match(/^#\s+(.+)$/m);
+      return m ? m[1]!.trim() : 'Resume';
     }
 
     function downloadBytes(bytes: Uint8Array, filename: string): void {
@@ -357,37 +247,43 @@ const jsonLd = graph([
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    function slug(name: string): string {
-      return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'resume';
-    }
+    function setStatus(msg: string): void { status.textContent = msg; }
 
-    const status = document.getElementById('status')!;
-    const previewBtn = document.getElementById('preview') as HTMLButtonElement;
-    const previewWrap = document.getElementById('preview-wrap') as HTMLDetailsElement;
-    const previewMd = document.getElementById('preview-md')!;
-    const downloadBtn = document.getElementById('download') as HTMLButtonElement;
+    buildBtn.addEventListener('click', async () => {
+      if (!pdfBytes) { setStatus('Drop a PDF first.'); return; }
+      const md = mdText.value.trim();
+      if (!md) { setStatus('Paste or drop your Markdown first.'); return; }
 
-    previewBtn.addEventListener('click', () => {
-      const { md } = buildMarkdown();
-      previewMd.textContent = md;
-      previewWrap.open = true;
-      previewWrap.style.display = 'block';
-    });
-
-    downloadBtn.addEventListener('click', async () => {
-      if (!getString('name')) {
-        status.textContent = 'Add at least a name first.';
-        return;
-      }
-      downloadBtn.disabled = true;
-      status.textContent = 'Building PDF…';
+      buildBtn.disabled = true;
       try {
-        const { md, name, lang } = buildMarkdown();
-        const pdfBytes = await renderPDF(md);
-        status.textContent = 'Packing .cv…';
+        const lang = (langInput.value.trim() || 'en');
+        const title = firstHeading(md);
+        const html = renderHtml(md, title, lang);
+
+        let embeddings;
+        if (embToggle.checked) {
+          setStatus('Loading embedding model (one-time ~30 MB download)…');
+          const { embed, createTransformersBackend } = await import('@cvfile/embed');
+          // all-MiniLM-L6-v2: 384-dim, ~7 MB quantised, English-dominant but
+          // works well enough for resume semantic search. The spec records
+          // the model id so consumers can match it at query time.
+          const backend = createTransformersBackend({
+            model: 'Xenova/all-MiniLM-L6-v2',
+            modelRevision: 'main',
+            dimension: 384,
+            metric: 'cosine',
+            dtype: 'q8',
+          });
+          setStatus('Embedding your resume locally…');
+          embeddings = await embed(md, { backend, chunking: 'section' });
+        }
+
+        setStatus('Packing .cv…');
         const cvBytes = await pack({
           pdf: pdfBytes,
           markdown: md,
+          html,
+          ...(embeddings ? { embeddings } : {}),
           metadata: {
             primaryLanguage: lang,
             primaryPayload: 'resume.md',
@@ -395,12 +291,16 @@ const jsonLd = graph([
             integrity: 'sha-256',
           },
         });
-        downloadBytes(cvBytes, `${slug(name)}.cv`);
-        status.textContent = 'Downloaded.';
+
+        const name = (filenameInput.value.trim() || 'resume.cv').replace(/[^a-zA-Z0-9._-]/g, '_');
+        downloadBytes(cvBytes, name.endsWith('.cv') ? name : `${name}.cv`);
+        const parts = ['PDF', 'Markdown', 'HTML'];
+        if (embeddings) parts.push(`${embeddings.spaces[0]!.chunks.length} BGE-M3 vectors`);
+        setStatus(`Done — packed ${parts.join(' + ')} into ${(cvBytes.length / 1024).toFixed(1)} KB.`);
       } catch (e) {
-        status.textContent = `Failed: ${(e as Error).message}`;
+        setStatus(`Failed: ${(e as Error).message}`);
       } finally {
-        downloadBtn.disabled = false;
+        buildBtn.disabled = false;
       }
     });
   </script>
