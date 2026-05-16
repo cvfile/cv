@@ -19,11 +19,11 @@ You finish your resume. You export a PDF for recruiters, paste a plain text copy
 
 **You are a job seeker.** You spent an evening polishing one resume in Figma. You export `resume.cv`. You upload that single file to Workday, Greenhouse, Lever, your LinkedIn profile, your portfolio site, and you email it to a recruiter. The recruiter opens the PDF inside the file and sees the design you intended. Workday's parser reads the Markdown copy inside the same file and fills every form field correctly, with the right accents and bullet characters intact. Two months later you update the file once. Everywhere it is hosted is current.
 
-**You are a recruiter using an AI copilot.** Your sourcing tool ingests 8,000 candidate resumes. With ordinary PDFs the tool OCRs every layout, mangles tables, misses headers, and burns a fortune on embedding API calls. With `.cv` the tool reads the embedded Markdown and the precomputed BGE M3 vectors directly. Search for "founding engineer python kubernetes Lyon" returns the right candidates in milliseconds. Latency drops. Cost drops. Quality goes up.
+**You are a recruiter using an AI copilot.** Your sourcing tool ingests 8,000 candidate resumes. With ordinary PDFs the tool OCRs every layout, mangles tables, misses headers, and burns a fortune on embedding API calls. With `.cv` the tool reads the embedded Markdown and the precomputed BGE-M3 vectors directly. Search for "founding engineer python kubernetes Lyon" returns the right candidates in milliseconds. Latency drops. Cost drops. Quality goes up.
 
-**You run a careers page.** You drop one `<cv-embed src="/team/jane.cv">` tag into your team page. The component renders the PDF for human visitors, exposes a clean ATS readable text for search engines (real text, no OCR fallback), and surfaces a "Download as PDF" button. One file. One source of truth. Zero JavaScript build pipeline to maintain.
+**You run a careers page.** You drop one `<cv-embed src="/team/jane.cv">` tag into your team page. The component renders the PDF for human visitors, exposes clean text that search engines and ATS crawlers can index (real text, no OCR fallback), and surfaces a "Download as PDF" button. One file. One source of truth. Zero JavaScript build pipeline to maintain.
 
-**You publish a freelance bio.** You host `bio.cv` at a stable URL. When a browser visits the URL the server returns the visual PDF. When Anthropic's `ClaudeBot` or OpenAI's `GPTBot` visits with `Accept: text/markdown`, the same URL serves the Markdown copy, perfectly formatted. The AI agents quoting you on the open web start quoting accurate text instead of an OCR garbled paragraph.
+**You publish a freelance bio.** You host `bio.cv` at a stable URL. When a browser visits the URL the server returns the visual PDF. When Anthropic's `ClaudeBot` or OpenAI's `GPTBot` visits with `Accept: text/markdown`, the same URL serves the Markdown copy, perfectly formatted. The AI agents quoting you on the open web start quoting accurate text instead of a paragraph mangled by OCR.
 
 **You write your CV in two languages.** Your résumé exists in French and English. Both copies live inside the same `.cv` file as separate payloads with `cv:primaryLanguage="fr"` and an alternate in `en`. A French employer's tool reads the French copy. A US recruiter's tool reads the English copy. You version one file.
 
@@ -34,7 +34,7 @@ You finish your resume. You export a PDF for recruiters, paste a plain text copy
 | Send a resume that always looks right | A PDF/A-3u file that opens visually in any reader |
 | Get parsed correctly by an ATS | A Markdown copy travelling inside the same file |
 | Embed your CV on your website | A `<cv-embed src="resume.cv">` Lit component, 10 KB |
-| Be searchable by an AI agent | Pre computed BGE M3 vectors ready for any vector DB |
+| Be searchable by an AI agent | Precomputed BGE-M3 vectors ready for any vector DB |
 | Serve content negotiation on your site | Express, Fastify, Hono, FastAPI, Flask, Django, net/http adapters |
 | Ship a CLI to your users | `brew install cvfile/tap/cv` and you are done |
 
@@ -76,7 +76,7 @@ Three lines of code, one file out the other side.
 
 * **[cvfile.org](https://cvfile.org)** for the rendered spec, the live drag and drop viewer, and the install page.
 * **[cvfile.org/spec/](https://cvfile.org/spec/)** for the normative `cv 1.0` specification.
-* **[github.com/cvfile/cv/tree/main/integrations](./integrations)** for the LangChain and LlamaIndex loaders that any RAG pipeline can already use today.
+* **[github.com/cvfile/cv/tree/main/integrations](./integrations)** for the LangChain, LlamaIndex, and Haystack loaders that any RAG pipeline can already use today.
 
 ---
 
@@ -98,6 +98,7 @@ Spec is stable at **`cv-1.0`** (`spec/cv-1.0.md`).
 | `sdks/go/` | The Go library, the `cv` CLI binary, and a `net/http` middleware |
 | `integrations/langchain-cvfile/` | LangChain document loader (PyPI: `langchain-cvfile`) |
 | `integrations/llama-index-readers-cvfile/` | LlamaIndex reader (PyPI: `llama-index-readers-cvfile`) |
+| `integrations/cvfile-haystack/` | Haystack 2.x converter (PyPI: `cvfile-haystack`) |
 | `docs/` | The cvfile.org Astro site |
 | `tools/verapdf-runner/` | Docker wrapper for the PDF/A-3u conformance gate |
 | `tools/installer-payloads/` | macOS UTI plist, Windows `.reg`, Linux `.desktop` plus shared mime info |
@@ -108,15 +109,15 @@ Spec is stable at **`cv-1.0`** (`spec/cv-1.0.md`).
 * Three reference SDKs (JS, Python, Go) with cross language byte identical interop.
 * veraPDF PASS for `cv-strict` output from JS and Python SDKs.
 * 7 fixture malicious corpus, identical error codes across all three SDK validators.
-* Real BGE M3 round trip end to end via Hugging Face Inference (no local model download).
+* Real BGE-M3 round trip end to end via Hugging Face Inference (no local model download).
 * `cv search` CLI produces semantic search results from the embedded vectors.
 * Three HTTP middleware implementations (Node, Python ASGI plus WSGI, Go) with byte identical content negotiation.
 * `<cv-embed>` viewer with ARIA tabs, keyboard nav, dark and light theming, mobile layout.
-* LangChain `CVFileLoader` and LlamaIndex `CVFileReader`, both live on PyPI.
+* LangChain `CVFileLoader`, LlamaIndex `CVFileReader`, and Haystack `CVFileToDocument`, all live on PyPI.
 * Astro docs site builds 5 pages including a live drag and drop viewer demo.
 * GoReleaser plus Homebrew, Scoop, WinGet templates.
 
-**129 tests passing across 7 packages and 3 languages.**
+**136 tests passing across 8 packages and 3 languages.**
 
 ### Documents
 
