@@ -102,6 +102,7 @@ Spec is stable at **`cv-1.0`** (`spec/cv-1.0.md`).
 | `docs/` | The cvfile.org Astro site |
 | `tools/verapdf-runner/` | Docker wrapper for the PDF/A-3u conformance gate |
 | `tools/installer-payloads/` | macOS UTI plist, Windows `.reg`, Linux `.desktop` plus shared mime info |
+| `tools/cv-detector/` | Reference sniffer (Python, Go, TypeScript) for crawler vendors |
 
 ### Status
 
@@ -116,8 +117,9 @@ Spec is stable at **`cv-1.0`** (`spec/cv-1.0.md`).
 * LangChain `CVFileLoader`, LlamaIndex `CVFileReader`, and Haystack `CVFileToDocument`, all live on PyPI.
 * Astro docs site builds 5 pages including a live drag and drop viewer demo.
 * GoReleaser plus Homebrew, Scoop, WinGet templates.
+* `cvfile-cv-detector` reference sniffer in Python, Go, and TypeScript: 200 line drop-in for any PDF crawler that wants `.cv` awareness without taking on the SDKs.
 
-**136 tests passing across 8 packages and 3 languages.**
+**157 tests passing across 8 packages and 3 languages.**
 
 ### Documents
 
