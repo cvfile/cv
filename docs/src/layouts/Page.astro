@@ -2,8 +2,21 @@
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
+  noindex?: boolean;
 }
-const { title, description = 'The .cv open file format — one file, three audiences, real semantic search.' } = Astro.props;
+
+const {
+  title,
+  description = 'The .cv open file format. One file packs a designed PDF, a clean Markdown copy, an HTML rendering, and pre-computed BGE-M3 embeddings so every audience (humans, ATS, AI agents) reads the same source of truth.',
+  ogImage = '/og.png',
+  noindex = false,
+} = Astro.props;
+
+const siteUrl = Astro.site?.origin ?? 'https://cvfile.org';
+const pathname = Astro.url.pathname;
+const canonical = new URL(pathname, siteUrl).toString();
+const ogImageAbs = new URL(ogImage, siteUrl).toString();
 ---
 
 <!doctype html>
@@ -11,13 +24,34 @@ const { title, description = 'The .cv open file format — one file, three audie
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+
+    <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)" />
+    <meta name="author" content="cvfile.org" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://cvfile.org" />
+    <meta property="og:image" content={ogImageAbs} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="cvfile.org" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageAbs} />
+
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>{title}</title>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="cvfile.org changelog" href="https://github.com/cvfile/cv/releases.atom" />
+
+    <slot name="head" />
     <style is:global>
       :root {
         color-scheme: light dark;
@@ -53,7 +87,7 @@ const { title, description = 'The .cv open file format — one file, three audie
       }
       header.site { display: flex; align-items: baseline; gap: 1.5rem; border-bottom: 1px solid var(--border); }
       header.site h1 { font-size: 1.1rem; margin: 0; }
-      header.site nav { margin-left: auto; display: flex; gap: 1.25rem; font-size: 0.95rem; }
+      header.site nav { margin-left: auto; display: flex; gap: 1.25rem; font-size: 0.95rem; flex-wrap: wrap; }
       header.site a { color: inherit; text-decoration: none; }
       header.site a:hover { color: var(--accent); }
       main { max-width: var(--max-width); margin: 0 auto; padding: 2rem 1.5rem 4rem; }
@@ -85,9 +119,11 @@ const { title, description = 'The .cv open file format — one file, three audie
     <header class="site">
       <h1><a href="/">cvfile.org</a></h1>
       <nav>
+        <a href="/create/">Create</a>
+        <a href="/view/">Demo</a>
         <a href="/spec/">Spec</a>
         <a href="/install/">Install</a>
-        <a href="/view/">Demo</a>
+        <a href="/ecosystem/">Ecosystem</a>
         <a href="https://github.com/cvfile/cv">GitHub</a>
       </nav>
     </header>

@@ -10,7 +10,10 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.2",
+    "@cvfile/sdk": "^0.1.0",
     "@cvfile/viewer-web": "workspace:*",
-    "astro": "^5.0.0"
+    "astro": "^5.0.0",
+    "pdf-lib": "^1.17.1"
   }
 }

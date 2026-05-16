@@ -3,12 +3,34 @@ import Page from '../layouts/Page.astro';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { graph, ORGANIZATION, WEBSITE, breadcrumbs } from '../lib/structured-data';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const specPath = join(here, '..', '..', '..', 'spec', 'cv-1.0.md');
 const specSource = readFileSync(specPath, 'utf8');
+
+const jsonLd = graph([
+  ORGANIZATION,
+  WEBSITE,
+  {
+    '@type': 'TechArticle',
+    headline: 'The .cv open file format specification, version 1.0',
+    description: 'Normative specification of the .cv open file format. Defines the PDF/A-3u container, /AF Associated Files payload conventions, XMP cv: namespace, security constraints, conformance levels, IANA registration, and embeddings payload schema.',
+    author: { '@id': 'https://cvfile.org/#org' },
+    publisher: { '@id': 'https://cvfile.org/#org' },
+    inLanguage: 'en',
+    url: 'https://cvfile.org/spec/',
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    keywords: 'open file format, resume, PDF/A-3u, IANA media type, RAG, embeddings, ATS, BGE-M3',
+  },
+  breadcrumbs([
+    { name: 'cvfile.org', url: 'https://cvfile.org/' },
+    { name: 'Spec', url: 'https://cvfile.org/spec/' },
+  ]),
+]);
 ---
-<Page title="Specification — cvfile.org" description="The .cv format normative spec, version 1.0.">
+<Page title="cv-1.0 specification — cvfile.org" description="Normative specification of the .cv open file format (PDF/A-3u + /AF Associated Files + cv XMP namespace). CC-BY-4.0.">
+  <script type="application/ld+json" slot="head" set:html={jsonLd} />
   <article style="max-width: 760px;">
     <p style="color: var(--muted)">
       Source of truth: <a href="https://github.com/cvfile/cv/blob/main/spec/cv-1.0.md">spec/cv-1.0.md</a>.
