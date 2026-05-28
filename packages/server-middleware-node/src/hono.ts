@@ -1,15 +1,16 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import { isCvFile } from '@cvfile/sdk';
-import { buildLinkHeader, PDF_PRIMARY_MIME } from './conneg.js';
-import { serveCv } from './serve.js';
+import type { ServeFormat } from './conneg.js';
+import { buildCvResponse } from './response.js';
 
 export interface CvHonoOptions {
   loader: (logicalPath: string) => Promise<Uint8Array | null>;
   cacheControl?: string;
+  defaultFormat?: ServeFormat;
 }
 
 export function cvHono(options: CvHonoOptions): MiddlewareHandler {
-  const { loader, cacheControl = 'public, max-age=300' } = options;
+  const { loader, cacheControl = 'public, max-age=300', defaultFormat } = options;
   return async (c: Context) => {
     const url = new URL(c.req.url);
     const logical = decodeURIComponent(url.pathname);
@@ -21,22 +22,24 @@ export function cvHono(options: CvHonoOptions): MiddlewareHandler {
     if (!(await isCvFile(bytes))) {
       return c.text('Not a .cv file', 415);
     }
-    const result = await serveCv({
+
+    const built = await buildCvResponse({
       bytes,
+      selfUrl: url.pathname,
       accept: c.req.header('accept'),
       acceptLanguage: c.req.header('accept-language'),
       formatQuery: c.req.query('format') ?? undefined,
+      defaultFormat,
+      cacheControl,
+      ifNoneMatch: c.req.header('if-none-match'),
+      ifModifiedSince: c.req.header('if-modified-since'),
     });
-    const link = buildLinkHeader({ selfUrl: url.pathname, cvMime: PDF_PRIMARY_MIME });
-    const headers: Record<string, string> = {
-      'Content-Type': result.contentType,
-      Vary: 'Accept, Accept-Language',
-      Link: link,
-      'Cache-Control': cacheControl,
-    };
-    if (result.language) headers['Content-Language'] = result.language;
-    const view = new Uint8Array(result.body.byteLength);
-    view.set(result.body);
-    return c.newResponse(view.buffer, 200, headers);
+
+    if (built.status === 304) {
+      return c.body(null, 304, built.headers);
+    }
+    const view = new Uint8Array(built.body.byteLength);
+    view.set(built.body);
+    return c.newResponse(view.buffer, 200, built.headers);
   };
 }
