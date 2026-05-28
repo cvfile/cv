@@ -45,6 +45,9 @@ const sampleLink = document.getElementById('load-sample');
 sampleLink?.addEventListener('click', async (e) => {
   e.preventDefault();
   const res = await fetch('./sample.cv');
+  if (!res.ok) {
+    throw new Error(`Could not load sample: ${res.status} ${res.statusText}`);
+  }
   const buf = new Uint8Array(await res.arrayBuffer());
   mount.hidden = false;
   await embed.loadFromBytes(buf);
