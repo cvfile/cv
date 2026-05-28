@@ -28,10 +28,38 @@ def _payload_meta(payload: ExtractedPayload, file: CvFile) -> dict[str, Any]:
         "mime_type": payload.mime_type,
         "payload": payload.name,
         "relationship": payload.relationship,
-        "language": payload.language or file.metadata.primary_language,
+        "language": payload.language,
         "primary": payload.name == file.metadata.primary_payload,
         "cv_version": file.metadata.version,
         "cv_generator": file.metadata.generator,
+    }
+
+
+def _resolve_chunks(file: CvFile) -> list:
+    """Decode the file's embeddings.cbor into text-resolved chunks.
+
+    Delegates to the core SDK so chunk text slicing uses UTF-8 byte offsets
+    (spec §5.1) and stays the single source of truth. Returns an empty list
+    when the embed extra is not installed or the file carries no embeddings.
+    """
+    try:
+        from cvfile.embed import resolve_embedding_chunks
+    except ImportError:
+        return []
+    return resolve_embedding_chunks(file)
+
+
+def _chunk_meta(chunk: Any, file: CvFile) -> dict[str, Any]:
+    return {
+        "language": file.metadata.primary_language,
+        "cv_version": file.metadata.version,
+        "cv_generator": file.metadata.generator,
+        "chunk_id": chunk.id,
+        "chunk_offset": chunk.text_offset,
+        "chunk_length": chunk.text_length,
+        "embedding_model": chunk.model,
+        "embedding_dimension": chunk.dimension,
+        "embedding_metric": chunk.metric,
     }
 
 
@@ -48,18 +76,32 @@ class CVFileToDocument:
     Set ``primary_only=True`` to emit only the payload marked as
     ``primaryPayload`` in the file's XMP metadata (usually the canonical
     Markdown copy), and skip all alternates.
+
+    Set ``mode="chunks"`` to emit one ``Document`` per pre-computed embedding
+    chunk instead of one per payload. Each chunk ``Document`` carries its vector
+    on ``Document.embedding`` and its text is sliced from the markdown using
+    UTF-8 byte offsets. Files without an embeddings payload fall back to a single
+    Markdown ``Document``. In ``mode="chunks"`` the ``primary_only`` flag is
+    ignored (chunks already index a single text payload).
     """
 
-    def __init__(self, primary_only: bool = False) -> None:
+    def __init__(self, primary_only: bool = False, *, mode: str = "payloads") -> None:
         """Create a CVFileToDocument component.
 
         :param primary_only:
             If ``True``, emit only the payload marked as ``primaryPayload``
             in the file's XMP metadata. If ``False`` (default), emit one
             ``Document`` per textual payload (the primary plus any
-            language alternates and supplements).
+            language alternates and supplements). Ignored in ``mode="chunks"``.
+        :param mode:
+            ``"payloads"`` (default) emits one ``Document`` per textual payload.
+            ``"chunks"`` emits one ``Document`` per pre-computed embedding chunk
+            with its vector attached.
         """
+        if mode not in ("payloads", "chunks"):
+            raise ValueError("mode must be 'payloads' or 'chunks'")
         self.primary_only = primary_only
+        self.mode = mode
 
     @component.output_types(documents=list[Document])
     def run(
@@ -105,6 +147,10 @@ class CVFileToDocument:
             stream_meta = bytestream.meta or {}
             source_label = stream_meta.get("file_path") or stream_meta.get("file_name") or str(source)
 
+            if self.mode == "chunks":
+                documents.extend(self._chunk_documents(file, stream_meta, source_meta, source_label))
+                continue
+
             for payload in file.payloads:
                 if not _is_text_payload(payload):
                     continue
@@ -115,3 +161,28 @@ class CVFileToDocument:
                 documents.append(Document(content=payload.text(), meta=merged))
 
         return {"documents": documents}
+
+    @staticmethod
+    def _chunk_documents(
+        file: CvFile,
+        stream_meta: dict[str, Any],
+        source_meta: dict[str, Any],
+        source_label: str,
+    ) -> list[Document]:
+        chunks = _resolve_chunks(file)
+        if not chunks:
+            primary = next(
+                (p for p in file.payloads if p.name == file.metadata.primary_payload and _is_text_payload(p)),
+                None,
+            )
+            if primary is None:
+                return []
+            payload_meta = _payload_meta(primary, file)
+            merged = {**stream_meta, **payload_meta, **source_meta, "source": source_label}
+            return [Document(content=primary.text(), meta=merged)]
+
+        out: list[Document] = []
+        for chunk in chunks:
+            merged = {**stream_meta, **_chunk_meta(chunk, file), **source_meta, "source": source_label}
+            out.append(Document(content=chunk.text, meta=merged, embedding=list(chunk.vector)))
+        return out
