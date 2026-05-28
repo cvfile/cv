@@ -20,7 +20,10 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 24 ships npm >= 11.5.1, which implements OIDC trusted publishing.
+          # No registry-url: it would write an .npmrc with an empty _authToken
+          # placeholder that suppresses OIDC and forces an unauthenticated publish.
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Build all packages
@@ -31,7 +34,7 @@ jobs:
           # not by `pnpm publish` (whose token exchange 404s against npm). So we
           # pack with pnpm (which rewrites the workspace:* dep on @cvfile/sdk to a
           # real version inside the tarball) and publish that tarball with npm.
-          npm install -g npm@latest
+          echo "node $(node -v), npm $(npm -v), oidc=${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
           tag="${GITHUB_REF##refs/tags/}"
           case "$tag" in
             sdk-js/v*)      dir="packages/sdk-js" ;;

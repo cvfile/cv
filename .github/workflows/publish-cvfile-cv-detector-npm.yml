@@ -17,7 +17,9 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 24 ships npm >= 11.5.1 (OIDC trusted publishing). No registry-url
+          # (its empty _authToken placeholder would suppress OIDC).
+          node-version: 24
       - name: Install dependencies
         working-directory: tools/cv-detector/typescript
         # No --ignore-workspace: this package has its own pnpm-workspace.yaml
@@ -33,5 +35,5 @@ jobs:
         # is used; `pnpm publish`'s token exchange 404s against npm. This package
         # has no workspace: deps, so npm can pack from source directly.
         run: |
-          npm install -g npm@latest
+          echo "node $(node -v), npm $(npm -v), oidc=${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
           npm publish --access public --provenance
