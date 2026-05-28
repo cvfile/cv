@@ -1,5 +1,7 @@
+import { CV_SPEC_VERSION } from './constants.js';
 import { sha256Hex } from './digest.js';
 import { toUint8Array } from './normalize.js';
+import { PORTABLE_NAME_RE } from './pack.js';
 import { loadDocument, readAssociatedFiles, readMetadataXml } from './pdf.js';
 import { scanForbiddenConstructs } from './security.js';
 import type { BinaryInput, ValidationIssue, ValidationLevel, ValidationReport } from './types.js';
@@ -20,20 +22,22 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
   const issues: ValidationIssue[] = [];
   const bytes = await toUint8Array(input);
 
-  if (looksEncrypted(bytes)) {
-    issues.push({
-      code: 'encrypted-document',
-      level: 'error',
-      message: 'Trailer declares /Encrypt; encryption is forbidden in cv 0.x (spec §3.4)',
-    });
-    return { ok: false, level, issues };
-  }
-
   let pdfDoc;
   try {
     pdfDoc = await loadDocument(bytes);
   } catch (err) {
     issues.push({ code: 'pdf-parse-failed', level: 'error', message: (err as Error).message });
+    return { ok: false, level, issues };
+  }
+
+  // An /Encrypt trailer entry is authoritative; encrypted files carry encrypted
+  // streams that cannot be meaningfully inspected, so reject immediately.
+  if (pdfDoc.context.trailerInfo.Encrypt) {
+    issues.push({
+      code: 'encrypted-document',
+      level: 'error',
+      message: 'Document declares an /Encrypt dictionary; encryption is forbidden in cv 0.x (spec §3.4)',
+    });
     return { ok: false, level, issues };
   }
 
@@ -53,6 +57,9 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
     return { ok: false, level, issues };
   }
 
+  const newerVersionIssue = checkVersion(meta.version);
+  if (newerVersionIssue) issues.push(newerVersionIssue);
+
   const payloads = readAssociatedFiles(pdfDoc);
   if (payloads.length === 0) {
     issues.push({ code: 'no-payloads', level: 'error', message: 'No /AF Associated Files present' });
@@ -64,6 +71,14 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
         code: 'payload-too-large',
         level: 'error',
         message: `Payload "${payload.name}" is ${payload.bytes.length} bytes; cap is ${maxPayloadBytes} (spec §7.3)`,
+        payload: payload.name,
+      });
+    }
+    if (!isPortableName(payload.name)) {
+      issues.push({
+        code: 'filename-not-portable',
+        level: 'error',
+        message: `Payload name "${payload.name}" is not POSIX-portable (spec §4.4)`,
         payload: payload.name,
       });
     }
@@ -120,14 +135,34 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
   return { ok, level, issues };
 }
 
+function isPortableName(name: string): boolean {
+  if (!PORTABLE_NAME_RE.test(name)) return false;
+  return name.split('/').every((segment) => segment !== '.' && segment !== '..');
+}
+
 /**
- * Byte-level pre-check for an /Encrypt trailer entry. pdf-lib refuses to
- * parse encrypted PDFs at load time, so without this the validator would
- * surface a generic parse failure instead of the documented spec-§3.4 code.
+ * The highest cv MAJOR version this SDK fully understands. The 0.x pre-stable
+ * series and the 1.x stable series are normatively identical (spec §12), so the
+ * SDK knows both; a MAJOR of 2 or greater is "newer".
  */
-function looksEncrypted(bytes: Uint8Array): boolean {
-  // Search the last 4 KiB where the trailer lives.
-  const tail = bytes.subarray(Math.max(0, bytes.length - 4096));
-  const text = new TextDecoder('latin1').decode(tail);
-  return /\/Encrypt\b/.test(text);
+const KNOWN_MAJOR = 1;
+
+/**
+ * Emit a "newer-format-version" warning when the file's cv:version MAJOR exceeds
+ * what this SDK knows (spec §8.3). Both "0.1" and "1.0" are known; only a MAJOR
+ * of 2 or greater warns. Extraction is never blocked: this is a warning only.
+ */
+function checkVersion(version: string): ValidationIssue | null {
+  const major = parseMajor(version);
+  if (major === null || major <= KNOWN_MAJOR) return null;
+  return {
+    code: 'newer-format-version',
+    level: 'warning',
+    message: `cv:version "${version}" has a newer MAJOR than this SDK knows (${CV_SPEC_VERSION}); rendering may be incomplete (spec §8.3)`,
+  };
+}
+
+function parseMajor(version: string): number | null {
+  const major = Number.parseInt(version.split('.')[0] ?? '', 10);
+  return Number.isNaN(major) ? null : major;
 }

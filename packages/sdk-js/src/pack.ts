@@ -1,6 +1,6 @@
-import { AFRelationship, PDFArray, PDFDocument, PDFHexString, PDFName, PDFString } from 'pdf-lib';
+import { AFRelationship, PDFArray, PDFDict, PDFDocument, PDFHexString, PDFName, PDFStream, PDFString } from 'pdf-lib';
 import { CV_SPEC_VERSION, DEFAULT_GENERATOR, DEFAULT_PAYLOAD_NAMES, PAYLOAD_MIME_TYPES } from './constants.js';
-import { sha256Hex } from './digest.js';
+import { md5Hex, sha256Hex } from './digest.js';
 import { encodeEmbeddings, type EmbeddingsPayload } from './embeddings.js';
 import { toBytes, toUint8Array } from './normalize.js';
 import { setMetadataXml } from './pdf.js';
@@ -35,8 +35,10 @@ export async function pack(input: PackInput): Promise<Uint8Array> {
     }
   }
 
+  const payloadBytesByName = new Map<string, Uint8Array>();
   for (const p of payloads) {
     const bytes = toBytes(p.data);
+    payloadBytesByName.set(p.name, bytes);
     pdfDoc.attach(bytes, p.name, {
       mimeType: p.mimeType,
       description: p.description ?? defaultDescription(p),
@@ -72,7 +74,88 @@ export async function pack(input: PackInput): Promise<Uint8Array> {
     setTrailerId(pdfDoc);
   }
 
+  // Materialize the embedded-file streams so we can amend their /Params before
+  // serialization. flush() is idempotent (each embeddable guards re-embedding).
+  await pdfDoc.flush();
+  setEmbeddedFileChecksums(pdfDoc, payloadBytesByName, created, modified);
+  setInfoDates(pdfDoc, created, modified);
+
   return pdfDoc.save({ useObjectStreams: false });
+}
+
+const PARAMS = PDFName.of('Params');
+const CHECKSUM = PDFName.of('CheckSum');
+const CREATION_DATE = PDFName.of('CreationDate');
+const MOD_DATE = PDFName.of('ModDate');
+
+/**
+ * Set the spec-mandated MD5 /CheckSum (spec §4.1) on each embedded-file
+ * stream's /Params, computed over the unwrapped payload bytes. pdf-lib emits
+ * /Size and /ModDate but never /CheckSum. Dates are rewritten with an explicit
+ * UTC offset so they agree with the XMP UTC dateTime (PDF/A-3 date hygiene).
+ */
+function setEmbeddedFileChecksums(
+  pdfDoc: PDFDocument,
+  payloadBytesByName: Map<string, Uint8Array>,
+  created: Date,
+  modified: Date,
+): void {
+  const afRaw = pdfDoc.catalog.get(PDFName.of('AF'));
+  if (!afRaw) return;
+  const afArray = pdfDoc.context.lookup(afRaw, PDFArray);
+
+  for (let i = 0; i < afArray.size(); i += 1) {
+    const filespec = pdfDoc.context.lookup(afArray.get(i), PDFDict);
+    const name = filespecName(filespec);
+    const efRaw = filespec.get(PDFName.of('EF'));
+    if (!efRaw) continue;
+    const efDict = pdfDoc.context.lookup(efRaw, PDFDict);
+    const streamRef = efDict.get(PDFName.of('F')) ?? efDict.get(PDFName.of('UF'));
+    const stream = pdfDoc.context.lookup(streamRef);
+    if (!(stream instanceof PDFStream)) continue;
+
+    const bytes = name ? payloadBytesByName.get(name) : undefined;
+    if (!bytes) continue;
+
+    let params = stream.dict.get(PARAMS);
+    if (!(params instanceof PDFDict)) {
+      params = pdfDoc.context.obj({});
+      stream.dict.set(PARAMS, params);
+    }
+    const paramsDict = params as PDFDict;
+    paramsDict.set(CHECKSUM, PDFHexString.of(md5Hex(bytes)));
+    paramsDict.set(CREATION_DATE, PDFString.of(pdfDate(created)));
+    paramsDict.set(MOD_DATE, PDFString.of(pdfDate(modified)));
+  }
+}
+
+function filespecName(filespec: PDFDict): string | undefined {
+  const uf = filespec.get(PDFName.of('UF'));
+  if (uf instanceof PDFHexString) return uf.decodeText();
+  if (uf instanceof PDFString) return uf.asString();
+  const f = filespec.get(PDFName.of('F'));
+  if (f instanceof PDFString) return f.asString();
+  if (f instanceof PDFHexString) return f.decodeText();
+  return undefined;
+}
+
+/**
+ * Set the document Info CreationDate/ModDate to the cv created/modified values
+ * with an explicit UTC offset so they match the XMP UTC dateTime.
+ */
+function setInfoDates(pdfDoc: PDFDocument, created: Date, modified: Date): void {
+  const info = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Info, PDFDict);
+  info.set(CREATION_DATE, PDFString.of(pdfDate(created)));
+  info.set(MOD_DATE, PDFString.of(pdfDate(modified)));
+}
+
+/** PDF date string in UTC with an explicit "+00'00'" offset (ISO 32000 §7.9.4). */
+function pdfDate(d: Date): string {
+  const p = (n: number, w = 2): string => String(n).padStart(w, '0');
+  return (
+    `D:${p(d.getUTCFullYear(), 4)}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}` +
+    `${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}+00'00'`
+  );
 }
 
 function addPdfaOutputIntent(pdfDoc: PDFDocument): void {
@@ -169,12 +252,31 @@ function collectPayloads(input: PackInput): { payloads: Payload[]; embeddingSumm
 
   const seen = new Set<string>();
   for (const p of out) {
+    assertPortableName(p.name);
     if (seen.has(p.name)) {
       throw new Error(`Duplicate payload name: ${p.name}`);
     }
     seen.add(p.name);
   }
   return { payloads: out, embeddingSummaries };
+}
+
+/** Matches the POSIX-portable filename charset required by spec §4.4. */
+export const PORTABLE_NAME_RE = /^[A-Za-z0-9._/-]+$/;
+
+/**
+ * Reject payload names that are not POSIX-portable (spec §4.4) or that contain
+ * "." / ".." path segments, which would allow path traversal on extraction.
+ */
+export function assertPortableName(name: string): void {
+  if (!PORTABLE_NAME_RE.test(name)) {
+    throw new Error(`Payload name "${name}" is not POSIX-portable; allowed charset is [A-Za-z0-9._/-] (spec §4.4)`);
+  }
+  for (const segment of name.split('/')) {
+    if (segment === '.' || segment === '..') {
+      throw new Error(`Payload name "${name}" contains a "${segment}" path segment (spec §4.4)`);
+    }
+  }
 }
 
 function resolveEmbeddings(
