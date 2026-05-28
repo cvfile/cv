@@ -43,6 +43,11 @@ func SearchSemantic(payload *EmbeddingsPayload, queryVector []float32, opts Sear
 
 	hits := make([]SearchHit, 0, len(space.Chunks))
 	for _, c := range space.Chunks {
+		// Skip chunks whose vector does not match the space dimension: scoring
+		// them would index out of range against the query vector.
+		if len(c.Vector) != space.Dimension {
+			continue
+		}
 		hits = append(hits, SearchHit{
 			SpaceModel: space.Model,
 			ChunkID:    c.ID,

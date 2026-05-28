@@ -12,10 +12,14 @@ import (
 	cv "github.com/cvfile/cv/sdks/go/cv"
 )
 
+// cliVersion is the version of this command-line tool, distinct from the
+// .cv spec version (cv.SpecVersion) and any SDK package version.
+const cliVersion = "0.1.0"
+
 const usage = `cv — the .cv open file format CLI (v0.1)
 
 Usage:
-  cv extract <file.cv> [--format md|html|pdf]
+  cv extract <file.cv> [--format pdf|md|html]   (--format defaults to pdf)
   cv inspect <file.cv> [--json]
   cv validate <file.cv> [--strict]
   cv search  <file.cv> "<query>" [--k 5] [--model BAAI/bge-m3]
@@ -50,7 +54,7 @@ func main() {
 	case "search":
 		os.Exit(cmdSearch(rest))
 	case "version", "--version", "-v":
-		fmt.Printf("cv %s (sdk %s)\n", cv.SpecVersion, cv.SpecVersion)
+		fmt.Printf("cv %s (spec %s)\n", cliVersion, cv.SpecVersion)
 	case "help", "--help", "-h":
 		fmt.Print(usage)
 	default:

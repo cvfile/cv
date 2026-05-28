@@ -39,12 +39,12 @@ type NegotiateInput struct {
 }
 
 var formatByMIME = map[string]ServeFormat{
-	"text/markdown":           FormatMarkdown,
-	"text/x-markdown":         FormatMarkdown,
-	"text/html":               FormatHTML,
-	"application/xhtml+xml":   FormatHTML,
-	"application/pdf":         FormatPDF,
-	"application/vnd.cv+pdf":  FormatPDF,
+	"text/markdown":          FormatMarkdown,
+	"text/x-markdown":        FormatMarkdown,
+	"text/html":              FormatHTML,
+	"application/xhtml+xml":  FormatHTML,
+	"application/pdf":        FormatPDF,
+	"application/vnd.cv+pdf": FormatPDF,
 }
 
 var formatByQuery = map[string]ServeFormat{

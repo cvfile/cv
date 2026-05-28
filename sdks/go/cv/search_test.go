@@ -5,6 +5,33 @@ import (
 	"testing"
 )
 
+// TestSearchSemanticMismatchedChunkVectorDoesNotPanic constructs a payload whose
+// chunks include a vector shorter than the space dimension. SearchSemantic must
+// skip it instead of panicking with index out of range.
+func TestSearchSemanticMismatchedChunkVectorDoesNotPanic(t *testing.T) {
+	payload := &EmbeddingsPayload{
+		FormatVersion: 1,
+		Spaces: []EmbeddingSpace{
+			{
+				Model:     "test/model",
+				Dimension: 3,
+				Metric:    "cosine",
+				Chunks: []EmbeddingChunk{
+					{ID: "good", Vector: []float32{0.1, 0.2, 0.3}},
+					{ID: "ragged", Vector: []float32{0.5}}, // wrong length
+				},
+			},
+		},
+	}
+	hits, err := SearchSemantic(payload, []float32{1, 0, 0}, SearchOptions{K: 5})
+	if err != nil {
+		t.Fatalf("SearchSemantic: %v", err)
+	}
+	if len(hits) != 1 || hits[0].ChunkID != "good" {
+		t.Errorf("expected only the well-sized chunk, got %+v", hits)
+	}
+}
+
 // TestSearchSemanticOnRealBGEM3 exercises the full path the cv search CLI
 // takes: open a .cv with real BGE-M3 embeddings, decode, embed a query via
 // the HF Inference API, rank chunks. Skips when fixture or HF_TOKEN is missing.
