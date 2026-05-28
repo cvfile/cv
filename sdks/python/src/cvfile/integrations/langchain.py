@@ -64,31 +64,31 @@ class CvFileLoader:
 
         # chunks mode: emit one Document per embedding chunk if the .cv
         # carries embeddings, otherwise fall back to a single document.
-        embedding_chunks = self._embedding_chunks(file)
-        if not embedding_chunks:
+        chunks = self._embedding_chunks(file)
+        if not chunks:
             yield Document(page_content=markdown, metadata=base_metadata)
             return
 
-        for chunk in embedding_chunks:
-            text = markdown[chunk["text_offset"] : chunk["text_offset"] + chunk["text_length"]]
+        for chunk in chunks:
             md = dict(base_metadata)
             md.update(
                 {
-                    "chunk_id": chunk["id"],
-                    "chunk_offset": chunk["text_offset"],
-                    "chunk_length": chunk["text_length"],
-                    "embedding": list(chunk["vector"]),
-                    "embedding_model": chunk["model"],
-                    "embedding_dimension": chunk["dimension"],
+                    "chunk_id": chunk.id,
+                    "chunk_offset": chunk.text_offset,
+                    "chunk_length": chunk.text_length,
+                    "embedding": list(chunk.vector),
+                    "embedding_model": chunk.model,
+                    "embedding_dimension": chunk.dimension,
                 }
             )
-            yield Document(page_content=text, metadata=md)
+            yield Document(page_content=chunk.text, metadata=md)
 
     @staticmethod
     def _markdown_payload(file: Any) -> str:
         for p in file.payloads:
             if p.mime_type == "text/markdown":
-                return p.bytes_.decode("utf-8", errors="replace")
+                decoded: str = p.bytes_.decode("utf-8", errors="replace")
+                return decoded
         return ""
 
     @staticmethod
@@ -116,29 +116,12 @@ class CvFileLoader:
         }
 
     @staticmethod
-    def _embedding_chunks(file: Any) -> list[dict[str, Any]]:
+    def _embedding_chunks(file: Any) -> list[Any]:
         try:
-            from cvfile.embed import decode_embeddings
+            from cvfile.embed import resolve_embedding_chunks
         except ImportError:
             return []
-        cbor_bytes = next((p.bytes_ for p in file.payloads if p.name == "embeddings.cbor"), None)
-        if cbor_bytes is None:
-            return []
         try:
-            payload = decode_embeddings(cbor_bytes)
+            return resolve_embedding_chunks(file)
         except Exception:
             return []
-        if not payload.spaces:
-            return []
-        space = payload.spaces[0]
-        return [
-            {
-                "id": c.id,
-                "text_offset": c.text_offset,
-                "text_length": c.text_length,
-                "vector": c.vector,
-                "model": space.model,
-                "dimension": space.dimension,
-            }
-            for c in space.chunks
-        ]

@@ -24,16 +24,23 @@ def pack(
     markdown: str | bytes | None = None,
     html: str | bytes | None = None,
     json_resume: Any = None,
-    embeddings: bytes | None = None,
+    embeddings: Any = None,
     payloads: list[Payload] | None = None,
     metadata: dict[str, Any],
 ) -> bytes:
-    """Build a .cv from a PDF and one or more representations."""
+    """Build a .cv from a PDF and one or more representations.
+
+    ``embeddings`` accepts either an ``EmbeddingsPayload`` (from
+    ``cvfile.embed``) or raw encoded CBOR bytes. When given a payload object the
+    per-space summary is recorded in the XMP metadata (so ``inspect`` surfaces
+    it); raw bytes are stored as-is without a summary (parity with @cvfile/sdk).
+    """
+    embeddings_bytes, embedding_summaries = _resolve_embeddings(embeddings)
     payload_list = _collect_payloads(
         markdown=markdown,
         html=html,
         json_resume=json_resume,
-        embeddings=embeddings,
+        embeddings=embeddings_bytes,
         extra=payloads,
     )
     if not payload_list:
@@ -89,10 +96,41 @@ def pack(
         generator=generator,
         alternates=alternates,
         integrity=tuple(integrity),
+        embeddings=embedding_summaries,
     )
     set_metadata_xml(writer, xmp)
 
     return write_to_bytes(writer)
+
+
+def _resolve_embeddings(embeddings: Any) -> tuple[bytes | None, tuple[EmbeddingSpaceSummary, ...]]:
+    """Normalize the ``embeddings`` argument to (encoded bytes, summaries).
+
+    Mirrors @cvfile/sdk's resolveEmbeddings: an ``EmbeddingsPayload`` yields both
+    encoded bytes and per-space summaries, raw bytes pass through with no summary,
+    and ``None`` yields ``(None, ())``.
+    """
+    if embeddings is None:
+        return None, ()
+    if isinstance(embeddings, (bytes, bytearray)):
+        return bytes(embeddings), ()
+
+    spaces = getattr(embeddings, "spaces", None)
+    if spaces is None:
+        raise TypeError("embeddings must be bytes or an EmbeddingsPayload")
+
+    from cvfile.embed import encode_embeddings
+
+    summaries = tuple(
+        EmbeddingSpaceSummary(
+            model=space.model,
+            dimension=space.dimension,
+            metric=space.metric,
+            chunks=len(space.chunks),
+        )
+        for space in spaces
+    )
+    return encode_embeddings(embeddings), summaries
 
 
 def _collect_payloads(

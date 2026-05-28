@@ -6,6 +6,8 @@ import hashlib
 import io
 
 import pypdf
+import pytest
+
 from cvfile import (
     extract,
     extract_html,
@@ -15,7 +17,6 @@ from cvfile import (
     pack,
     validate,
 )
-
 
 SAMPLE_MD = """# Jane Doe
 
@@ -103,3 +104,13 @@ def test_validate_rejects_plain_pdf() -> None:
     report = validate(make_blank_pdf())
     assert report.ok is False
     assert any(i.code == "no-xmp" for i in report.issues)
+
+
+def test_extract_raises_valueerror_on_garbage() -> None:
+    with pytest.raises(ValueError):
+        extract(b"definitely not a pdf")
+
+
+def test_inspect_raises_valueerror_on_garbage() -> None:
+    with pytest.raises(ValueError):
+        inspect(b"%PDF-1.7 truncated and broken")

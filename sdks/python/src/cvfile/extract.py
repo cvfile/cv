@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 from cvfile._constants import PAYLOAD_MIME_TYPES
 from cvfile._pdf import read_associated_files, read_metadata_xml
@@ -14,7 +15,10 @@ from cvfile._xmp import parse_xmp
 
 def extract(data: bytes) -> CvFile:
     """Parse a .cv file's metadata and embedded payloads."""
-    reader = PdfReader(io.BytesIO(data))
+    try:
+        reader = PdfReader(io.BytesIO(data))
+    except (PdfReadError, KeyError, ValueError) as err:
+        raise ValueError(f"Not a .cv file: failed to parse PDF ({err})") from err
 
     xml = read_metadata_xml(reader)
     if not xml:
