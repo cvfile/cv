@@ -28,12 +28,19 @@ jobs:
         run: pnpm -r build
       - name: Publish package matching the tag
         run: |
+          # npm's OIDC trusted publishing is implemented by the npm CLI (>= 11.5.1),
+          # not by `pnpm publish` (whose token exchange 404s against npm). So we
+          # pack with pnpm (which rewrites the workspace:* dep on @cvfile/sdk to a
+          # real version inside the tarball) and publish that tarball with npm.
+          npm install -g npm@latest
           tag="${GITHUB_REF##refs/tags/}"
           case "$tag" in
-            sdk-js/v*)      filter="@cvfile/sdk" ;;
-            embed-js/v*)    filter="@cvfile/embed" ;;
-            server-node/v*) filter="@cvfile/server" ;;
-            viewer-web/v*)  filter="@cvfile/viewer-web" ;;
+            sdk-js/v*)      dir="packages/sdk-js" ;;
+            embed-js/v*)    dir="packages/embed-js" ;;
+            server-node/v*) dir="packages/server-middleware-node" ;;
+            viewer-web/v*)  dir="packages/viewer-web" ;;
             *) echo "unknown tag: $tag" && exit 1 ;;
           esac
-          pnpm --filter "$filter" publish --access public --no-git-checks --provenance
+          cd "$dir"
+          pnpm pack
+          npm publish ./*.tgz --access public --provenance
