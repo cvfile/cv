@@ -33,14 +33,30 @@ const jsonLd = graph([
     </a>
   </div>
 
-  <div
+  <label
     id="dropzone"
-    style="border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; margin: 0 0 1.5rem;"
+    style="display: block; border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; margin: 0 0 1.5rem;"
   >
     <strong>Drop a .cv file here</strong>
     <div style="color: var(--muted); margin-top: 0.5rem;">or click to choose</div>
-    <input id="picker" type="file" accept=".cv,application/pdf,application/vnd.cv+pdf" hidden />
-  </div>
+    <input id="picker" class="visually-hidden-file" type="file" accept=".cv,application/pdf,application/vnd.cv+pdf" />
+  </label>
+
+  <style>
+    /* Visually hide the native file input while keeping it focusable and in the
+       accessibility tree, so the styled label acts as the visible control. */
+    .visually-hidden-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
 
   <cv-embed id="viewer" view="auto" theme="auto" style="display: none;"></cv-embed>
 
@@ -65,7 +81,6 @@ const jsonLd = graph([
       await viewer.loadFromBytes(buf);
     }
 
-    dz.addEventListener('click', () => picker.click());
     picker.addEventListener('change', () => {
       const file = picker.files?.[0];
       if (file) void handle(file);

@@ -131,16 +131,32 @@ def unwrap(pdf_bytes: bytes, payload_name: str | None = None) -> UnwrappedPayloa
     return None
 
 
-_TAG_RE: dict[str, re.Pattern[str]] = {}
+_TAG_RE: dict[str, tuple[re.Pattern[str], re.Pattern[str]]] = {}
 
 
 def _inner(text: str, tag: str) -> str | None:
-    pat = _TAG_RE.get(tag)
-    if pat is None:
-        pat = re.compile(rf"<{re.escape(tag)}>([^<]*)</{re.escape(tag)}>")
-        _TAG_RE[tag] = pat
-    m = pat.search(text)
-    return m.group(1).strip() if m else None
+    """Read a cv XMP field.
+
+    RDF allows two equivalent serialisations: the element form
+    ``<cv:version>1.0</cv:version>`` and the attribute form
+    ``cv:version="1.0"``. Try the element form first, then fall back to the
+    attribute form so both shapes are detected identically.
+    """
+    pats = _TAG_RE.get(tag)
+    if pats is None:
+        q = re.escape(tag)
+        elem = re.compile(rf"<{q}>([^<]*)</{q}>")
+        attr = re.compile(rf"""{q}\s*=\s*"([^"]*)"|{q}\s*=\s*'([^']*)'""")
+        pats = (elem, attr)
+        _TAG_RE[tag] = pats
+    elem, attr = pats
+    m = elem.search(text)
+    if m:
+        return m.group(1).strip()
+    m = attr.search(text)
+    if m:
+        return (m.group(1) or m.group(2) or "").strip()
+    return None
 
 
 def _name_to_mime(name: str) -> str:

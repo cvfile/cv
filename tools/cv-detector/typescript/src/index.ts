@@ -135,10 +135,19 @@ function bytesToLatin1(bytes: Uint8Array): string {
   return out;
 }
 
+// Reads a cv XMP field. RDF allows two equivalent serialisations: the element
+// form <cv:version>1.0</cv:version> and the attribute form cv:version="1.0".
+// Try the element form first, then fall back to the attribute form so both
+// shapes are detected identically.
 function innerTag(text: string, tag: string): string | undefined {
-  const re = new RegExp(`<${escapeRegex(tag)}>([^<]*)</${escapeRegex(tag)}>`);
-  const m = re.exec(text);
-  return m ? m[1]!.trim() : undefined;
+  const q = escapeRegex(tag);
+  const elem = new RegExp(`<${q}>([^<]*)</${q}>`);
+  const em = elem.exec(text);
+  if (em) return em[1]!.trim();
+  const attr = new RegExp(`${q}\\s*=\\s*"([^"]*)"|${q}\\s*=\\s*'([^']*)'`);
+  const am = attr.exec(text);
+  if (am) return (am[1] ?? am[2] ?? '').trim();
+  return undefined;
 }
 
 function escapeRegex(s: string): string {
