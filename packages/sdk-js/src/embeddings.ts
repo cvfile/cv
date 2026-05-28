@@ -96,9 +96,26 @@ function toCborSpace(space: EmbeddingSpace): CborSpace {
 }
 
 function fromCborSpace(raw: CborSpace): EmbeddingSpace {
-  if (typeof raw.dimension !== 'number' || raw.dimension <= 0) {
-    throw new Error('Invalid embedding space: dimension must be a positive integer');
+  if (typeof raw !== 'object' || raw === null) {
+    throw new Error('Invalid embedding space: not a map');
   }
+  if (typeof raw.normalized !== 'boolean') {
+    throw new Error(`Invalid embedding space "${raw.model}": normalized must be a boolean`);
+  }
+  if (!Array.isArray(raw.chunks)) {
+    throw new Error(`Invalid embedding space "${raw.model}": chunks must be an array`);
+  }
+  // Mirror the encode-side guarantees (validateSpace) so attacker-supplied CBOR
+  // cannot smuggle untyped model/metric/chunking/dimension values past readers.
+  // Scalars are checked before decoding chunks so the dimension used for vector
+  // length checks is known-valid.
+  validateScalars({
+    model: raw.model,
+    modelRevision: raw['model-revision'],
+    dimension: raw.dimension,
+    metric: raw.metric,
+    chunking: raw.chunking,
+  });
   return {
     model: raw.model,
     modelRevision: raw['model-revision'],
@@ -140,19 +157,40 @@ function fromCborChunk(raw: CborChunk, dimension: number): EmbeddingChunk {
 }
 
 function validateSpace(space: EmbeddingSpace): void {
-  if (!space.model) throw new Error('Embedding space missing model');
-  if (!space.modelRevision) throw new Error(`Embedding space "${space.model}" missing modelRevision`);
-  if (!Number.isInteger(space.dimension) || space.dimension <= 0) {
+  validateScalars({
+    model: space.model,
+    modelRevision: space.modelRevision,
+    dimension: space.dimension,
+    metric: space.metric,
+    chunking: space.chunking,
+  });
+  if (!Array.isArray(space.chunks) || space.chunks.length === 0) {
+    throw new Error(`Embedding space "${space.model}" must contain at least one chunk`);
+  }
+}
+
+interface SpaceScalars {
+  model: unknown;
+  modelRevision: unknown;
+  dimension: unknown;
+  metric: unknown;
+  chunking: unknown;
+}
+
+/** Validates the scalar header fields shared by the encode and decode paths. */
+function validateScalars(space: SpaceScalars): void {
+  if (!space.model || typeof space.model !== 'string') throw new Error('Embedding space missing model');
+  if (!space.modelRevision || typeof space.modelRevision !== 'string') {
+    throw new Error(`Embedding space "${space.model}" missing modelRevision`);
+  }
+  if (!Number.isInteger(space.dimension) || (space.dimension as number) <= 0) {
     throw new Error(`Embedding space "${space.model}" dimension must be a positive integer`);
   }
   if (space.metric !== 'cosine' && space.metric !== 'dot' && space.metric !== 'euclidean') {
-    throw new Error(`Embedding space "${space.model}" has invalid metric "${space.metric}"`);
+    throw new Error(`Embedding space "${space.model}" has invalid metric "${String(space.metric)}"`);
   }
   if (space.chunking !== 'document' && space.chunking !== 'section' && space.chunking !== 'paragraph') {
-    throw new Error(`Embedding space "${space.model}" has invalid chunking "${space.chunking}"`);
-  }
-  if (!Array.isArray(space.chunks) || space.chunks.length === 0) {
-    throw new Error(`Embedding space "${space.model}" must contain at least one chunk`);
+    throw new Error(`Embedding space "${space.model}" has invalid chunking "${String(space.chunking)}"`);
   }
 }
 

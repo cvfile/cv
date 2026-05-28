@@ -1,28 +1,27 @@
-import { PDFArray, PDFDict, PDFDocument, PDFHexString, PDFName, PDFObject, PDFString } from 'pdf-lib';
+import { PDFArray, PDFDict, PDFDocument, PDFHexString, PDFName, PDFObject, PDFRef, PDFString } from 'pdf-lib';
 import type { ValidationIssue } from './types.js';
 
 const TYPE = PDFName.of('Type');
-const SUBTYPE = PDFName.of('Subtype');
 const S_KEY = PDFName.of('S');
 const JS_KEY = PDFName.of('JS');
 const JAVASCRIPT_KEY = PDFName.of('JavaScript');
 const F_KEY = PDFName.of('F');
 const UF_KEY = PDFName.of('UF');
 const EF_KEY = PDFName.of('EF');
-const NAMES_KEY = PDFName.of('Names');
 
-const ACTION = PDFName.of('Action');
-const FILESPEC = PDFName.of('Filespec');
-
-const SUBMIT_FORM = PDFName.of('SubmitForm');
-const LAUNCH = PDFName.of('Launch');
-const IMPORT_DATA = PDFName.of('ImportData');
-const JS_ACTION = PDFName.of('JavaScript');
+const SUBMIT_FORM = 'SubmitForm';
+const LAUNCH = 'Launch';
+const IMPORT_DATA = 'ImportData';
+const JS_ACTION = 'JavaScript';
 
 /**
- * Walk the entire indirect-object graph and report any construct prohibited
- * by the .cv spec §3.4. Each rule maps to a stable error code so consumers
- * can pattern-match without parsing free-text messages.
+ * Walk the entire object graph from the catalog and report any construct
+ * prohibited by the .cv spec §3.4. The walk descends through every PDFDict and
+ * PDFArray value, resolving indirect references, so that forbidden actions
+ * carried as DIRECT/inline children (e.g. catalog /OpenAction, page /Annots/A,
+ * /AA, AcroForm field actions) are caught as well as indirect ones. Each rule
+ * maps to a stable error code so consumers can pattern-match without parsing
+ * free-text messages. Mirrors the Python reference impl in _security.py.
  */
 export function scanForbiddenConstructs(pdfDoc: PDFDocument): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -35,44 +34,58 @@ export function scanForbiddenConstructs(pdfDoc: PDFDocument): ValidationIssue[] 
     });
   }
 
-  for (const [, obj] of pdfDoc.context.enumerateIndirectObjects()) {
-    if (!(obj instanceof PDFDict)) continue;
-    inspectDict(pdfDoc, obj, issues);
-  }
+  const seen = new Set<PDFObject>();
+  walk(pdfDoc, pdfDoc.catalog, seen, issues);
 
   return dedupe(issues);
 }
 
+function walk(pdfDoc: PDFDocument, value: PDFObject | undefined, seen: Set<PDFObject>, issues: ValidationIssue[]): void {
+  const obj = resolve(pdfDoc, value);
+  if (obj === undefined || seen.has(obj)) return;
+  seen.add(obj);
+
+  if (obj instanceof PDFDict) {
+    inspectDict(pdfDoc, obj, issues);
+    for (const [, child] of obj.entries()) {
+      walk(pdfDoc, child, seen, issues);
+    }
+  } else if (obj instanceof PDFArray) {
+    for (let i = 0; i < obj.size(); i += 1) {
+      walk(pdfDoc, obj.get(i), seen, issues);
+    }
+  }
+}
+
 function inspectDict(pdfDoc: PDFDocument, dict: PDFDict, issues: ValidationIssue[]): void {
   const type = nameOf(dict.get(TYPE));
+  const subtype = nameOf(dict.get(S_KEY));
 
-  if (type === 'Action' || dict.get(S_KEY) instanceof PDFName) {
-    inspectAction(pdfDoc, dict, issues);
+  if (type === 'Action' || subtype) {
+    inspectAction(pdfDoc, dict, subtype, issues);
   }
 
   if (type === 'Filespec') {
     inspectFilespec(dict, issues);
   }
 
-  // /Names tree for document-level JavaScript: catalog→/Names→/JavaScript
-  // surfaces as a dict with a JavaScript key whose entry is a name tree.
-  // Any presence of /JavaScript on a Names dict is forbidden.
-  const namesEntry = dict.get(NAMES_KEY);
-  if (dict.get(JAVASCRIPT_KEY) || (namesEntry instanceof PDFDict && namesEntry.get(JAVASCRIPT_KEY))) {
-    if (!issues.some((i) => i.code === 'javascript-names-tree')) {
-      issues.push({
-        code: 'javascript-names-tree',
-        level: 'error',
-        message: 'Document declares /JavaScript names entries; JavaScript actions are forbidden (spec §3.4)',
-      });
-    }
+  // A /JavaScript entry on any dict (catalog→/Names→/JavaScript name tree, or
+  // the leaf nodes thereof) signals document-level JavaScript, which is forbidden.
+  if (dict.get(JAVASCRIPT_KEY) !== undefined) {
+    issues.push({
+      code: 'javascript-names-tree',
+      level: 'error',
+      message: 'Document declares /JavaScript names entries; JavaScript actions are forbidden (spec §3.4)',
+    });
   }
 }
 
-function inspectAction(pdfDoc: PDFDocument, dict: PDFDict, issues: ValidationIssue[]): void {
-  const subtype = dict.get(S_KEY);
-  if (!(subtype instanceof PDFName)) return;
-
+function inspectAction(
+  pdfDoc: PDFDocument,
+  dict: PDFDict,
+  subtype: string | undefined,
+  issues: ValidationIssue[],
+): void {
   if (subtype === JS_ACTION || dict.get(JS_KEY) !== undefined) {
     issues.push({
       code: 'javascript-action',
@@ -101,7 +114,7 @@ function inspectAction(pdfDoc: PDFDocument, dict: PDFDict, issues: ValidationIss
   }
 
   if (subtype === SUBMIT_FORM) {
-    const fEntry = pdfDoc.context.lookup(dict.get(F_KEY));
+    const fEntry = resolve(pdfDoc, dict.get(F_KEY));
     const target = filespecTarget(fEntry);
     if (!target || !target.toLowerCase().startsWith('mailto:')) {
       issues.push({
@@ -119,16 +132,13 @@ function inspectFilespec(dict: PDFDict, issues: ValidationIssue[]): void {
   if (dict.get(EF_KEY) !== undefined) return;
   // No /EF means the filespec points outside the container.
   const target = filespecTarget(dict);
-  if (!issues.some((i) => i.code === 'external-filespec' && i.payload === target)) {
-    issues.push({
-      code: 'external-filespec',
-      level: 'error',
-      message: target
-        ? `External /Filespec "${target}" (spec §3.4)`
-        : 'External /Filespec with no /EF (spec §3.4)',
-      payload: target,
-    });
-  }
+  const issue: ValidationIssue = {
+    code: 'external-filespec',
+    level: 'error',
+    message: target ? `External /Filespec "${target}" (spec §3.4)` : 'External /Filespec with no /EF (spec §3.4)',
+  };
+  if (target !== undefined) issue.payload = target;
+  issues.push(issue);
 }
 
 function filespecTarget(value: PDFObject | undefined): string | undefined {
@@ -153,6 +163,14 @@ function filespecTarget(value: PDFObject | undefined): string | undefined {
     return parts.length > 0 ? parts.join('/') : undefined;
   }
   return undefined;
+}
+
+function resolve(pdfDoc: PDFDocument, value: PDFObject | undefined): PDFObject | undefined {
+  if (value === undefined) return undefined;
+  if (value instanceof PDFRef) {
+    return pdfDoc.context.lookup(value) ?? undefined;
+  }
+  return value;
 }
 
 function nameOf(value: PDFObject | undefined): string | undefined {
