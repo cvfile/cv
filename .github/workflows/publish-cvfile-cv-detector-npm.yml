@@ -27,4 +27,9 @@ jobs:
         run: pnpm build
       - name: Publish
         working-directory: tools/cv-detector/typescript
-        run: pnpm publish --access public --no-git-checks --provenance
+        # Publish with the npm CLI (>= 11.5.1) so npm's OIDC trusted publishing
+        # is used; `pnpm publish`'s token exchange 404s against npm. This package
+        # has no workspace: deps, so npm can pack from source directly.
+        run: |
+          npm install -g npm@latest
+          npm publish --access public --provenance
