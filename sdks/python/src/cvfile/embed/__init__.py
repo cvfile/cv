@@ -5,35 +5,38 @@ Install via `pip install cvfile[embed]`. Default model is BAAI/bge-m3
 """
 
 from cvfile.embed._chunk import ChunkingMode, MarkdownChunk, chunk_markdown
+from cvfile.embed._embed import EmbedOptions, embed
 from cvfile.embed._embeddings import (
     EmbeddingChunk,
-    EmbeddingsPayload,
     EmbeddingSpace,
+    EmbeddingsPayload,
     decode_embeddings,
     encode_embeddings,
 )
-from cvfile.embed._search import SearchHit, SearchOptions, search_semantic
-from cvfile.embed._embed import EmbedOptions, embed
 from cvfile.embed._huggingface import HuggingFaceBackend
+from cvfile.embed._resolve import ResolvedChunk, resolve_embedding_chunks
+from cvfile.embed._search import SearchHit, SearchOptions, search_semantic
 
 DEFAULT_MODEL = "BAAI/bge-m3"
 DEFAULT_MODEL_DIMENSION = 1024
 
 __all__ = [
-    "ChunkingMode",
     "DEFAULT_MODEL",
     "DEFAULT_MODEL_DIMENSION",
+    "ChunkingMode",
     "EmbedOptions",
     "EmbeddingChunk",
     "EmbeddingSpace",
     "EmbeddingsPayload",
     "HuggingFaceBackend",
     "MarkdownChunk",
+    "ResolvedChunk",
     "SearchHit",
     "SearchOptions",
     "chunk_markdown",
     "decode_embeddings",
     "embed",
     "encode_embeddings",
+    "resolve_embedding_chunks",
     "search_semantic",
 ]

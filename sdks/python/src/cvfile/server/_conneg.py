@@ -6,6 +6,7 @@ over Accept; otherwise q-sorted Accept; defaults to PDF.
 
 from __future__ import annotations
 
+import contextlib
 import re
 from dataclasses import dataclass
 from typing import Literal
@@ -59,10 +60,8 @@ def parse_accept(header: str | None) -> list[_ParsedAccept]:
         for p in bits[1:]:
             m = _Q_RE.match(p)
             if m:
-                try:
+                with contextlib.suppress(ValueError):
                     q = float(m.group(1))
-                except ValueError:
-                    pass
         parts.append(_ParsedAccept(type=bits[0].lower(), q=q))
     parts.sort(key=lambda p: p.q, reverse=True)
     return parts
@@ -83,10 +82,8 @@ def parse_accept_language(header: str | None) -> list[str]:
         for p in bits[1:]:
             m = _Q_RE.match(p)
             if m:
-                try:
+                with contextlib.suppress(ValueError):
                     q = float(m.group(1))
-                except ValueError:
-                    pass
         pairs.append((tag, q))
     pairs.sort(key=lambda p: p[1], reverse=True)
     return [tag for tag, _ in pairs]

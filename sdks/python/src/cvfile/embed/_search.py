@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from cvfile.embed._embeddings import EmbeddingsPayload, EmbeddingSpace
+from cvfile.embed._embeddings import EmbeddingSpace, EmbeddingsPayload
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,8 +67,8 @@ def _pick_space(payload: EmbeddingsPayload, model: str | None) -> EmbeddingSpace
 
 def _similarity(a: tuple[float, ...], b: tuple[float, ...], metric: str) -> float:
     if metric == "euclidean":
-        return math.sqrt(sum((ai - bi) ** 2 for ai, bi in zip(a, b)))
-    dot = sum(ai * bi for ai, bi in zip(a, b))
+        return math.sqrt(sum((ai - bi) ** 2 for ai, bi in zip(a, b, strict=True)))
+    dot = sum(ai * bi for ai, bi in zip(a, b, strict=True))
     if metric == "dot":
         return dot
     na = math.sqrt(sum(ai * ai for ai in a))

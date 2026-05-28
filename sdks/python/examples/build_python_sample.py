@@ -6,12 +6,39 @@ suite can verify it extracts identically.
 
 from __future__ import annotations
 
+import hashlib
 import io
+import struct
 from pathlib import Path
 
 import pypdf
 
 from cvfile import extract, inspect, pack, validate
+from cvfile.embed import EmbedOptions, embed
+
+_EMBED_DIMENSION = 8
+
+
+class DeterministicBackend:
+    """Offline, reproducible embedding backend for fixtures.
+
+    Hashes each chunk's text into a fixed-length float32 vector so the fixture
+    is byte-stable across runs and machines without any model download. Not for
+    real retrieval; only to exercise the embeddings path end to end.
+    """
+
+    model = "fixture/deterministic-hash"
+    model_revision = "v1"
+    metric = "cosine"
+    normalized = False
+
+    def embed(self, texts: list[str]) -> tuple[list[tuple[float, ...]], int]:
+        vectors: list[tuple[float, ...]] = []
+        for text in texts:
+            digest = hashlib.sha256(text.encode("utf-8")).digest()
+            raw = (digest * ((_EMBED_DIMENSION * 4) // len(digest) + 1))[: _EMBED_DIMENSION * 4]
+            vectors.append(struct.unpack(f"<{_EMBED_DIMENSION}f", raw))
+        return vectors, _EMBED_DIMENSION
 
 
 SAMPLE_MD = """# Marie Curie
@@ -42,11 +69,14 @@ def main() -> None:
     out_dir = repo_root / "packages" / "sdk-js" / "tests" / "fixtures"
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    embeddings = embed(SAMPLE_MD, EmbedOptions(chunking="section", backend=DeterministicBackend()))
+
     cv = pack(
         pdf=make_blank_pdf(),
         markdown=SAMPLE_MD,
         html=SAMPLE_HTML,
         json_resume={"basics": {"name": "Marie Curie"}},
+        embeddings=embeddings,
         metadata={"primary_language": "en", "generator": "cvfile-py-examples/marie-curie"},
     )
 

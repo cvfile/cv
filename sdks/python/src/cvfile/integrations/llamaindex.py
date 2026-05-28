@@ -50,19 +50,18 @@ class CvFileReader:
 
         out: list[Document] = []
         for chunk in chunks:
-            text = markdown[chunk["text_offset"] : chunk["text_offset"] + chunk["text_length"]]
             md = dict(base_meta)
             md.update(
                 {
-                    "chunk_id": chunk["id"],
-                    "chunk_offset": chunk["text_offset"],
-                    "chunk_length": chunk["text_length"],
-                    "embedding_model": chunk["model"],
-                    "embedding_dimension": chunk["dimension"],
+                    "chunk_id": chunk.id,
+                    "chunk_offset": chunk.text_offset,
+                    "chunk_length": chunk.text_length,
+                    "embedding_model": chunk.model,
+                    "embedding_dimension": chunk.dimension,
                 }
             )
-            doc = Document(text=text, metadata=md)
-            doc.embedding = list(chunk["vector"])
+            doc = Document(text=chunk.text, metadata=md)
+            doc.embedding = list(chunk.vector)
             out.append(doc)
         return out
 
@@ -70,7 +69,8 @@ class CvFileReader:
     def _markdown_payload(file: Any) -> str:
         for p in file.payloads:
             if p.mime_type == "text/markdown":
-                return p.bytes_.decode("utf-8", errors="replace")
+                decoded: str = p.bytes_.decode("utf-8", errors="replace")
+                return decoded
         return ""
 
     @staticmethod
@@ -85,29 +85,12 @@ class CvFileReader:
         }
 
     @staticmethod
-    def _embedding_chunks(file: Any) -> list[dict[str, Any]]:
+    def _embedding_chunks(file: Any) -> list[Any]:
         try:
-            from cvfile.embed import decode_embeddings
+            from cvfile.embed import resolve_embedding_chunks
         except ImportError:
             return []
-        cbor_bytes = next((p.bytes_ for p in file.payloads if p.name == "embeddings.cbor"), None)
-        if cbor_bytes is None:
-            return []
         try:
-            payload = decode_embeddings(cbor_bytes)
+            return resolve_embedding_chunks(file)
         except Exception:
             return []
-        if not payload.spaces:
-            return []
-        space = payload.spaces[0]
-        return [
-            {
-                "id": c.id,
-                "text_offset": c.text_offset,
-                "text_length": c.text_length,
-                "vector": c.vector,
-                "model": space.model,
-                "dimension": space.dimension,
-            }
-            for c in space.chunks
-        ]

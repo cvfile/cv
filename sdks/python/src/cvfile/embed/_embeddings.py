@@ -97,9 +97,9 @@ def _from_cbor_space(raw: object) -> EmbeddingSpace:
         model=str(raw["model"]),
         model_revision=str(raw["model-revision"]),
         dimension=dimension,
-        metric=raw.get("metric", "cosine"),  # type: ignore[arg-type]
+        metric=raw.get("metric", "cosine"),
         normalized=bool(raw.get("normalized", True)),
-        chunking=raw.get("chunking", "section"),  # type: ignore[arg-type]
+        chunking=raw.get("chunking", "section"),
         chunks=tuple(_from_cbor_chunk(c, dimension) for c in raw.get("chunks", [])),
     )
 

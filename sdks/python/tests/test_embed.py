@@ -47,6 +47,46 @@ def test_chunk_markdown_section_mode() -> None:
         assert SAMPLE[c.text_offset : c.text_offset + c.text_length] == c.text
 
 
+MULTIBYTE_SAMPLE = """# Café résumé 📄
+
+Développeur sénior. Æther.
+
+## Expérience 日本語
+
+- Œuvre 2022 à 2026 🚀
+- Naïve Inc 2018 à 2022
+
+## Compétences
+
+Python, Go, 中文.
+"""
+
+
+def test_chunk_markdown_offsets_are_utf8_bytes() -> None:
+    """Offsets/lengths index into the UTF-8 byte stream, not code points."""
+    data = MULTIBYTE_SAMPLE.encode("utf-8")
+    # Sanity: the source genuinely has multibyte chars, so byte len > char len.
+    assert len(data) > len(MULTIBYTE_SAMPLE)
+
+    chunks = chunk_markdown(MULTIBYTE_SAMPLE)
+    # slugify keeps only [a-z0-9]; accents are dropped (no transliteration).
+    assert [c.id for c in chunks] == ["caf-r-sum", "exp-rience", "comp-tences"]
+    for c in chunks:
+        sliced = data[c.text_offset : c.text_offset + c.text_length].decode("utf-8")
+        assert sliced == c.text
+        # A naive code-point slice would NOT round-trip here.
+    # At least one chunk must start past a multibyte char to prove byte semantics.
+    assert any(c.text_offset > 0 for c in chunks)
+
+
+def test_chunk_markdown_paragraph_offsets_are_utf8_bytes() -> None:
+    data = MULTIBYTE_SAMPLE.encode("utf-8")
+    chunks = chunk_markdown(MULTIBYTE_SAMPLE, mode="paragraph")
+    assert len(chunks) > 1
+    for c in chunks:
+        assert data[c.text_offset : c.text_offset + c.text_length].decode("utf-8") == c.text
+
+
 def test_chunk_markdown_document_mode() -> None:
     chunks = chunk_markdown(SAMPLE, mode="document")
     assert len(chunks) == 1

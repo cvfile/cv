@@ -7,6 +7,7 @@ embedding, ICC profile injection on arbitrary input PDFs) will land here.
 
 from __future__ import annotations
 
+import hashlib
 import io
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -68,6 +69,7 @@ def add_associated_file(
                     NameObject("/CreationDate"): TextStringObject(_pdf_date(creation_date)),
                     NameObject("/ModDate"): TextStringObject(_pdf_date(modification_date)),
                     NameObject("/Size"): NumberObject(len(data)),
+                    NameObject("/CheckSum"): ByteStringObject(hashlib.md5(data).digest()),
                 }
             ),
         }
@@ -163,13 +165,15 @@ def read_metadata_xml(reader: PdfReader) -> str | None:
     meta = meta.get_object() if isinstance(meta, IndirectObject) else meta
     if not isinstance(meta, StreamObject):
         return None
-    data = meta.get_data()
+    data: object = meta.get_data()
     if isinstance(data, str):
         return data
-    return data.decode("utf-8", errors="replace")
+    if isinstance(data, bytes):
+        return data.decode("utf-8", errors="replace")
+    return None
 
 
-def _parse_filespec(filespec: DictionaryObject) -> RawPayload | None:
+def _parse_filespec(filespec: object) -> RawPayload | None:
     if not isinstance(filespec, DictionaryObject):
         return None
     ef = filespec.get("/EF")
@@ -185,9 +189,13 @@ def _parse_filespec(filespec: DictionaryObject) -> RawPayload | None:
     if not isinstance(stream, StreamObject):
         return None
 
-    data = stream.get_data()
-    if isinstance(data, str):
-        data = data.encode("latin-1", errors="replace")
+    raw_data: object = stream.get_data()
+    if isinstance(raw_data, str):
+        data = raw_data.encode("latin-1", errors="replace")
+    elif isinstance(raw_data, bytes):
+        data = raw_data
+    else:
+        return None
 
     name_obj = filespec.get("/UF") or filespec.get("/F")
     if name_obj is None:
@@ -239,7 +247,7 @@ def _pdf_date(dt: datetime) -> str:
     """Format a datetime as a PDF date string (D:YYYYMMDDHHmmSS+HH'mm')."""
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc).strftime("D:%Y%m%d%H%M%SZ")
+    return dt.astimezone(timezone.utc).strftime("D:%Y%m%d%H%M%S+00'00'")
 
 
 __all__ = [

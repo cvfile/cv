@@ -8,8 +8,8 @@ from typing import Protocol
 from cvfile.embed._chunk import ChunkingMode, chunk_markdown
 from cvfile.embed._embeddings import (
     EmbeddingChunk,
-    EmbeddingsPayload,
     EmbeddingSpace,
+    EmbeddingsPayload,
 )
 from cvfile.embed._huggingface import HuggingFaceBackend
 

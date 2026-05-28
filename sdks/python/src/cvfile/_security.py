@@ -132,14 +132,14 @@ def _inspect_filespec(d: DictionaryObject, issues: list[ValidationIssue]) -> Non
     )
 
 
-def _filespec_target(value: PdfObject | None) -> str | None:
+def _filespec_target(value: object | None) -> str | None:
     if value is None:
         return None
     if isinstance(value, str):
         return value
     if isinstance(value, DictionaryObject):
         for key in ("/UF", "/F"):
-            entry = _resolve(value.get(key))
+            entry: object = _resolve(value.get(key))
             if isinstance(entry, str):
                 return entry
     if isinstance(value, ArrayObject):
@@ -148,7 +148,7 @@ def _filespec_target(value: PdfObject | None) -> str | None:
     return None
 
 
-def _name_of(value: PdfObject | None) -> str | None:
+def _name_of(value: object | None) -> str | None:
     if isinstance(value, NameObject):
         s = str(value)
         return s[1:] if s.startswith("/") else s

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import html as _html
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, assert_never
 
 from cvfile.extract import extract
 from cvfile.server._conneg import (
@@ -125,7 +125,7 @@ def _serve(cv_bytes: bytes, decision: NegotiationResult) -> ServeBody:
             )
         return _fallback_pdf(cv_bytes)
 
-    return _fallback_pdf(cv_bytes)
+    assert_never(decision.format)
 
 
 def _pick(file: CvFile, mime: str, prefer_lang: str) -> ExtractedPayload | None:
