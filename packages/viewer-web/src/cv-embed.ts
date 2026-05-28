@@ -3,11 +3,16 @@ import { property, state } from 'lit/decorators.js';
 import { extract } from '@cvfile/sdk';
 import type { CvFile } from '@cvfile/sdk';
 import { renderMarkdown } from './render-markdown.js';
-import { renderPdfPage } from './render-pdf.js';
+import { pickPayloadByLanguage, selectCleanText } from './payload-selection.js';
 
 type Tab = 'pdf' | 'md' | 'html';
 type Theme = 'auto' | 'light' | 'dark';
 type ChangedKeys = Map<PropertyKey, unknown>;
+
+/** Abort a stalled fetch after this many milliseconds. */
+const FETCH_TIMEOUT_MS = 15_000;
+/** Reject absurdly large bodies before extraction (.cv files are PDF-sized). */
+const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 export class CvEmbed extends LitElement {
   static override styles = css`
@@ -243,6 +248,8 @@ export class CvEmbed extends LitElement {
   @property({ type: String, attribute: 'language' }) language = '';
   @property({ type: Boolean, attribute: 'tab-bar' }) tabBar = true;
   @property({ type: String, reflect: true }) theme: Theme = 'auto';
+  /** Optional override for the pdf.js worker URL (defaults to a bundler-portable resolution). */
+  @property({ type: String, attribute: 'worker-src' }) workerSrc = '';
 
   @state() private file: CvFile | null = null;
   @state() private error: string | null = null;
@@ -250,6 +257,18 @@ export class CvEmbed extends LitElement {
   @state() private loading = true;
   @state() private pdfPage = 1;
   @state() private pdfPageCount = 1;
+
+  /**
+   * The extracted crawler-friendly clean text (the selected markdown payload,
+   * or HTML as a fallback). Exposed read-only so hosts and tests can read it,
+   * and mirrored into the light DOM in {@link projectCleanText} so search
+   * engines can index it (shadow-DOM content is not indexed).
+   */
+  get cleanText(): string {
+    return this._cleanText;
+  }
+  private _cleanText = '';
+  private cleanTextNode: HTMLElement | null = null;
 
   private pdfModulePromise: Promise<typeof import('./render-pdf.js')> | null = null;
 
@@ -275,6 +294,15 @@ export class CvEmbed extends LitElement {
         void this.renderPdf();
       }
     }
+    if (changed.has('file') || changed.has('language')) {
+      this.projectCleanText();
+    }
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.cleanTextNode?.remove();
+    this.cleanTextNode = null;
   }
 
   loadFromBytes(bytes: Uint8Array): Promise<void> {
@@ -294,11 +322,22 @@ export class CvEmbed extends LitElement {
     this.error = null;
     this.file = null;
     try {
-      const res = await fetch(this.src);
+      const res = await fetch(this.src, {
+        credentials: 'omit',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
       if (!res.ok) {
         throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
       }
+      const declared = Number(res.headers.get('content-length'));
+      if (Number.isFinite(declared) && declared > MAX_FILE_BYTES) {
+        throw new Error(`File too large: ${declared} bytes exceeds limit of ${MAX_FILE_BYTES}`);
+      }
       const buf = new Uint8Array(await res.arrayBuffer());
+      if (buf.byteLength > MAX_FILE_BYTES) {
+        throw new Error(`File too large: ${buf.byteLength} bytes exceeds limit of ${MAX_FILE_BYTES}`);
+      }
       await this.processBytes(buf);
     } catch (err) {
       this.error = (err as Error).message;
@@ -325,15 +364,57 @@ export class CvEmbed extends LitElement {
     return 'pdf';
   }
 
+  /**
+   * Mirror the extracted clean text into the LIGHT DOM. Shadow-DOM content is
+   * invisible to crawlers, which defeats the purpose of shipping clean text, so
+   * we maintain a single light-DOM child holding the selected markdown (or HTML)
+   * payload. It is visually hidden but remains in the accessibility tree and is
+   * indexable. Hosts can also read it via the `cleanText` property.
+   */
+  private projectCleanText(): void {
+    const text = this.file ? selectCleanText(this.file, this.language) : '';
+    this._cleanText = text;
+
+    if (!text) {
+      this.cleanTextNode?.remove();
+      this.cleanTextNode = null;
+      return;
+    }
+    if (!this.cleanTextNode) {
+      const node = document.createElement('div');
+      node.setAttribute('data-cv-clean-text', '');
+      node.setAttribute('aria-hidden', 'false');
+      // Visually hidden but kept in the DOM, accessibility tree, and crawl index.
+      Object.assign(node.style, {
+        position: 'absolute',
+        width: '1px',
+        height: '1px',
+        margin: '-1px',
+        padding: '0',
+        overflow: 'hidden',
+        clip: 'rect(0 0 0 0)',
+        clipPath: 'inset(50%)',
+        whiteSpace: 'pre-wrap',
+        border: '0',
+      } satisfies Partial<CSSStyleDeclaration>);
+      this.cleanTextNode = node;
+      this.appendChild(node);
+    }
+    this.cleanTextNode.textContent = text;
+  }
+
   private async renderPdf(): Promise<void> {
     if (!this.file) return;
     const canvas = this.renderRoot.querySelector<HTMLCanvasElement>('.pdf-canvas');
     if (!canvas) return;
     if (!this.pdfModulePromise) {
+      // Dynamic import keeps heavy pdf.js out of the entry chunk.
       this.pdfModulePromise = import('./render-pdf.js');
     }
     try {
       const mod = await this.pdfModulePromise;
+      // Configure the worker source on the lazily loaded module (idempotent).
+      if (this.workerSrc) mod.setWorkerSrc(this.workerSrc);
       const { numPages } = await mod.renderPdfPage(this.file.bytes, this.pdfPage, canvas);
       if (numPages !== this.pdfPageCount) {
         this.pdfPageCount = numPages;
@@ -403,8 +484,8 @@ export class CvEmbed extends LitElement {
     }
 
     const file = this.file;
-    const md = file.payloads.find((p) => p.mimeType === 'text/markdown');
-    const htmlPayload = file.payloads.find((p) => p.mimeType === 'text/html');
+    const md = pickPayloadByLanguage(file, 'text/markdown', this.language);
+    const htmlPayload = pickPayloadByLanguage(file, 'text/html', this.language);
     const available: Record<Tab, boolean> = {
       pdf: true,
       md: !!md,
@@ -504,5 +585,3 @@ declare global {
     'cv-embed': CvEmbed;
   }
 }
-
-export { renderPdfPage };
