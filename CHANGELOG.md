@@ -2,6 +2,26 @@
 
 All notable changes to the `.cv` format and reference tooling are documented here. The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] (2026-05-29)
+
+End-to-end audit sweep across every component. All fixes verified by exercising the real code paths (CLI round-trips, live server negotiation, cross-SDK fixtures), not only the test suites.
+
+### Fixed
+- **Go `Pack()` no longer silently corrupts.** It previously returned no error while pdfcpu dropped every embedded payload, emitting a file that passed `IsCvFile` but had zero payloads (and panicked on minimal PDFs). The Go writer is deferred to a later release, so `Pack()` now returns an explicit "writer not implemented" error before any mutation.
+- **Validator inline-action bypass (JS + Go).** `scanForbiddenConstructs` only walked indirect objects, so an inline `/OpenAction` JavaScript action (or `/AA`, annotation `/A`, AcroForm action) passed validation. Both now recursively walk the catalog/trailer object graph, matching the Python implementation.
+- **Server served HTML to browsers.** A normal browser request (`*/*` or `text/html` with a wildcard) now returns the visual PDF as documented; markdown is served only as an explicit top preference. Also: `q=0` is honored, `Content-Disposition` filenames are sanitized (no header injection), `defaultFormat` is a true fallback rather than a forced format, Hono reaches header parity with the other adapters, and `ETag`/`Last-Modified`/`304` are supported.
+- **Chunk offsets are UTF-8 bytes (JS + Python).** The chunkers emitted UTF-16/code-point offsets, disagreeing with the spec (§5.1) and across SDKs on any non-ASCII résumé. Both now emit byte offsets; the RAG integrations slice on bytes.
+- **Embedded-file `/Params` now carries the spec-mandated `/CheckSum`** (JS + Python), with valid PDF date zones.
+- **Python `validate()` no longer crashes** on a malformed encrypted file (broadened parse handling; encryption detected via the parsed reader). Python `pack()` now emits the `cv:embeddings` XMP summary it previously omitted.
+
+### Changed
+- **RAG integrations now load embeddings.** `langchain-cvfile`, `llama-index-readers-cvfile`, and `cvfile-haystack` previously dropped `embeddings.cbor`; they now expose a chunks mode that attaches per-chunk vectors, delegating to a single SDK helper.
+- **viewer-web**: portable pdf.js worker (was a Vite-only `?url` import that broke other bundlers), real lazy pdf.js loading, crawler-facing clean text projected into the light DOM, language-aware payload selection, hardened `src` fetch.
+- **JS SDK**: portable-filename validation on pack and read, CBOR decode-path validation parity, `/DecodeParms` predictor rejection, `newer-format-version` warning (spec §8.3).
+- **docs**: accessible file pickers, lazily loaded and sanitized `marked` on `/create`.
+- `cv-detector` (Go/Python/TS, 0.1.1) recognizes the RDF attribute form of `cv:version`.
+- Spec §6.3 corrected: `cv:alternates`/`integrity`/`embeddings` are XMP `Text` holding a JSON-encoded array (as all SDKs implement), not `rdf:Bag` of struct.
+
 ## [Unreleased]
 
 ### Added

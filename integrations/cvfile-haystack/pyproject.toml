@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cvfile-haystack"
-version = "0.1.0"
+version = "0.2.0"
 description = "Haystack integration for the .cv open file format."
 readme = "README.md"
 license = { text = "Apache-2.0" }

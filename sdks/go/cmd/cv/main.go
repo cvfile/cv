@@ -14,7 +14,7 @@ import (
 
 // cliVersion is the version of this command-line tool, distinct from the
 // .cv spec version (cv.SpecVersion) and any SDK package version.
-const cliVersion = "0.1.0"
+const cliVersion = "0.2.0"
 
 const usage = `cv — the .cv open file format CLI (v0.1)
 

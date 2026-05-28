@@ -1,6 +1,6 @@
 {
   "name": "@cvfile/cv-detector",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tiny reference sniffer for the .cv open file format. Detects .cv wrapping inside any application/pdf and unwraps the canonical Markdown payload.",
   "type": "module",
   "license": "Apache-2.0",
@@ -11,7 +11,15 @@
     "directory": "tools/cv-detector/typescript"
   },
   "bugs": "https://github.com/cvfile/cv/issues",
-  "keywords": ["cv", "resume", "pdf", "open-format", "rag", "crawler", "sniffer"],
+  "keywords": [
+    "cv",
+    "resume",
+    "pdf",
+    "open-format",
+    "rag",
+    "crawler",
+    "sniffer"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -24,7 +32,10 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",

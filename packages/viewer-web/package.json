@@ -1,6 +1,6 @@
 {
   "name": "@cvfile/viewer-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "<cv-embed> web component and standalone viewer for the .cv open file format.",
   "license": "Apache-2.0",
   "homepage": "https://cvfile.org",
