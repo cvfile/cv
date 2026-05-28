@@ -1,14 +1,23 @@
 package cv
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 )
 
 // DefaultMaxPayloadBytes is the per-payload decompressed-byte cap (spec §7.3).
 const DefaultMaxPayloadBytes = 16 * 1024 * 1024
+
+// knownMaxMajor is the highest cv: format MAJOR this SDK was built to read.
+// Both "0.1" and "1.0" are accepted; a file declaring major >= 2 triggers a
+// warning (spec §8.3) but is still extracted.
+const knownMaxMajor = 1
 
 // ValidateOptions controls the strictness of validation.
 type ValidateOptions struct {
@@ -29,21 +38,21 @@ func Validate(data []byte, opts ValidateOptions) *ValidationReport {
 	}
 	var issues []ValidationIssue
 
-	if looksEncrypted(data) {
-		issues = append(issues, ValidationIssue{
-			Code:    "encrypted-document",
-			Level:   "error",
-			Message: "Trailer declares /Encrypt; encryption is forbidden in cv 0.x (spec §3.4)",
-		})
-		return &ValidationReport{OK: false, Level: level, Issues: issues}
-	}
-
 	ctx, err := loadContext(data)
 	if err != nil {
+		// pdfcpu refuses to build a context for an encrypted document and tells
+		// us so via its parse error; classify that as the spec-§3.4 encryption
+		// rejection rather than a generic parse failure.
+		code := "pdf-parse-failed"
+		msg := err.Error()
+		if isEncryptionError(err) {
+			code = "encrypted-document"
+			msg = "Trailer declares /Encrypt; encryption is forbidden in cv 0.x (spec §3.4)"
+		}
 		issues = append(issues, ValidationIssue{
-			Code:    "pdf-parse-failed",
+			Code:    code,
 			Level:   "error",
-			Message: err.Error(),
+			Message: msg,
 		})
 		return &ValidationReport{OK: false, Level: level, Issues: issues}
 	}
@@ -68,6 +77,17 @@ func Validate(data []byte, opts ValidateOptions) *ValidationReport {
 			Message: "XMP packet missing required cv: properties",
 		})
 		return &ValidationReport{OK: false, Level: level, Issues: issues}
+	}
+
+	// Spec §8.3: accept files from the same MAJOR line (this SDK knows 0.x and
+	// 1.0), but warn when the file declares a newer MAJOR we were not built for.
+	// Extraction continues regardless; this is informational only.
+	if major, ok := majorVersion(meta.Version); ok && major > knownMaxMajor {
+		issues = append(issues, ValidationIssue{
+			Code:    "newer-format-version",
+			Level:   "warning",
+			Message: fmt.Sprintf("File declares cv:version %q (major %d); this SDK knows up to major %d (spec §8.3)", meta.Version, major, knownMaxMajor),
+		})
 	}
 
 	rawList, err := readAssociatedFiles(ctx)
@@ -168,25 +188,36 @@ func Validate(data []byte, opts ValidateOptions) *ValidationReport {
 	return &ValidationReport{OK: ok, Level: level, Issues: issues}
 }
 
-var encryptToken = []byte("/Encrypt")
-
-// looksEncrypted is a byte-level pre-check on the trailer region: pdfcpu can
-// load encrypted PDFs but our policy is to refuse them outright with the
-// documented spec-§3.4 code regardless of parser behaviour.
-func looksEncrypted(data []byte) bool {
-	tail := data
-	if len(data) > 4096 {
-		tail = data[len(data)-4096:]
-	}
-	idx := bytes.Index(tail, encryptToken)
-	if idx < 0 {
+// isEncryptionError reports whether a pdfcpu read error stems from the document
+// being encrypted. pdfcpu signals this through its parse error (it has no clean
+// exported sentinel for the malformed-encryption case), so we match the stable
+// "encryption" wording it uses. This keys off the parser's own diagnosis, not a
+// byte scan of payload content, so it cannot false-positive on a payload that
+// merely contains the literal "/Encrypt".
+func isEncryptionError(err error) bool {
+	if err == nil {
 		return false
 	}
-	// Confirm word boundary (next byte is space, slash, newline, or EOF).
-	end := idx + len(encryptToken)
-	if end >= len(tail) {
+	if errors.Is(err, pdfcpu.ErrWrongPassword) || errors.Is(err, pdfcpu.ErrUnknownEncryption) {
 		return true
 	}
-	c := tail[end]
-	return c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '/' || c == '<' || c == '['
+	return strings.Contains(strings.ToLower(err.Error()), "encryption")
+}
+
+// majorVersion parses the MAJOR component of a "MAJOR.MINOR" cv:version string.
+// Returns (0, false) when the string is empty or the major is not an integer.
+func majorVersion(version string) (int, bool) {
+	version = strings.TrimSpace(version)
+	if version == "" {
+		return 0, false
+	}
+	majorStr := version
+	if i := strings.IndexByte(version, '.'); i >= 0 {
+		majorStr = version[:i]
+	}
+	major, err := strconv.Atoi(majorStr)
+	if err != nil {
+		return 0, false
+	}
+	return major, true
 }

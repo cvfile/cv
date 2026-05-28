@@ -125,15 +125,27 @@ func parseHFMatrix(raw []byte, expected int) ([][]float32, error) {
 		switch first[0].(type) {
 		case float64:
 			out := make([][]float32, len(arr))
-			for i, row := range arr {
-				out[i] = toFloat32(row.([]any))
+			for i, raw := range arr {
+				row, ok := raw.([]any)
+				if !ok {
+					return nil, fmt.Errorf("HF response: row %d is %T, expected an array of numbers", i, raw)
+				}
+				out[i] = toFloat32(row)
 			}
 			return out, nil
 		case []any:
 			// Token-level embeddings: mean-pool per input.
 			out := make([][]float32, len(arr))
-			for i, row := range arr {
-				out[i] = meanPool(row.([]any))
+			for i, raw := range arr {
+				row, ok := raw.([]any)
+				if !ok {
+					return nil, fmt.Errorf("HF response: row %d is %T, expected a token matrix", i, raw)
+				}
+				vec, err := meanPool(row)
+				if err != nil {
+					return nil, fmt.Errorf("HF response: row %d: %w", i, err)
+				}
+				out[i] = vec
 			}
 			return out, nil
 		}
@@ -150,15 +162,24 @@ func toFloat32(arr []any) []float32 {
 	return out
 }
 
-func meanPool(tokens []any) []float32 {
+func meanPool(tokens []any) ([]float32, error) {
 	if len(tokens) == 0 {
-		return nil
+		return nil, nil
 	}
-	first, _ := tokens[0].([]any)
+	first, ok := tokens[0].([]any)
+	if !ok {
+		return nil, fmt.Errorf("token 0 is %T, expected an array of numbers", tokens[0])
+	}
 	dim := len(first)
 	sum := make([]float64, dim)
-	for _, t := range tokens {
-		row, _ := t.([]any)
+	for ti, t := range tokens {
+		row, ok := t.([]any)
+		if !ok {
+			return nil, fmt.Errorf("token %d is %T, expected an array of numbers", ti, t)
+		}
+		if len(row) != dim {
+			return nil, fmt.Errorf("token %d has length %d, expected %d (ragged matrix)", ti, len(row), dim)
+		}
 		for i, v := range row {
 			f, _ := v.(float64)
 			sum[i] += f
@@ -169,7 +190,7 @@ func meanPool(tokens []any) []float32 {
 	for i, v := range sum {
 		out[i] = float32(v / n)
 	}
-	return out
+	return out, nil
 }
 
 func normalize(v []float32) []float32 {

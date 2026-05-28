@@ -1,6 +1,7 @@
 package cv
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -21,9 +22,8 @@ Senior software engineer.
 const sampleHTML = `<!doctype html>
 <html lang="en"><body><h1>Jane Doe</h1></body></html>`
 
-// minimalPDF is a minimal PDF with /Resources containing /Font and
-// /ProcSet so that pdfcpu's writePagesDict has writable maps to populate.
-// Built by hand once for tests; unused fields trimmed to the minimum.
+// minimalPDF is a minimal hand-built PDF used to confirm the reader rejects
+// plain PDFs as .cv and that Pack refuses minimal input without panicking.
 var minimalPDF = []byte("%PDF-1.7\n" +
 	"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
 	"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
@@ -31,20 +31,52 @@ var minimalPDF = []byte("%PDF-1.7\n" +
 	"xref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000054 00000 n \n0000000099 00000 n \n" +
 	"trailer<</Size 4/Root 1 0 R>>\nstartxref\n195\n%%EOF\n")
 
-// Go-side Pack() depends on pdfcpu's writer, which currently chokes on
-// some minimal input PDFs (nil-map panic in writePagesDict). The reader
-// path through pdfcpu is solid, so v0.1 of cv-go ships as a consumer
-// SDK. Pack() round-trip tests will return when the writer issue is
-// resolved (likely by fronting pdfcpu with a hand-rolled incremental
-// updater that appends /AF + /Metadata without touching the page tree).
-//
-// In the meantime, the killer property for Go adopters — "Go can read
-// .cv files produced by any compliant SDK" — is exercised by the
-// interop tests below.
+// Go-side Pack() (the writer) is deferred to v0.2: v0.1 of cv-go ships as a
+// consumer SDK. The reader path through pdfcpu is solid, and "Go can read .cv
+// files produced by any compliant SDK" is exercised by the interop tests below.
+// Pack() must refuse up front so it can never emit a corrupt file or panic.
 
 func TestIsCvFileRejectsPlainPDF(t *testing.T) {
 	if IsCvFile(minimalPDF) {
 		t.Error("plain PDF should not be detected as .cv")
+	}
+}
+
+// TestPackReturnsNotImplementedForNormalPDF asserts Pack refuses a normal input
+// PDF with ErrPackNotImplemented instead of emitting a corrupt .cv file.
+func TestPackReturnsNotImplementedForNormalPDF(t *testing.T) {
+	pdf, err := os.ReadFile(repoFixturePath("packages/sdk-js/examples/out/jane-doe.pdf"))
+	if err != nil {
+		t.Skipf("input PDF fixture missing at %s", "packages/sdk-js/examples/out/jane-doe.pdf")
+	}
+	out, err := Pack(PackInput{
+		PDF:      pdf,
+		Markdown: []byte(sampleMD),
+		HTML:     []byte(sampleHTML),
+		Metadata: Metadata{PrimaryLanguage: "en"},
+	})
+	if !errors.Is(err, ErrPackNotImplemented) {
+		t.Fatalf("Pack err = %v, want ErrPackNotImplemented", err)
+	}
+	if out != nil {
+		t.Errorf("Pack returned %d bytes; want nil (no corrupt file)", len(out))
+	}
+}
+
+// TestPackDoesNotPanicOnMinimalPDF asserts Pack returns the not-implemented
+// error rather than panicking on a minimal PDF (the old writer path panicked
+// with "assignment to entry in nil map").
+func TestPackDoesNotPanicOnMinimalPDF(t *testing.T) {
+	out, err := Pack(PackInput{
+		PDF:      minimalPDF,
+		Markdown: []byte(sampleMD),
+		Metadata: Metadata{PrimaryLanguage: "en"},
+	})
+	if !errors.Is(err, ErrPackNotImplemented) {
+		t.Fatalf("Pack err = %v, want ErrPackNotImplemented", err)
+	}
+	if out != nil {
+		t.Errorf("Pack returned %d bytes; want nil", len(out))
 	}
 }
 

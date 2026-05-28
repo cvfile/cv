@@ -8,9 +8,13 @@ import (
 	pdfTypes "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
-// scanForbiddenConstructs walks every indirect object in the xref table and
-// reports constructs prohibited by .cv spec §3.4. Error codes match the JS
-// and Python SDKs so cross-language tests share expectations.
+// scanForbiddenConstructs walks the object graph from the catalog (resolving
+// indirect refs and descending into every dict/array value) and reports
+// constructs prohibited by .cv spec §3.4. Walking the graph rather than just
+// the xref table means forbidden actions stored as DIRECT (inline) children —
+// e.g. a catalog /OpenAction << /S /JavaScript /JS (...) >> — are still caught.
+// Error codes match the JS and Python SDKs so cross-language tests share
+// expectations. This mirrors the Python _security.py implementation.
 func scanForbiddenConstructs(ctx *model.Context) []ValidationIssue {
 	var issues []ValidationIssue
 
@@ -22,22 +26,52 @@ func scanForbiddenConstructs(ctx *model.Context) []ValidationIssue {
 		})
 	}
 
-	for _, entry := range ctx.Table {
-		if entry == nil || entry.Object == nil {
-			continue
-		}
-		dict, ok := entry.Object.(pdfTypes.Dict)
-		if !ok {
-			if sd, isStream := entry.Object.(pdfTypes.StreamDict); isStream {
-				dict = sd.Dict
-			} else {
-				continue
-			}
-		}
-		inspectSecurityDict(ctx, dict, &issues)
+	root, err := ctx.Catalog()
+	if err == nil && root != nil {
+		seen := map[int]struct{}{}
+		walkSecurityObject(ctx, root, seen, &issues)
 	}
 
 	return dedupeIssues(issues)
+}
+
+// walkSecurityObject recursively descends an object, resolving indirect refs.
+// The visited set is keyed by indirect-object number to avoid cycles; direct
+// (inline) dicts and arrays are always descended.
+func walkSecurityObject(ctx *model.Context, obj pdfTypes.Object, seen map[int]struct{}, issues *[]ValidationIssue) {
+	if obj == nil {
+		return
+	}
+	if ref, ok := obj.(pdfTypes.IndirectRef); ok {
+		num := ref.ObjectNumber.Value()
+		if _, done := seen[num]; done {
+			return
+		}
+		seen[num] = struct{}{}
+		resolved, err := ctx.Dereference(ref)
+		if err != nil {
+			return
+		}
+		walkSecurityObject(ctx, resolved, seen, issues)
+		return
+	}
+
+	switch v := obj.(type) {
+	case pdfTypes.Dict:
+		inspectSecurityDict(ctx, v, issues)
+		for _, value := range v {
+			walkSecurityObject(ctx, value, seen, issues)
+		}
+	case pdfTypes.StreamDict:
+		inspectSecurityDict(ctx, v.Dict, issues)
+		for _, value := range v.Dict {
+			walkSecurityObject(ctx, value, seen, issues)
+		}
+	case pdfTypes.Array:
+		for _, item := range v {
+			walkSecurityObject(ctx, item, seen, issues)
+		}
+	}
 }
 
 func inspectSecurityDict(ctx *model.Context, d pdfTypes.Dict, issues *[]ValidationIssue) {
