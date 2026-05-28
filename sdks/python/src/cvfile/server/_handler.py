@@ -8,8 +8,16 @@ and headers Node would return for the same Accept.
 from __future__ import annotations
 
 import html as _html
+import sys
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, assert_never
+from typing import TYPE_CHECKING, NoReturn
+
+if sys.version_info >= (3, 11):
+    from typing import assert_never
+else:  # assert_never landed in typing only in Python 3.11; we support 3.10+.
+
+    def assert_never(value: object, /) -> NoReturn:
+        raise AssertionError(f"Unhandled value: {value!r}")
 
 from cvfile.extract import extract
 from cvfile.server._conneg import (
