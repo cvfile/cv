@@ -17,6 +17,21 @@ describe('parseAccept', () => {
     expect(parseAccept(null)).toEqual([]);
     expect(parseAccept('')).toEqual([]);
   });
+
+  it('drops entries with q=0 (not acceptable)', () => {
+    const parsed = parseAccept('text/markdown;q=0, text/html;q=0.8');
+    expect(parsed.map((p) => p.type)).toEqual(['text/html']);
+  });
+
+  it('clamps q to [0,1]', () => {
+    const parsed = parseAccept('text/html;q=5, text/markdown;q=0.5');
+    expect(parsed[0]!.q).toBe(1);
+  });
+
+  it('skips a type whose q is malformed', () => {
+    const parsed = parseAccept('text/html;q=abc, text/markdown');
+    expect(parsed.map((p) => p.type)).toEqual(['text/markdown']);
+  });
 });
 
 describe('parseAcceptLanguage', () => {
@@ -35,8 +50,16 @@ describe('negotiate', () => {
     expect(negotiate({ accept: 'text/markdown' }).format).toBe('markdown');
   });
 
-  it('text/html returns html', () => {
+  it('deliberate text/html (no wildcard) returns html', () => {
+    expect(negotiate({ accept: 'text/html' }).format).toBe('html');
     expect(negotiate({ accept: 'text/html,application/xhtml+xml' }).format).toBe('html');
+  });
+
+  it('browser request (text/html + */*) returns pdf', () => {
+    expect(negotiate({ accept: 'text/html,*/*' }).format).toBe('pdf');
+    expect(
+      negotiate({ accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' }).format,
+    ).toBe('pdf');
   });
 
   it('application/pdf returns pdf', () => {
@@ -47,18 +70,31 @@ describe('negotiate', () => {
     expect(negotiate({ accept: 'application/vnd.cv+pdf' }).format).toBe('pdf');
   });
 
-  it('q-values pick the highest preference', () => {
-    const r = negotiate({ accept: 'text/html;q=0.5, text/markdown;q=0.9' });
-    expect(r.format).toBe('markdown');
+  it('markdown only wins as a top, non-wildcard preference', () => {
+    expect(negotiate({ accept: 'text/html;q=0.5, text/markdown;q=0.9' }).format).toBe('markdown');
+    // markdown not at the top -> browser/wildcard case wins (pdf)
+    expect(negotiate({ accept: 'text/html, text/markdown;q=0.5' }).format).toBe('html');
   });
 
-  it('default is pdf when nothing matches', () => {
+  it('q=0 markdown falls through to pdf', () => {
+    expect(negotiate({ accept: 'text/markdown;q=0' }).format).toBe('pdf');
+  });
+
+  it('default is pdf when nothing usable matches', () => {
     expect(negotiate({}).format).toBe('pdf');
     expect(negotiate({ accept: '*/*' }).format).toBe('pdf');
   });
 
-  it('text/* falls through to html', () => {
+  it('text/* falls through to html (deliberate text fetch)', () => {
     expect(negotiate({ accept: 'text/*' }).format).toBe('html');
+  });
+
+  it('defaultFormat is the final fallback only, never overrides an explicit Accept', () => {
+    // explicit Accept beats defaultFormat
+    expect(negotiate({ accept: 'application/pdf', defaultFormat: 'markdown' }).format).toBe('pdf');
+    // no usable Accept -> defaultFormat applies
+    expect(negotiate({ defaultFormat: 'markdown' }).format).toBe('markdown');
+    expect(negotiate({ accept: '*/*', defaultFormat: 'markdown' }).format).toBe('pdf');
   });
 
   it('captures accept-language', () => {

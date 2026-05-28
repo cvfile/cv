@@ -7,6 +7,7 @@ export interface ServeRequest {
   accept?: string | undefined;
   acceptLanguage?: string | undefined;
   formatQuery?: string | undefined;
+  defaultFormat?: ServeFormat | undefined;
 }
 
 export interface ServeResponse {
@@ -23,6 +24,7 @@ export async function serveCv(req: ServeRequest): Promise<ServeResponse> {
     accept: req.accept,
     acceptLanguage: req.acceptLanguage,
     formatQuery: req.formatQuery,
+    defaultFormat: req.defaultFormat,
   });
 
   if (decision.format === 'pdf') {
@@ -42,7 +44,7 @@ export async function serveCv(req: ServeRequest): Promise<ServeResponse> {
     if (md) {
       return {
         format: 'markdown',
-        contentType: `text/markdown; charset=utf-8; cv-language=${md.language ?? preferLang}`,
+        contentType: 'text/markdown; charset=utf-8',
         ...(md.language !== undefined ? { language: md.language } : {}),
         body: md.bytes,
       };
@@ -55,7 +57,7 @@ export async function serveCv(req: ServeRequest): Promise<ServeResponse> {
     if (html) {
       return {
         format: 'html',
-        contentType: `text/html; charset=utf-8; cv-language=${html.language ?? preferLang}`,
+        contentType: 'text/html; charset=utf-8',
         ...(html.language !== undefined ? { language: html.language } : {}),
         body: html.bytes,
       };

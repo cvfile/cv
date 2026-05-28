@@ -12,10 +12,12 @@ export const cvFastifyPlugin: FastifyPluginAsync<CvFastifyOptions> = async (
   const handler = cvHandler(opts);
   const route = `${opts.prefix ?? ''}/*`;
   fastify.get(route, async (request: FastifyRequest, reply: FastifyReply) => {
-    if (!request.url.toLowerCase().includes('.cv')) {
+    const { pathname } = new URL(request.url, `http://${request.headers.host ?? 'localhost'}`);
+    if (!decodeURIComponent(pathname).toLowerCase().endsWith('.cv')) {
       reply.code(404).send('Not found');
       return;
     }
+    reply.hijack();
     await handler(request.raw, reply.raw);
   });
 };
