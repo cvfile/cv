@@ -37,6 +37,30 @@ def test_detect_rejects_garbage() -> None:
     assert det.is_cv_file is False
 
 
+def test_detect_attribute_form_xmp() -> None:
+    # RDF attribute-form serialisation: cv fields are attributes on the
+    # rdf:Description element rather than child elements.
+    xmp = (
+        b"%PDF-1.7\n"
+        b'<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>\n'
+        b'<x:xmpmeta xmlns:x="adobe:ns:meta/">\n'
+        b'<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n'
+        b'<rdf:Description rdf:about="" xmlns:cv="http://ns.cvfile.org/cv/1.0/"\n'
+        b'  cv:version="1.0"\n'
+        b'  cv:primaryPayload="resume.md"\n'
+        b'  cv:primaryLanguage="en"\n'
+        b'  cv:generator="cvfile.org/create"/>\n'
+        b"</rdf:RDF>\n</x:xmpmeta>\n"
+        b'<?xpacket end="w"?>\n%%EOF'
+    )
+    det = detect(xmp)
+    assert det.is_cv_file is True
+    assert det.version == "1.0"
+    assert det.primary_payload == "resume.md"
+    assert det.primary_language == "en"
+    assert det.generator == "cvfile.org/create"
+
+
 def test_unwrap_returns_primary_markdown(cv_bytes: bytes) -> None:
     payload = unwrap(cv_bytes)
     assert payload is not None

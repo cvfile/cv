@@ -37,6 +37,34 @@ describe('detect', () => {
   it('rejects garbage', () => {
     expect(detect(new TextEncoder().encode('hello world')).isCvFile).toBe(false);
   });
+
+  it('detects RDF attribute-form XMP', () => {
+    // Fields serialised as attributes on rdf:Description rather than as
+    // child elements.
+    const xmp = new TextEncoder().encode(
+      [
+        '%PDF-1.7',
+        '<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>',
+        '<x:xmpmeta xmlns:x="adobe:ns:meta/">',
+        '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">',
+        '<rdf:Description rdf:about="" xmlns:cv="http://ns.cvfile.org/cv/1.0/"',
+        '  cv:version="1.0"',
+        '  cv:primaryPayload="resume.md"',
+        '  cv:primaryLanguage="en"',
+        '  cv:generator="cvfile.org/create"/>',
+        '</rdf:RDF>',
+        '</x:xmpmeta>',
+        '<?xpacket end="w"?>',
+        '%%EOF',
+      ].join('\n'),
+    );
+    const det = detect(xmp);
+    expect(det.isCvFile).toBe(true);
+    expect(det.version).toBe('1.0');
+    expect(det.primaryPayload).toBe('resume.md');
+    expect(det.primaryLanguage).toBe('en');
+    expect(det.generator).toBe('cvfile.org/create');
+  });
 });
 
 describe('unwrap', () => {
