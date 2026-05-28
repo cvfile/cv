@@ -101,10 +101,13 @@ def build_cv_asgi_app(
 
 def _header(scope: ASGIScope, name: str) -> str | None:
     headers = scope.get("headers") or []
+    if not isinstance(headers, list):
+        return None
     target = name.lower().encode("latin1")
-    for raw_key, raw_val in headers:  # type: ignore[union-attr]
+    for raw_key, raw_val in headers:
         if raw_key == target:
-            return raw_val.decode("latin1")
+            decoded: str = raw_val.decode("latin1")
+            return decoded
     return None
 
 

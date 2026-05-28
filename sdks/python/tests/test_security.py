@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cvfile import pack, validate
-from cvfile.validate import DEFAULT_MAX_PAYLOAD_BYTES
+from cvfile.validate import DEFAULT_MAX_PAYLOAD_BYTES, _check_version
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MAL_DIR = REPO_ROOT / "spec" / "test-vectors" / "malicious"
@@ -32,6 +32,37 @@ def test_rejects_malicious_fixture(entry: dict) -> None:
     assert entry["expectedCode"] in codes, (
         f"{entry['filename']} expected code {entry['expectedCode']!r}, got {codes}"
     )
+
+
+def test_encrypted_fixture_flagged_without_crashing() -> None:
+    """The encrypted vector must be rejected with encrypted-document and never
+    raise (pypdf's KeyError('/P') used to escape validate())."""
+    path = MAL_DIR / "encrypted.cv"
+    if not path.exists():
+        pytest.skip("encrypted fixture missing")
+    report = validate(path.read_bytes())  # must not raise
+    assert not report.ok
+    assert [i.code for i in report.issues] == ["encrypted-document"]
+
+
+def test_garbage_input_yields_parse_failed_not_raise() -> None:
+    report = validate(b"not a pdf at all")
+    assert not report.ok
+    assert any(i.code == "pdf-parse-failed" for i in report.issues)
+
+
+@pytest.mark.parametrize(
+    ("version", "warns"),
+    [("0.1", False), ("1.0", False), ("1.4", False), ("2.0", True), ("3.2", True)],
+)
+def test_newer_format_version_warning(version: str, warns: bool) -> None:
+    issue = _check_version(version)
+    if warns:
+        assert issue is not None
+        assert issue.code == "newer-format-version"
+        assert issue.level == "warning"
+    else:
+        assert issue is None
 
 
 def test_payload_size_cap() -> None:

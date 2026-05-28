@@ -15,7 +15,7 @@ from cvfile.server._conneg import (
     parse_accept,
     parse_accept_language,
 )
-from cvfile.server._handler import serve_cv_bytes, ServeOptions
+from cvfile.server._handler import ServeOptions, serve_cv_bytes
 
 __all__ = [
     "PDF_FALLBACK_MIME",

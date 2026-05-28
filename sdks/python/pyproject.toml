@@ -55,3 +55,9 @@ select = ["E", "F", "I", "B", "UP", "N", "SIM", "RUF"]
 python_version = "3.12"
 strict = true
 warn_unreachable = true
+
+# Optional integration targets (LangChain, LlamaIndex) are not runtime deps of
+# this SDK; their stubs are absent in CI. Treat only their imports as untyped.
+[[tool.mypy.overrides]]
+module = ["langchain_core.*", "llama_index.*"]
+ignore_missing_imports = true
