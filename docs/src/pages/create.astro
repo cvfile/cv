@@ -39,11 +39,11 @@ const jsonLd = graph([
 
   <section class="cv-fieldset">
     <h2 style="margin: 0 0 0.5rem;">1 · PDF</h2>
-    <div id="pdf-drop" class="dropzone">
+    <label id="pdf-drop" class="dropzone">
       <strong id="pdf-label">Drop your PDF here</strong>
       <div style="color: var(--muted); margin-top: 0.4rem;">or click to choose</div>
-      <input id="pdf-picker" type="file" accept="application/pdf,.pdf" hidden />
-    </div>
+      <input id="pdf-picker" class="visually-hidden-file" type="file" accept="application/pdf,.pdf" />
+    </label>
   </section>
 
   <section class="cv-fieldset">
@@ -56,11 +56,11 @@ const jsonLd = graph([
       <textarea id="md-text" rows="10" placeholder="# Jane Doe&#10;&#10;## Experience&#10;&#10;### Senior Engineer · Acme Inc.&#10;*Jan 2023 — present*&#10;&#10;Led the platform team..."></textarea>
     </div>
     <div id="md-drop-panel" class="tab-panel" hidden>
-      <div id="md-drop" class="dropzone">
+      <label id="md-drop" class="dropzone">
         <strong id="md-label">Drop your .md here</strong>
         <div style="color: var(--muted); margin-top: 0.4rem;">or click to choose</div>
-        <input id="md-picker" type="file" accept=".md,text/markdown,text/plain" hidden />
-      </div>
+        <input id="md-picker" class="visually-hidden-file" type="file" accept=".md,text/markdown,text/plain" />
+      </label>
     </div>
   </section>
 
@@ -82,10 +82,13 @@ const jsonLd = graph([
   </div>
 
   <p style="color: var(--muted); font-size: 0.9rem; margin-top: 2rem;">
-    Want to add BGE-M3 semantic embeddings? Install the CLI
-    (<a href="/install/"><code>brew install cvfile/tap/cv</code></a>) and run
-    <code>cv pack --embed-with bge-m3</code>. The model is ~285 MB so it
-    runs once locally on your machine, not on every visitor's browser.
+    Want to add BGE-M3 semantic embeddings? Generate them with the Python
+    package (<a href="/install/"><code>pip install "cvfile[embed]"</code></a>):
+    run <code>embed(markdown)</code> then pack with
+    <code>pack(..., embeddings=encode_embeddings(payload))</code>. The model is
+    ~285 MB so it runs once locally on your machine, not on every visitor's
+    browser. The <code>cv</code> CLI is reader-only (extract, inspect, validate,
+    search) and does not generate embeddings.
   </p>
 
   <style is:global>
@@ -114,8 +117,22 @@ const jsonLd = graph([
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
     @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
     .dropzone {
+      display: block;
       border: 2px dashed var(--border); border-radius: 10px; padding: 1.75rem;
       text-align: center; cursor: pointer; transition: background 120ms;
+    }
+    /* Visually hide the native file input while keeping it focusable and in the
+       accessibility tree, so the styled label acts as the visible control. */
+    .cv-fieldset input.visually-hidden-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
     .dropzone.over { background: rgba(127,127,127,0.08); }
     .dropzone.loaded { border-style: solid; border-color: var(--accent); }
@@ -138,7 +155,6 @@ const jsonLd = graph([
 
   <script>
     import { pack } from '@cvfile/sdk';
-    import { marked } from 'marked';
 
     const pdfDrop = document.getElementById('pdf-drop')!;
     const pdfPicker = document.getElementById('pdf-picker') as HTMLInputElement;
@@ -156,7 +172,6 @@ const jsonLd = graph([
     const buildBtn = document.getElementById('build') as HTMLButtonElement;
 
     function bindDrop(zone: HTMLElement, picker: HTMLInputElement, onFile: (f: File) => void): void {
-      zone.addEventListener('click', () => picker.click());
       picker.addEventListener('change', () => { const f = picker.files?.[0]; if (f) onFile(f); });
       zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('over'); });
       zone.addEventListener('dragleave', () => zone.classList.remove('over'));
@@ -191,11 +206,27 @@ const jsonLd = graph([
       });
     });
 
-    function renderHtml(md: string, title: string, lang: string): string {
-      const body = marked.parse(md, { async: false }) as string;
-      const safeTitle = title.replace(/[&<>"']/g, (c) =>
+    function escapeHtml(s: string): string {
+      return s.replace(/[&<>"']/g, (c) =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!
       );
+    }
+
+    async function renderHtml(md: string, title: string, lang: string): Promise<string> {
+      // Lazy-load marked so its ~500KB bundle stays out of the initial chunk.
+      const { marked } = await import('marked');
+      // Spec §7.3: never bake raw, unsanitised HTML into resume.html. Escape
+      // any inline/block HTML the author put in the Markdown instead of
+      // passing it through verbatim.
+      marked.use({
+        renderer: {
+          html(token: string | { text: string }): string {
+            return escapeHtml(typeof token === 'string' ? token : token.text);
+          },
+        },
+      });
+      const body = marked.parse(md, { async: false }) as string;
+      const safeTitle = escapeHtml(title);
       return `<!doctype html>
 <html lang="${lang}">
 <head>
@@ -248,7 +279,7 @@ ${body}
       try {
         const lang = (langInput.value.trim() || 'en');
         const title = firstHeading(md);
-        const html = renderHtml(md, title, lang);
+        const html = await renderHtml(md, title, lang);
 
         setStatus('Packing .cv…');
         const cvBytes = await pack({

@@ -168,13 +168,25 @@ func Unwrap(pdfBytes []byte, payloadName string) (*UnwrappedPayload, error) {
 	return nil, nil
 }
 
+// innerTag reads a cv XMP field. RDF allows two equivalent serialisations:
+// the element form <cv:version>1.0</cv:version> and the attribute form
+// cv:version="1.0". We try the element form first, then fall back to the
+// attribute form so both shapes are detected identically.
 func innerTag(data []byte, tag string) string {
-	pat := regexp.MustCompile(`<` + regexp.QuoteMeta(tag) + `>([^<]*)</` + regexp.QuoteMeta(tag) + `>`)
-	m := pat.FindSubmatch(data)
-	if m == nil {
-		return ""
+	q := regexp.QuoteMeta(tag)
+	elem := regexp.MustCompile(`<` + q + `>([^<]*)</` + q + `>`)
+	if m := elem.FindSubmatch(data); m != nil {
+		return string(bytes.TrimSpace(m[1]))
 	}
-	return string(bytes.TrimSpace(m[1]))
+	attr := regexp.MustCompile(q + `\s*=\s*"([^"]*)"|` + q + `\s*=\s*'([^']*)'`)
+	if m := attr.FindSubmatch(data); m != nil {
+		val := m[1]
+		if len(val) == 0 {
+			val = m[2]
+		}
+		return string(bytes.TrimSpace(val))
+	}
+	return ""
 }
 
 func stringEntry(d pdfTypes.Dict, key string) string {

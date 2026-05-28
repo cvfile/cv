@@ -52,6 +52,40 @@ func TestDetectRejectsGarbage(t *testing.T) {
 	}
 }
 
+func TestDetectAttributeFormXMP(t *testing.T) {
+	// RDF attribute-form serialisation: fields are attributes on the
+	// rdf:Description element rather than child elements.
+	xmp := `%PDF-1.7
+<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<rdf:Description rdf:about="" xmlns:cv="http://ns.cvfile.org/cv/1.0/"
+  cv:version="1.0"
+  cv:primaryPayload="resume.md"
+  cv:primaryLanguage="en"
+  cv:generator="cvfile.org/create"/>
+</rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>
+%%EOF`
+	det := Detect([]byte(xmp))
+	if !det.IsCvFile {
+		t.Fatal("expected IsCvFile=true for attribute-form XMP")
+	}
+	if det.Version != "1.0" {
+		t.Errorf("Version = %q, want 1.0", det.Version)
+	}
+	if det.PrimaryPayload != "resume.md" {
+		t.Errorf("PrimaryPayload = %q, want resume.md", det.PrimaryPayload)
+	}
+	if det.PrimaryLanguage != "en" {
+		t.Errorf("PrimaryLanguage = %q, want en", det.PrimaryLanguage)
+	}
+	if det.Generator != "cvfile.org/create" {
+		t.Errorf("Generator = %q, want cvfile.org/create", det.Generator)
+	}
+}
+
 func TestUnwrapReturnsPrimaryMarkdown(t *testing.T) {
 	data, err := os.ReadFile(fixturePath(t))
 	if err != nil {

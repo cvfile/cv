@@ -191,9 +191,11 @@ prefix: cv
 | --- | --- | --- |
 | `cv:modified` | xs:dateTime | Last modification |
 | `cv:generator` | text | Producer string, e.g. `"@cvfile/sdk/0.1.0"` |
-| `cv:alternates` | rdf:Bag of struct | One entry per alternate payload: `{ payload, language, mimeType }` |
-| `cv:integrity` | rdf:Bag of struct | One entry per payload: `{ payload, algorithm, digest }` |
-| `cv:embeddings` | rdf:Bag of struct | One entry per embedding space: `{ model, dimension, metric, chunks }` |
+| `cv:alternates` | Text (JSON-encoded array) | One entry per alternate payload: `{ payload, language, mimeType }` |
+| `cv:integrity` | Text (JSON-encoded array) | One entry per payload: `{ payload, algorithm, digest }` |
+| `cv:embeddings` | Text (JSON-encoded array) | One entry per embedding space: `{ model, dimension, metric, chunks }` |
+
+These three properties are simple XMP `Text` values whose content is a JSON-encoded array of objects (UTF-8, XML-escaped), declared with `pdfaProperty:valueType="Text"` in the PDF/A extension schema. They are not `rdf:Bag` containers. Consumers parse the element text as JSON.
 
 ### 6.4 Integrity
 

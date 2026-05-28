@@ -10,6 +10,16 @@ FILE="${1:-}"
 FLAVOUR="${2:-3u}"
 FORMAT="${VERAPDF_FORMAT:-text}"
 
+# Pin a specific tagged image for reproducible runs (override via VERAPDF_IMAGE).
+VERAPDF_IMAGE="${VERAPDF_IMAGE:-verapdf/cli:v1.28.2}"
+
+# Default to the host architecture (fast, native). Set VERAPDF_PLATFORM to
+# force one, e.g. VERAPDF_PLATFORM=linux/amd64 on an arm host if needed.
+PLATFORM_ARG=()
+if [[ -n "${VERAPDF_PLATFORM:-}" ]]; then
+  PLATFORM_ARG=(--platform "$VERAPDF_PLATFORM")
+fi
+
 if [[ -z "$FILE" ]]; then
   echo "Usage: $0 <path/to/file.cv> [3u|3a|3b]" >&2
   exit 64
@@ -24,9 +34,9 @@ ABS_FILE="$(cd "$(dirname "$FILE")" && pwd)/$(basename "$FILE")"
 DIR="$(dirname "$ABS_FILE")"
 NAME="$(basename "$ABS_FILE")"
 
-docker run --rm --platform linux/amd64 \
+docker run --rm "${PLATFORM_ARG[@]}" \
   -v "$DIR:/data" \
-  verapdf/cli:latest \
+  "$VERAPDF_IMAGE" \
   --flavour "$FLAVOUR" \
   --format "$FORMAT" \
   --nonpdfext \
