@@ -37,6 +37,7 @@ jobs:
           version="${full#sdks/go/}"
           echo "Releasing $version (from $full)"
           git tag "$version"
+          echo "cv_version=$version" >> "$GITHUB_ENV"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -44,6 +45,11 @@ jobs:
           args: release --clean
           workdir: sdks/go
         env:
+          # Pin the tag explicitly. Sibling packages tag the same release
+          # commit (sdk-js/v*, viewer-web/v*, ...), so GoReleaser's git-state
+          # autodetection can otherwise pick a non-semver sibling tag and fail
+          # to parse it. This forces the plain semver re-tag created above.
+          GORELEASER_CURRENT_TAG: ${{ env.cv_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
           SCOOP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
