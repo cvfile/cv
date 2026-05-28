@@ -47,11 +47,19 @@ describe('JS reads Python-produced .cv (interop)', () => {
     expect(await extractHtml(bytes)).toBe(PY_HTML);
   });
 
-  it('extracts all three Python-produced payloads', async () => {
+  it('extracts all Python-produced payloads (incl. precomputed embeddings)', async () => {
     const bytes = new Uint8Array(await readFile(FIXTURE));
     const file = await extract(bytes);
     const names = file.payloads.map((p) => p.name).sort();
-    expect(names).toEqual(['resume.html', 'resume.json', 'resume.md']);
+    expect(names).toEqual(['embeddings.cbor', 'resume.html', 'resume.json', 'resume.md']);
+  });
+
+  it('surfaces the embedding-space summary in metadata', async () => {
+    const bytes = new Uint8Array(await readFile(FIXTURE));
+    const meta = await inspect(bytes);
+    expect(meta.embeddings.length).toBeGreaterThan(0);
+    expect(meta.embeddings[0].chunks).toBeGreaterThan(0);
+    expect(meta.embeddings[0].dimension).toBeGreaterThan(0);
   });
 
   it('validates the Python-produced file', async () => {

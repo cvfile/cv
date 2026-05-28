@@ -11,6 +11,7 @@ from haystack.dataclasses import ByteStream
 from haystack_integrations.components.converters.cvfile import CVFileToDocument
 
 FIXTURE = Path(__file__).parents[3] / "packages" / "sdk-js" / "tests" / "fixtures" / "python-produced.cv"
+UNICODE_FIXTURE = Path(__file__).parents[2] / "tests" / "fixtures" / "unicode.cv"
 
 
 @pytest.fixture(scope="module")
@@ -75,3 +76,33 @@ def test_unreadable_source_is_skipped(tmp_path: Path) -> None:
     not_a_cv.write_bytes(b"not a real cv file")
     result = converter.run(sources=[not_a_cv])
     assert result["documents"] == []
+
+
+def test_chunks_mode_attaches_a_vector_per_chunk() -> None:
+    if not FIXTURE.exists():
+        pytest.skip(f"fixture not found: {FIXTURE}")
+    docs = CVFileToDocument(mode="chunks").run(sources=[FIXTURE])["documents"]
+    assert len(docs) >= 1
+    for doc in docs:
+        assert doc.embedding is not None
+        assert len(doc.embedding) == doc.meta["embedding_dimension"]
+        assert all(isinstance(v, float) for v in doc.embedding)
+        assert doc.content.strip(), "chunk text should not be empty"
+
+
+def test_invalid_mode_rejected() -> None:
+    with pytest.raises(ValueError):
+        CVFileToDocument(mode="bogus")
+
+
+def test_non_ascii_chunk_text_slices_on_byte_offsets() -> None:
+    if not UNICODE_FIXTURE.exists():
+        pytest.skip(f"fixture not found: {UNICODE_FIXTURE}")
+    docs = CVFileToDocument(mode="chunks").run(sources=[UNICODE_FIXTURE])["documents"]
+    joined = "".join(d.content for d in docs)
+    assert "Élodie" in joined
+    assert "工程師" in joined
+    assert "🚀" in joined
+    assert "经验" in joined
+    for doc in docs:
+        assert doc.content == doc.content.encode("utf-8").decode("utf-8")
