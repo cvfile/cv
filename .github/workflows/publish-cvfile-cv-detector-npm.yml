@@ -18,10 +18,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
       - name: Install dependencies
         working-directory: tools/cv-detector/typescript
-        run: pnpm install --frozen-lockfile --ignore-workspace
+        # No --ignore-workspace: this package has its own pnpm-workspace.yaml
+        # (with the esbuild build approval pnpm 11 requires); --ignore-workspace
+        # would skip it and fail with ERR_PNPM_IGNORED_BUILDS.
+        run: pnpm install --frozen-lockfile
       - name: Build
         working-directory: tools/cv-detector/typescript
         run: pnpm build
