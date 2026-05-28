@@ -49,6 +49,19 @@
         cursor: pointer;
         font-weight: 600;
       }
+      .drop button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+      /* Visually hidden but focusable: the styled button proxies clicks/keys to it. */
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        border: 0;
+      }
       .viewer { margin-top: 2rem; }
       footer {
         max-width: 920px;
@@ -59,7 +72,7 @@
       }
       footer code { background: rgba(127,127,127,0.15); padding: 0.1rem 0.4rem; border-radius: 4px; }
     </style>
-    <script type="module" crossorigin src="/assets/index-L4DwlYUA.js"></script>
+    <script type="module" crossorigin src="/assets/index-CGHtsZ-C.js"></script>
   </head>
   <body>
     <header>
@@ -73,13 +86,25 @@
       <div class="drop" id="drop">
         <div><strong>Drop a .cv file here</strong></div>
         <div style="opacity: 0.6; margin-top: 0.5rem;">or pick one from disk</div>
-        <input type="file" id="file" accept=".cv,application/pdf,application/vnd.cv+pdf" hidden />
-        <button type="button" id="pick">Choose file</button>
+        <input
+          type="file"
+          id="file"
+          class="visually-hidden"
+          accept=".cv,application/pdf,application/vnd.cv+pdf"
+          tabindex="-1"
+          aria-hidden="true"
+        />
+        <button type="button" id="pick" aria-label="Choose a .cv file from disk">Choose file</button>
       </div>
 
       <div class="viewer" id="viewer-mount" hidden>
         <cv-embed id="embed"></cv-embed>
       </div>
+
+      <p style="margin-top: 2rem; opacity: 0.7; text-align: center;">
+        No <code>.cv</code> file handy?
+        <a href="#" id="load-sample">Load the sample</a>
+      </p>
     </main>
     <footer>
       <span>cvfile.org · open standard · MIT spec, Apache-2.0 SDKs</span>

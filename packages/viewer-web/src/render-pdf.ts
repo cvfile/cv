@@ -1,11 +1,25 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+/**
+ * Resolve the pdf.js worker with a bundler-portable specifier. Unlike a
+ * Vite-only `?url` import, `new URL(..., import.meta.url)` is understood by
+ * webpack, Rollup, esbuild, and plain ESM, so the published `dist` works for
+ * every consumer. A host can still override this via `setWorkerSrc`.
+ */
+const DEFAULT_WORKER_URL = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).href;
 
 let workerConfigured = false;
+let workerSrcOverride: string | null = null;
+
+/** Override the pdf.js worker URL (e.g. when serving it from a custom path/CDN). */
+export function setWorkerSrc(src: string): void {
+  workerSrcOverride = src;
+  workerConfigured = false;
+}
 
 function ensureWorker(): void {
   if (workerConfigured) return;
-  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrcOverride ?? DEFAULT_WORKER_URL;
   workerConfigured = true;
 }
 

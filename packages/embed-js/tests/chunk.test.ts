@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { chunkMarkdown } from '../src/chunk.js';
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+function byteSlice(source: string, offset: number, length: number): string {
+  return decoder.decode(encoder.encode(source).subarray(offset, offset + length));
+}
+
 const sample = `# Jane Doe
 
 Senior engineer.
@@ -24,8 +31,39 @@ describe('chunkMarkdown', () => {
   it('preserves byte offsets that index back into the source', () => {
     const chunks = chunkMarkdown(sample);
     for (const c of chunks) {
-      const slice = sample.slice(c.textOffset, c.textOffset + c.textLength);
-      expect(slice).toBe(c.text);
+      expect(byteSlice(sample, c.textOffset, c.textLength)).toBe(c.text);
+    }
+  });
+
+  it('emits UTF-8 byte offsets that slice back correctly for multibyte content', () => {
+    const multibyte = `# Résumé de Zoé 🚀
+
+Ingénieure logicielle. 日本語 も少し.
+
+## Expérience
+
+- Société Générale, 2020 à 2024 — café ☕ inclus
+
+## Compétences
+
+TypeScript, Go, Python. Naïve façade.
+`;
+    const chunks = chunkMarkdown(multibyte);
+    expect(chunks.length).toBeGreaterThan(1);
+    const totalBytes = new TextEncoder().encode(multibyte).byteLength;
+    for (const c of chunks) {
+      // Offsets address bytes, not UTF-16 code units.
+      expect(c.textOffset).toBeGreaterThanOrEqual(0);
+      expect(c.textOffset + c.textLength).toBeLessThanOrEqual(totalBytes);
+      expect(byteSlice(multibyte, c.textOffset, c.textLength)).toBe(c.text);
+    }
+    // Heading slug retains ASCII slugification of the multibyte title.
+    expect(chunks[0]?.id).toBe('r-sum-de-zo');
+    // First chunk's byte length exceeds its UTF-16 length because of the emoji + accents.
+    const first = chunks[0];
+    expect(first).toBeDefined();
+    if (first) {
+      expect(first.textLength).toBeGreaterThan(first.text.length);
     }
   });
 
