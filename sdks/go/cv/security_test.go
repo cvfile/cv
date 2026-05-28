@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
 type maliciousFixture struct {
@@ -54,6 +56,43 @@ func TestSecurityRejectsMaliciousFixtures(t *testing.T) {
 				t.Errorf("%s expected code %q, got %v", f.Filename, f.ExpectedCode, codes)
 			}
 		})
+	}
+}
+
+// mustLoadInlineJSContext returns a context for a PDF that carries a forbidden
+// JavaScript action as a DIRECT (inline) child of the catalog's /OpenAction.
+// The old xref-only scan never looked inside inline dicts, so this slipped
+// through; the graph walk catches it.
+func mustLoadInlineJSContext(t *testing.T) *model.Context {
+	t.Helper()
+	pdf := []byte("%PDF-1.7\n" +
+		"1 0 obj<</Type/Catalog/Pages 2 0 R/OpenAction<</S/JavaScript/JS(app.alert\\(1\\))>>>>endobj\n" +
+		"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+		"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 400]/Resources<</Font<<>>/ProcSet[/PDF/Text]>>>>endobj\n" +
+		"xref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000089 00000 n \n0000000134 00000 n \n" +
+		"trailer<</Size 4/Root 1 0 R>>\nstartxref\n229\n%%EOF\n")
+	ctx, err := loadContext(pdf)
+	if err != nil {
+		t.Fatalf("loadContext: %v", err)
+	}
+	return ctx
+}
+
+// TestSecurityCatchesInlineOpenActionJS asserts that a JavaScript action stored
+// as a DIRECT (inline) catalog /OpenAction is rejected with javascript-action.
+func TestSecurityCatchesInlineOpenActionJS(t *testing.T) {
+	ctx := mustLoadInlineJSContext(t)
+	issues := scanForbiddenConstructs(ctx)
+	found := false
+	codes := make([]string, 0, len(issues))
+	for _, i := range issues {
+		codes = append(codes, i.Code)
+		if i.Code == "javascript-action" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("inline /OpenAction JavaScript not rejected; got codes %v", codes)
 	}
 }
 
