@@ -2,14 +2,14 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { normalize, resolve, sep } from 'node:path';
 import { isCvFile } from '@cvfile/sdk';
-import { buildLinkHeader, PDF_PRIMARY_MIME } from './conneg.js';
-import { serveCv } from './serve.js';
+import type { ServeFormat } from './conneg.js';
+import { buildCvResponse } from './response.js';
 
 export interface CvHandlerOptions {
   root?: string;
   loader?: (logicalPath: string) => Promise<Uint8Array | null>;
   cacheControl?: string;
-  defaultFormat?: 'pdf' | 'markdown' | 'html';
+  defaultFormat?: ServeFormat;
 }
 
 export type CvHandler = (req: IncomingMessage, res: ServerResponse) => Promise<void>;
@@ -26,45 +26,45 @@ export function cvHandler(options: CvHandlerOptions = {}): CvHandler {
     try {
       const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
       const logical = decodeURIComponent(url.pathname);
-      const formatQuery = url.searchParams.get('format') ?? defaultFormat;
 
-      const bytes = await load(logical, { baseRoot, loader });
-      if (!bytes) {
+      const loaded = await load(logical, { baseRoot, loader });
+      if (!loaded) {
         res.statusCode = 404;
         res.end('Not found');
         return;
       }
 
-      if (!(await isCvFile(bytes))) {
+      if (!(await isCvFile(loaded.bytes))) {
         res.statusCode = 415;
         res.end('Not a .cv file');
         return;
       }
 
-      const result = await serveCv({
-        bytes,
+      const built = await buildCvResponse({
+        bytes: loaded.bytes,
+        selfUrl: url.pathname,
         accept: req.headers['accept'],
         acceptLanguage: req.headers['accept-language'],
-        formatQuery: formatQuery ?? undefined,
+        formatQuery: url.searchParams.get('format') ?? undefined,
+        defaultFormat,
+        cacheControl,
+        lastModified: loaded.lastModified,
+        ifNoneMatch: req.headers['if-none-match'],
+        ifModifiedSince: req.headers['if-modified-since'],
       });
 
-      const link = buildLinkHeader({ selfUrl: url.pathname, cvMime: PDF_PRIMARY_MIME });
-
-      res.setHeader('Content-Type', result.contentType);
-      res.setHeader('Content-Length', String(result.body.length));
-      res.setHeader('Vary', 'Accept, Accept-Language');
-      res.setHeader('Link', link);
-      res.setHeader('Cache-Control', cacheControl);
-      if (result.language) {
-        res.setHeader('Content-Language', result.language);
+      for (const [name, value] of Object.entries(built.headers)) {
+        res.setHeader(name, value);
       }
-      const filename = filenameForFormat(logical, result.format);
-      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-      res.statusCode = 200;
-      res.end(Buffer.from(result.body));
-    } catch (err) {
+      res.statusCode = built.status;
+      res.end(built.status === 304 ? undefined : Buffer.from(built.body));
+    } catch {
+      if (res.headersSent) {
+        res.end();
+        return;
+      }
       res.statusCode = 500;
-      res.end(`cvHandler error: ${(err as Error).message}`);
+      res.end('Internal Server Error');
     }
   };
 }
@@ -74,10 +74,15 @@ interface LoadOpts {
   loader?: ((logicalPath: string) => Promise<Uint8Array | null>) | undefined;
 }
 
-async function load(logicalPath: string, { baseRoot, loader }: LoadOpts): Promise<Uint8Array | null> {
+interface LoadedFile {
+  bytes: Uint8Array;
+  lastModified?: Date | undefined;
+}
+
+async function load(logicalPath: string, { baseRoot, loader }: LoadOpts): Promise<LoadedFile | null> {
   if (loader) {
     const bytes = await loader(logicalPath);
-    return bytes ?? null;
+    return bytes ? { bytes } : null;
   }
   if (!baseRoot) return null;
   const safe = normalize(logicalPath).replace(/^[/\\]+/, '');
@@ -88,7 +93,7 @@ async function load(logicalPath: string, { baseRoot, loader }: LoadOpts): Promis
   try {
     const s = await stat(full);
     if (!s.isFile()) return null;
-    return new Uint8Array(await readFile(full));
+    return { bytes: new Uint8Array(await readFile(full)), lastModified: s.mtime };
   } catch {
     return null;
   }
@@ -99,12 +104,3 @@ function isWithin(parent: string, child: string): boolean {
   const base = resolve(parent);
   return rel === base || rel.startsWith(base + sep);
 }
-
-function filenameForFormat(logical: string, format: 'pdf' | 'markdown' | 'html'): string {
-  const base = logical.split('/').pop() ?? 'document';
-  const stem = base.replace(/\.cv$/i, '').replace(/\.(pdf|md|html)$/i, '') || 'document';
-  if (format === 'markdown') return `${stem}.md`;
-  if (format === 'html') return `${stem}.html`;
-  return `${stem}.cv`;
-}
-
