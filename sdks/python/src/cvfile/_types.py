@@ -82,8 +82,17 @@ class ValidationIssue:
     payload: str | None = None
 
 
+PdfaConformance = Literal["verified", "structural-pass", "failed", "not-checked"]
+
+
 @dataclass(frozen=True, slots=True)
 class ValidationReport:
     ok: bool
     level: Literal["cv-strict", "cv-lenient"]
     issues: tuple[ValidationIssue, ...]
+    # PDF/A-3u conformance verdict. Only meaningful under cv-strict, where the
+    # in-process structural check runs ("structural-pass" or "failed"; "verified"
+    # is reserved for a future full veraPDF gate). cv-lenient never runs the check,
+    # so it stays "not-checked" (JS leaves the field undefined under lenient; the
+    # Python SDK keeps the dataclass non-optional and uses the explicit sentinel).
+    conformance: PdfaConformance = "not-checked"

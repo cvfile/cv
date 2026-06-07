@@ -12,8 +12,9 @@ from pypdf.errors import PdfReadError
 from pypdf.generic import IndirectObject
 
 from cvfile._pdf import read_associated_files, read_metadata_xml
+from cvfile._pdfa import check_pdfa_conformance
 from cvfile._security import scan_forbidden_constructs
-from cvfile._types import ValidationIssue, ValidationReport
+from cvfile._types import PdfaConformance, ValidationIssue, ValidationReport
 from cvfile._xmp import parse_xmp
 
 DEFAULT_MAX_PAYLOAD_BYTES = 16 * 1024 * 1024
@@ -128,17 +129,18 @@ def validate(
                 )
             )
 
+    # cv-strict is defined by PDF/A-3u conformance, so it MUST be checked rather
+    # than asserted: the old code appended a "not-checked" warning and still
+    # returned ok under strict, certifying a property it never verified. Under
+    # cv-lenient the check is skipped entirely and conformance stays "not-checked"
+    # (parity with the JS SDK, which omits the field under lenient).
+    conformance: PdfaConformance = "not-checked"
     if strict:
-        issues.append(
-            ValidationIssue(
-                code="pdfa3-not-checked",
-                level="warning",
-                message="cv-strict requires veraPDF PDF/A-3u conformance, which this SDK does not run in-process",
-            )
-        )
+        conformance, pdfa_issues = check_pdfa_conformance(reader, xml)
+        issues.extend(pdfa_issues)
 
     ok = all(i.level != "error" for i in issues)
-    return ValidationReport(ok=ok, level=level, issues=tuple(issues))
+    return ValidationReport(ok=ok, level=level, issues=tuple(issues), conformance=conformance)
 
 
 _ENCRYPT_RE = re.compile(rb"/Encrypt\b")

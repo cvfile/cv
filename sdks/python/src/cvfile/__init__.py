@@ -15,6 +15,7 @@ from cvfile._types import (
     ExtractedPayload,
     IntegrityEntry,
     Payload,
+    PdfaConformance,
     ValidationIssue,
     ValidationReport,
 )
@@ -37,6 +38,7 @@ __all__ = [
     "ExtractedPayload",
     "IntegrityEntry",
     "Payload",
+    "PdfaConformance",
     "ValidationIssue",
     "ValidationReport",
     "extract",

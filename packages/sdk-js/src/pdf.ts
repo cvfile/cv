@@ -92,11 +92,17 @@ function parseFilespec(pdfDoc: PDFDocument, filespec: PDFDict): RawPayload | nul
   return payload;
 }
 
+// A MIME type carried in a PDF /Subtype name has its '/' written as the hex
+// escape #2F (ISO 32000 §7.3.5). That escape is case-insensitive, but pd-lib's
+// name parser only decodes UPPERCASE escapes (PDFName.decodeName uses
+// /#[\dABCDEF]{2}/), so a producer that emits lowercase (#2f, as Go's pdfcpu
+// does) slips past it and is re-escaped in asString() to /text#232fmarkdown.
+// decodeText() returns the name's actual byte content (text#2fmarkdown), over
+// which a single case-insensitive #XX pass yields the true MIME for either
+// producer, keeping the reader conformant to the PDF spec rather than to one
+// library's quirk.
 function decodeMimeName(name: PDFName): string {
-  return name
-    .asString()
-    .slice(1)
-    .replace(/#([0-9a-fA-F]{2})/g, (_m, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+  return name.decodeText().replace(/#([0-9a-fA-F]{2})/g, (_m, hex: string) => String.fromCharCode(parseInt(hex, 16)));
 }
 
 function readString(dict: PDFDict, key: PDFName): string | undefined {

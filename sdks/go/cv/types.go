@@ -111,4 +111,8 @@ type ValidationReport struct {
 	OK     bool
 	Level  ValidationLevel
 	Issues []ValidationIssue
+	// Conformance is the PDF/A-3u verdict, set only under cv-strict where the
+	// in-process check runs. One of "verified" | "structural-pass" | "failed" |
+	// "not-checked". Omitted (empty) under cv-lenient, matching the JS SDK.
+	Conformance string `json:"conformance,omitempty"`
 }

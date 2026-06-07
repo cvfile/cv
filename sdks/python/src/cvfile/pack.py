@@ -13,7 +13,13 @@ from cvfile._constants import (
     DEFAULT_PAYLOAD_NAMES,
     PAYLOAD_MIME_TYPES,
 )
-from cvfile._pdf import add_associated_file, load_writer, set_metadata_xml, write_to_bytes
+from cvfile._pdf import (
+    add_associated_file,
+    add_pdfa_output_intent,
+    load_writer,
+    set_metadata_xml,
+    write_to_bytes,
+)
 from cvfile._types import AlternateMeta, EmbeddingSpaceSummary, IntegrityEntry, Payload
 from cvfile._xmp import build_xmp
 
@@ -99,6 +105,12 @@ def pack(
         embeddings=embedding_summaries,
     )
     set_metadata_xml(writer, xmp)
+
+    # PDF/A-3u by default (parity with @cvfile/sdk and cv-go): add the sRGB output
+    # intent so device-dependent colour in the input PDF stays conformant. Opt out
+    # with metadata['pdfa'] = False for the lenient container-only path.
+    if metadata.get("pdfa") is not False:
+        add_pdfa_output_intent(writer)
 
     return write_to_bytes(writer)
 
