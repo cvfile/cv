@@ -2,9 +2,10 @@ import { CV_SPEC_VERSION } from './constants.js';
 import { sha256Hex } from './digest.js';
 import { toUint8Array } from './normalize.js';
 import { PORTABLE_NAME_RE } from './pack.js';
+import { checkPdfaConformance } from './pdfa.js';
 import { loadDocument, readAssociatedFiles, readMetadataXml } from './pdf.js';
 import { scanForbiddenConstructs } from './security.js';
-import type { BinaryInput, ValidationIssue, ValidationLevel, ValidationReport } from './types.js';
+import type { BinaryInput, PdfaConformance, ValidationIssue, ValidationLevel, ValidationReport } from './types.js';
 import { parseXmp } from './xmp.js';
 
 /** Default per-payload size cap, in bytes, per spec §7.3. */
@@ -123,16 +124,17 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
     }
   }
 
+  let conformance: PdfaConformance | undefined;
   if (level === 'cv-strict') {
-    issues.push({
-      code: 'pdfa3-not-checked',
-      level: 'warning',
-      message: 'cv-strict requires veraPDF PDF/A-3u conformance, which this SDK does not run in-process',
-    });
+    const pdfa = checkPdfaConformance(pdfDoc, xml);
+    conformance = pdfa.conformance;
+    for (const issue of pdfa.issues) {
+      issues.push(issue);
+    }
   }
 
   const ok = issues.every((i) => i.level !== 'error');
-  return { ok, level, issues };
+  return conformance ? { ok, level, issues, conformance } : { ok, level, issues };
 }
 
 function isPortableName(name: string): boolean {

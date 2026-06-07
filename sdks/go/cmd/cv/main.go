@@ -1,6 +1,6 @@
 // Command cv is the canonical command-line interface for the .cv open file
-// format. v0.1 ships extract/inspect/validate (reader path); pack will follow
-// once the writer integration with pdfcpu's page tree is hardened.
+// format. It ships the reader path (extract / inspect / validate / search) and
+// the writer (pack), all backed by the cv Go SDK.
 package main
 
 import (
@@ -16,9 +16,11 @@ import (
 // .cv spec version (cv.SpecVersion) and any SDK package version.
 const cliVersion = "0.2.0"
 
-const usage = `cv — the .cv open file format CLI (v0.1)
+const usage = `cv — the .cv open file format CLI
 
 Usage:
+  cv pack    --pdf <file.pdf> -o <out.cv> [--md <f>] [--html <f>] [--json <f>]
+             [--lang <bcp47>] [--primary <name>] [--embeddings <f>]
   cv extract <file.cv> [--format pdf|md|html]   (--format defaults to pdf)
   cv inspect <file.cv> [--json]
   cv validate <file.cv> [--strict]
@@ -27,8 +29,8 @@ Usage:
   cv help
 
 Notes:
-  v0.1 ships the reader path (extract / inspect / validate / search). Pack
-  support is planned for v0.2 (see ROADMAP Phase 1.7-1.8).
+  cv pack wraps an input PDF plus one or more text representations (markdown,
+  html, json) into a .cv. At least one of --md / --html / --json is required.
 
   cv search calls the Hugging Face Inference API to embed the query in the
   same model space the file was packed with. Set HF_TOKEN in the env.
@@ -45,6 +47,8 @@ func main() {
 	rest := args[1:]
 
 	switch cmd {
+	case "pack":
+		os.Exit(cmdPack(rest))
 	case "extract":
 		os.Exit(cmdExtract(rest))
 	case "inspect":
@@ -61,6 +65,115 @@ func main() {
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n\n%s", cmd, usage)
 		os.Exit(64)
 	}
+}
+
+// cmdPack reads an input PDF plus one or more text representations and writes a
+// .cv to --out. Flags mirror cv.PackInput. Exit codes follow the rest of the
+// CLI: 64 usage error, 66 file-read error, 65 pack failure, 1 write failure.
+func cmdPack(args []string) int {
+	var pdfPath, mdPath, htmlPath, jsonPath, embPath, lang, primary, outPath string
+	for i := 0; i < len(args); i++ {
+		next := func() (string, bool) {
+			if i+1 < len(args) {
+				i++
+				return args[i], true
+			}
+			return "", false
+		}
+		var ok bool
+		switch args[i] {
+		case "--pdf":
+			pdfPath, ok = next()
+		case "--md", "--markdown":
+			mdPath, ok = next()
+		case "--html":
+			htmlPath, ok = next()
+		case "--json":
+			jsonPath, ok = next()
+		case "--embeddings":
+			embPath, ok = next()
+		case "--lang":
+			lang, ok = next()
+		case "--primary":
+			primary, ok = next()
+		case "-o", "--out":
+			outPath, ok = next()
+		default:
+			fmt.Fprintf(os.Stderr, "pack: unknown flag %q\n", args[i])
+			return 64
+		}
+		if !ok {
+			fmt.Fprintf(os.Stderr, "pack: flag %q needs a value\n", args[i])
+			return 64
+		}
+	}
+
+	if pdfPath == "" {
+		fmt.Fprintln(os.Stderr, "pack: --pdf <file.pdf> is required")
+		return 64
+	}
+	if outPath == "" {
+		fmt.Fprintln(os.Stderr, "pack: -o/--out <file.cv> is required")
+		return 64
+	}
+	if mdPath == "" && htmlPath == "" && jsonPath == "" {
+		fmt.Fprintln(os.Stderr, "pack: at least one of --md / --html / --json is required")
+		return 64
+	}
+
+	in := cv.PackInput{Metadata: cv.Metadata{PrimaryLanguage: lang, PrimaryPayload: primary}}
+
+	pdf, err := os.ReadFile(pdfPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "read %s: %v\n", pdfPath, err)
+		return 66
+	}
+	in.PDF = pdf
+
+	for _, f := range []struct {
+		path string
+		dst  *[]byte
+	}{
+		{mdPath, &in.Markdown},
+		{htmlPath, &in.HTML},
+		{embPath, &in.Embeddings},
+	} {
+		if f.path == "" {
+			continue
+		}
+		b, err := os.ReadFile(f.path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "read %s: %v\n", f.path, err)
+			return 66
+		}
+		*f.dst = b
+	}
+
+	if jsonPath != "" {
+		b, err := os.ReadFile(jsonPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "read %s: %v\n", jsonPath, err)
+			return 66
+		}
+		var parsed any
+		if err := json.Unmarshal(b, &parsed); err != nil {
+			fmt.Fprintf(os.Stderr, "pack: %s is not valid JSON: %v\n", jsonPath, err)
+			return 65
+		}
+		in.JSON = parsed
+	}
+
+	out, err := cv.Pack(in)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "pack: %v\n", err)
+		return 65
+	}
+	if err := os.WriteFile(outPath, out, 0o644); err != nil {
+		fmt.Fprintf(os.Stderr, "write %s: %v\n", outPath, err)
+		return 1
+	}
+	fmt.Fprintf(os.Stderr, "packed %d bytes to %s\n", len(out), outPath)
+	return 0
 }
 
 func cmdExtract(args []string) int {

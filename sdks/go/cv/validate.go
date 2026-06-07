@@ -170,12 +170,18 @@ func Validate(data []byte, opts ValidateOptions) *ValidationReport {
 		}
 	}
 
+	// Under cv-strict, run the in-process PDF/A-3u structural conformance check.
+	// This replaces the former pdfa3-not-checked lie: the SDK now verifies the
+	// load-bearing PDF/A-3u requirements (embedded fonts, output intent, PDF/A
+	// identification, file ID) and reports an honest verdict, matching the JS SDK
+	// (packages/sdk-js/src/pdfa.ts). Full ISO 19005-3 conformance still defers to
+	// the veraPDF gate, surfaced as the pdfa3-structural-pass warning. Under
+	// cv-lenient the check is skipped and Conformance is left empty (omitted).
+	conformance := ""
 	if level == LevelStrict {
-		issues = append(issues, ValidationIssue{
-			Code:    "pdfa3-not-checked",
-			Level:   "warning",
-			Message: "cv-strict requires veraPDF PDF/A-3u conformance, which this SDK does not run in-process",
-		})
+		var pdfaIssues []ValidationIssue
+		conformance, pdfaIssues = checkPDFAConformance(ctx, xml)
+		issues = append(issues, pdfaIssues...)
 	}
 
 	ok = true
@@ -185,7 +191,7 @@ func Validate(data []byte, opts ValidateOptions) *ValidationReport {
 			break
 		}
 	}
-	return &ValidationReport{OK: ok, Level: level, Issues: issues}
+	return &ValidationReport{OK: ok, Level: level, Issues: issues, Conformance: conformance}
 }
 
 // isEncryptionError reports whether a pdfcpu read error stems from the document

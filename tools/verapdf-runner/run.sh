@@ -34,7 +34,7 @@ ABS_FILE="$(cd "$(dirname "$FILE")" && pwd)/$(basename "$FILE")"
 DIR="$(dirname "$ABS_FILE")"
 NAME="$(basename "$ABS_FILE")"
 
-docker run --rm "${PLATFORM_ARG[@]}" \
+docker run --rm ${PLATFORM_ARG[@]+"${PLATFORM_ARG[@]}"} \
   -v "$DIR:/data" \
   "$VERAPDF_IMAGE" \
   --flavour "$FLAVOUR" \

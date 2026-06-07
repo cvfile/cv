@@ -26,6 +26,8 @@ from pypdf.generic import (
     TextStringObject,
 )
 
+from cvfile._srgb_profile import SRGB_ICC_COMPONENTS, SRGB_ICC_VERSION, srgb_icc_profile
+
 AFRelationshipKind = Literal["Alternative", "Data", "Supplement"]
 
 
@@ -113,6 +115,46 @@ def set_metadata_xml(writer: PdfWriter, xml: str) -> None:
     )
     ref = writer._add_object(stream)
     writer._root_object[NameObject("/Metadata")] = ref
+
+
+def add_pdfa_output_intent(writer: PdfWriter) -> None:
+    """Add an sRGB GTS_PDFA1 output intent unless one is already present.
+
+    PDF/A-3u (ISO 19005-3 §6.2.4.3) forbids device-dependent colour (DeviceRGB)
+    unless the file carries a PDF/A output intent whose destination profile is an
+    RGB ICC profile. Input PDFs from real exporters paint in DeviceRGB, so without
+    this the file fails veraPDF. The embedded sRGB profile is byte-identical to the
+    one the Go and JS SDKs add, so all three producers yield conformant files.
+    """
+    catalog = writer._root_object
+    existing = catalog.get(NameObject("/OutputIntents"))
+    if isinstance(existing, IndirectObject):
+        existing = existing.get_object()
+    if isinstance(existing, ArrayObject) and len(existing) > 0:
+        return
+
+    icc = srgb_icc_profile()
+    icc_stream = DecodedStreamObject()
+    icc_stream.set_data(icc)
+    icc_stream.update(
+        {
+            NameObject("/N"): NumberObject(SRGB_ICC_COMPONENTS),
+            NameObject("/Length"): NumberObject(len(icc)),
+        }
+    )
+    icc_ref = writer._add_object(icc_stream)
+
+    intent = DictionaryObject(
+        {
+            NameObject("/Type"): NameObject("/OutputIntent"),
+            NameObject("/S"): NameObject("/GTS_PDFA1"),
+            NameObject("/OutputConditionIdentifier"): TextStringObject(SRGB_ICC_VERSION),
+            NameObject("/Info"): TextStringObject(SRGB_ICC_VERSION),
+            NameObject("/RegistryName"): TextStringObject("http://www.color.org"),
+            NameObject("/DestOutputProfile"): icc_ref,
+        }
+    )
+    catalog[NameObject("/OutputIntents")] = ArrayObject([intent])
 
 
 def write_to_bytes(writer: PdfWriter) -> bytes:
@@ -255,6 +297,7 @@ __all__ = [
     "ByteStringObject",
     "RawPayload",
     "add_associated_file",
+    "add_pdfa_output_intent",
     "load_writer",
     "read_associated_files",
     "read_metadata_xml",

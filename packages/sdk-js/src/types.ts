@@ -87,8 +87,20 @@ export interface ValidationIssue {
   payload?: string;
 }
 
+/**
+ * PDF/A-3u conformance verdict for a cv-strict validation.
+ *   - 'verified'        full veraPDF (ISO 19005-3) conformance confirmed
+ *   - 'structural-pass' the in-process structural checks hold; full conformance
+ *                       still needs veraPDF
+ *   - 'failed'          a provable PDF/A-3u violation was found
+ *   - 'not-checked'     cv-lenient, or strict checking did not run
+ */
+export type PdfaConformance = 'verified' | 'structural-pass' | 'failed' | 'not-checked';
+
 export interface ValidationReport {
   ok: boolean;
   level: ValidationLevel;
   issues: ValidationIssue[];
+  /** Present for cv-strict; reports exactly what was verified, never a false pass. */
+  conformance?: PdfaConformance;
 }
