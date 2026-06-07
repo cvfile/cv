@@ -1,6 +1,6 @@
 {
   "name": "@cvfile/sdk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Reference SDK for the .cv open file format — pack, extract, inspect, validate.",
   "license": "Apache-2.0",
   "homepage": "https://cvfile.org",
