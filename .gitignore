@@ -66,5 +66,6 @@ src-tauri/target/
 *.tgz
 .vercel
 
-# Private outreach/prospecting data (PII): kept local, never published
-launch/outreach/
+# Launch material (HN/PH drafts, runbook, screenshots) and private outreach
+# data (PII): kept local, purged from history, never published.
+launch/
