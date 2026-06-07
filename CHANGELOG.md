@@ -2,6 +2,20 @@
 
 All notable changes to the `.cv` format and reference tooling are documented here. The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] (2026-06-07)
+
+Coherent, working, veraPDF-gated pack and validate across all three SDKs. Every producer now emits files that pass veraPDF PDF/A-3u and round-trip byte-identically through every reader (full 3x3 matrix verified).
+
+### Added
+- **Go `Pack()` is now implemented and lossless.** It writes a PDF increment (ISO 32000 §7.5.6) instead of a full rewrite, so objects living in the input object streams (the embedded font above all) survive verbatim. The CLI `cv pack` produces a single file that opens in any PDF viewer, passes veraPDF, and is readable by the JS and Python SDKs. Replaces the prior "writer not implemented" stub.
+- **Honest in-process PDF/A-3u structural check** in every SDK (`pdfa.ts`, `_pdfa.py`, `pdfa.go`): verifies embedded fonts, sRGB output intent, pdfaid markers, and trailer `/ID`, returning `failed` or `structural-pass`. Replaces the placeholder that returned a strict PASS on veraPDF-failing files. veraPDF remains the authoritative gate.
+
+### Fixed
+- **Go filespec names readable by every reader.** `/F` is now a portable ASCII literal and `/UF` a UTF-16BE hex string (ISO 32000 §7.11.2), so the payload name resolves in pd-lib and elsewhere (previously a UTF-16 literal that read as mojibake, breaking `extractMarkdown` on Go-packed files).
+- **JS reader decodes MIME `/Subtype` from byte content**, so a lowercase name hex escape (`text#2fmarkdown`, as pdfcpu emits) resolves the same as uppercase, keeping the reader conformant to the PDF spec rather than to one library's quirk.
+- **Python pack adds the sRGB GTS_PDFA1 output intent** (byte-identical profile shared with the Go and JS SDKs), so device-dependent colour in the input PDF stays conformant under veraPDF.
+- **veraPDF runner** no longer crashes on the empty-array expansion under bash 3.2.
+
 ## [0.2.0] (2026-05-29)
 
 End-to-end audit sweep across every component. All fixes verified by exercising the real code paths (CLI round-trips, live server negotiation, cross-SDK fixtures), not only the test suites.
