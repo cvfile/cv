@@ -10,60 +10,119 @@ const jsonLd = graph([
     { name: 'Ecosystem', url: 'https://cvfile.org/ecosystem/' },
   ]),
 ]);
+
+const GROUPS = [
+  {
+    hx: 'SDK',
+    title: 'Reference SDKs',
+    items: [
+      { name: '@cvfile/sdk', desc: 'JavaScript / TypeScript pack, extract, inspect, validate. Browser and Node.' },
+      { name: 'cvfile', desc: 'Python equivalent. Same API surface, idiomatic naming.' },
+      { name: 'cv-go', desc: 'Go equivalent. Reader path complete; pack writer lands in v0.2.' },
+    ],
+  },
+  {
+    hx: 'CLI',
+    title: 'Command line',
+    items: [
+      { name: 'cv', desc: 'Single Go binary. Subcommands: extract, inspect, validate, search.' },
+    ],
+  },
+  {
+    hx: 'EMB',
+    title: 'Embeddings',
+    items: [
+      { name: '@cvfile/embed', desc: 'JS chunker plus transformers.js and HF Inference backends. Default model BAAI/bge-m3 (1024-dim, MIT, multilingual).' },
+      { name: 'cvfile[embed]', desc: 'Python equivalent.' },
+    ],
+  },
+  {
+    hx: 'WEB',
+    title: 'Viewer',
+    items: [
+      { name: '@cvfile/viewer-web', desc: 'Lit web component (cv-embed) with PDF, Markdown and HTML tabs, lazy PDF.js worker, dark/light theming, keyboard nav, mobile layout.' },
+    ],
+  },
+  {
+    hx: 'HTTP',
+    title: 'Server middleware',
+    items: [
+      { name: '@cvfile/server', desc: 'Node Express, Fastify and Hono adapters plus a vanilla http handler.' },
+      { name: 'cvfile.server', desc: 'Python ASGI (FastAPI/Starlette) and WSGI (Flask/Django).' },
+      { name: 'cv-go/middleware', desc: 'Go net/http handler.' },
+    ],
+  },
+  {
+    hx: 'AI',
+    title: 'AI tooling integrations',
+    items: [
+      { name: 'langchain-cvfile', desc: 'CVFileLoader emits LangChain Documents, optionally one per embedding chunk.' },
+      { name: 'llama-index-readers-cvfile', desc: 'CVFileReader emits LlamaIndex Documents with .embedding populated.' },
+      { name: 'cvfile-haystack', desc: 'Haystack 2.x CVFileToDocument converter component.' },
+      { name: 'cvfile-cv-detector', desc: '200-line reference sniffer (PyPI / npm / Go) that detects .cv wrapping inside any application/pdf and unwraps the /AF Markdown payload. For crawler vendors who want .cv awareness without adopting an SDK.' },
+    ],
+  },
+];
 ---
 <Page
   title=".cv ecosystem: SDKs, CLI, viewer, middleware, integrations — cvfile.org"
   description="Every package that ships in the cvfile/cv monorepo: three reference SDKs (JS, Python, Go), the cv CLI, <cv-embed> web component, HTTP middleware for 7 frameworks, BGE-M3 embedding generators, and RAG integrations for LangChain, LlamaIndex, Haystack."
 >
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
-  <h1>Ecosystem</h1>
-  <p>The packages that ship in this repo and how they fit together.</p>
 
-  <h2>SDKs</h2>
-  <ul>
-    <li><strong><code>@cvfile/sdk</code></strong> — JavaScript / TypeScript pack/extract/inspect/validate. Browser + Node.</li>
-    <li><strong><code>cvfile</code></strong> — Python equivalent. Same API surface, idiomatic naming.</li>
-    <li><strong><code>cv-go</code></strong> — Go equivalent. Reader path complete; pack writer landing in v0.2.</li>
-  </ul>
+  <div class="doc">
+    <header class="page-head">
+      <span class="kicker label">§05 / Ecosystem</span>
+      <h1>One repository. Every surface a consumer might need.</h1>
+      <p>The packages that ship in the <code>cvfile/cv</code> monorepo and how they fit together.</p>
+    </header>
 
-  <h2>CLI</h2>
-  <ul>
-    <li><strong><code>cv</code></strong> — single Go binary. Subcommands: <code>extract</code>, <code>inspect</code>, <code>validate</code>, <code>search</code>.</li>
-  </ul>
+    {GROUPS.map((group) => (
+      <section class="grp">
+        <h2><span class="hx">{group.hx}</span> {group.title}</h2>
+        <div class="pkgs">
+          {group.items.map((item) => (
+            <div class="pkg">
+              <code class="pkg__name">{item.name}</code>
+              <p class="pkg__desc">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))}
 
-  <h2>Embeddings</h2>
-  <ul>
-    <li><strong><code>@cvfile/embed</code></strong> — JS chunker + transformers.js + HF Inference backends. Default model <code>BAAI/bge-m3</code> (1024-dim, MIT, multilingual).</li>
-    <li><strong><code>cvfile[embed]</code></strong> — Python equivalent.</li>
-  </ul>
+    <section class="grp">
+      <h2><span class="hx">QA</span> Verified compatible</h2>
+      <p>
+        The same <code>.cv</code> file built by any SDK reads byte-identically in
+        the others. The <code>embeddings.cbor</code> payload survives a round
+        trip through CBOR encoders and decoders in JS, Python and Go. Server
+        middleware in three languages negotiates the same Accept header to the
+        same response.
+      </p>
+      <ol class="feat-list">
+        <li><span><strong>veraPDF:</strong> every shipped fixture passes PDF/A-3u conformance. CI runs the gate via the <code>tools/verapdf-runner/</code> Docker image.</span></li>
+        <li><span><strong>Malicious corpus:</strong> 7 mutated fixtures under <code>spec/test-vectors/malicious/</code>. All three SDK validators reject every one with the same documented error code.</span></li>
+        <li><span><strong>Cross-SDK interop:</strong> the producer/consumer matrix is exercised on every pull request.</span></li>
+      </ol>
+    </section>
+  </div>
 
-  <h2>Viewer</h2>
-  <ul>
-    <li><strong><code>@cvfile/viewer-web</code></strong> — Lit web component (<code>&lt;cv-embed&gt;</code>) with PDF/MD/HTML tabs, lazy PDF.js worker, dark/light theming, keyboard nav, mobile layout.</li>
-  </ul>
-
-  <h2>Server middleware</h2>
-  <ul>
-    <li><strong><code>@cvfile/server</code></strong> — Node Express/Fastify/Hono adapters + vanilla <code>http</code> handler.</li>
-    <li><strong><code>cvfile.server</code></strong> — Python ASGI (FastAPI/Starlette) and WSGI (Flask/Django).</li>
-    <li><strong><code>cv-go/middleware</code></strong> — Go <code>net/http</code> handler.</li>
-  </ul>
-
-  <h2>AI tooling integrations</h2>
-  <ul>
-    <li><strong><code>langchain-cvfile</code></strong> (PyPI) — <code>CVFileLoader</code> emits LangChain Documents, optionally one per embedding chunk.</li>
-    <li><strong><code>llama-index-readers-cvfile</code></strong> (PyPI) — <code>CVFileReader</code> emits LlamaIndex Documents with <code>.embedding</code> populated.</li>
-    <li><strong><code>cvfile-haystack</code></strong> (PyPI) — Haystack 2.x <code>CVFileToDocument</code> converter component.</li>
-    <li><strong><code>cvfile-cv-detector</code></strong> (PyPI / npm / Go) — 200 line reference sniffer that detects <code>.cv</code> wrapping inside any <code>application/pdf</code> and unwraps the <code>/AF</code> markdown payload. Designed for crawler vendors who want <code>.cv</code> awareness without adopting an SDK.</li>
-  </ul>
-
-  <h2>Compatibility verified</h2>
-  <p>The same <code>.cv</code> file built by any SDK reads byte-identically in the others. The embeddings.cbor payload survives a round trip through CBOR encoders/decoders in JS, Python, and Go. Server middleware in three languages negotiates the same Accept header to the same response.</p>
-
-  <h2>Production gates</h2>
-  <ul>
-    <li><strong>veraPDF</strong> — every shipped fixture passes PDF/A-3u conformance. CI runs the gate via the <code>tools/verapdf-runner/</code> Docker image.</li>
-    <li><strong>Malicious corpus</strong> — 7 mutated fixtures under <code>spec/test-vectors/malicious/</code>. All three SDK validators reject every one with the same documented error code.</li>
-    <li><strong>Cross-SDK interop</strong> — the producer/consumer matrix is exercised on every PR.</li>
-  </ul>
+  <style>
+    .grp { margin-bottom: var(--space-xl); }
+    .pkgs { border-top: 1px solid var(--line); }
+    .pkg {
+      display: grid;
+      grid-template-columns: minmax(13rem, 16rem) 1fr;
+      gap: var(--space-lg);
+      padding: var(--space-md) var(--space-2xs);
+      border-bottom: 1px solid var(--line);
+      align-items: baseline;
+    }
+    .pkg__name { white-space: normal; background: transparent; border: 0; padding: 0; color: var(--ink); font-weight: 600; font-size: 0.92rem; }
+    .pkg__desc { margin: 0; color: var(--ink-soft); font-size: 0.96rem; max-width: 62ch; }
+    @media (max-width: 640px) {
+      .pkg { grid-template-columns: 1fr; gap: var(--space-2xs); }
+    }
+  </style>
 </Page>

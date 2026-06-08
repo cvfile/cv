@@ -59,6 +59,40 @@ const jsonLd = graph([
   breadcrumbs([{ name: 'cvfile.org', url: 'https://cvfile.org/' }]),
   faqPage(FAQS),
 ]);
+
+const PAYLOADS = [
+  { glyph: '▦', name: 'resume.pdf', type: 'application/pdf', role: 'the visual layer', primary: false },
+  { glyph: '▤', name: 'resume.md', type: 'text/markdown', role: 'ATS · AI', primary: true },
+  { glyph: '◫', name: 'resume.html', type: 'text/html', role: 'the web', primary: false },
+  { glyph: '◈', name: 'embeddings.cbor', type: 'vnd.cv.embeddings+cbor', role: 'BGE-M3 · 1024d', primary: false },
+];
+
+const PATHS = [
+  {
+    n: '01',
+    tag: 'Developers / AI',
+    title: 'I build RAG and AI tooling.',
+    body: 'Read the embedded Markdown and precomputed vectors directly. LangChain, LlamaIndex and Haystack loaders, or a 200-line sniffer. No OCR pass, no re-embedding.',
+    href: '/ecosystem/',
+    cta: 'Browse the ecosystem',
+  },
+  {
+    n: '02',
+    tag: 'Job seekers',
+    title: 'I am writing my resume.',
+    body: 'Fill a form, download one .cv file, upload it to Workday, Greenhouse, Lever, LinkedIn or your own site. One file, every audience, never out of sync.',
+    href: '/create/',
+    cta: 'Create your .cv',
+  },
+  {
+    n: '03',
+    tag: 'ATS / CRM / Recruiters',
+    title: 'I run a hiring platform.',
+    body: 'Drop in the server middleware for Express, Fastify, Hono, FastAPI, Django or Go. Content negotiation hands your crawler clean text. The wrapper stays invisible.',
+    href: '/install/',
+    cta: 'Read the integration',
+  },
+];
 ---
 <Page
   title="cvfile.org — the .cv open file format"
@@ -66,127 +100,186 @@ const jsonLd = graph([
 >
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
 
-  <section style="margin-bottom: 3rem">
-    <h1 style="font-size: 2.4rem; line-height: 1.15; margin: 0 0 1rem">
-      One file. Three audiences. Real semantic search.
-    </h1>
-    <p style="font-size: 1.15rem; color: var(--muted); max-width: 60ch">
-      <code>.cv</code> is the open file format for resumes. One file packs a
-      designed PDF, a clean Markdown copy, a self-contained HTML rendering, and
-      pre-computed BGE-M3 vectors inside a single PDF/A-3u that opens
-      everywhere on day one.
-    </p>
-    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap">
-      <a href="/create/" style="background: var(--accent); color: #fff; padding: 0.65rem 1.3rem; border-radius: 8px; text-decoration: none; font-weight: 600">
-        Create your .cv in the browser
-      </a>
-      <a href="/install/" style="border: 1px solid var(--border); padding: 0.65rem 1.3rem; border-radius: 8px; text-decoration: none; color: inherit">
-        Install the CLI
-      </a>
-      <a href="/spec/" style="border: 1px solid var(--border); padding: 0.65rem 1.3rem; border-radius: 8px; text-decoration: none; color: inherit">
-        Read the spec
-      </a>
+  <!-- ============ HERO ============ -->
+  <section class="hero sheet">
+    <div class="hero__copy">
+      <p class="hero__status" data-rise style="--d: 0ms">
+        <span>Spec cv 1.0</span><i></i><span>Apache 2.0</span><i></i><span>IANA media type</span>
+      </p>
+      <h1 data-rise style="--d: 60ms">One file.<br />Three readers.<br />One source of truth.</h1>
+      <p class="lede" data-rise style="--d: 140ms">
+        <code>.cv</code> is the open file format for resumes. A single PDF/A-3u
+        that carries a designed PDF, a clean Markdown copy, an HTML rendering,
+        and pre-computed BGE-M3 vectors. It opens in any PDF reader on day one;
+        machines read the text inside without OCR.
+      </p>
+      <div class="cta-row" data-rise style="--d: 220ms">
+        <a href="/create/" class="btn btn--primary">Create your .cv <span class="arrow">→</span></a>
+        <a href="/spec/" class="btn btn--ghost">Read the spec</a>
+        <a href="/install/" class="hero__textlink">or install the CLI</a>
+      </div>
+      <dl class="legend" data-rise style="--d: 300ms">
+        <div><dt>Humans</dt><dd>the designed PDF</dd></div>
+        <div><dt>ATS · CRM · recruiters</dt><dd>clean Markdown</dd></div>
+        <div><dt>AI · RAG pipelines</dt><dd>precomputed vectors</dd></div>
+      </dl>
+    </div>
+
+    <!-- The schematic: a .cv file, exploded -->
+    <figure class="schematic" aria-label="A .cv file is a PDF/A-3u container holding four payloads">
+      <div class="schem__rule schem__rule--top"><span class="label">application/vnd.cv+pdf</span><span class="label">PDF/A-3u</span></div>
+      <div class="schem__frame">
+        <span class="tick tick--tl"></span><span class="tick tick--tr"></span>
+        <span class="tick tick--bl"></span><span class="tick tick--br"></span>
+        <ul class="payloads">
+          {PAYLOADS.map((p, i) => (
+            <li class:list={['payload', { 'is-primary': p.primary }]} data-rise style={`--d: ${360 + i * 90}ms`}>
+              <span class="payload__glyph" aria-hidden="true">{p.glyph}</span>
+              <span class="payload__name">{p.name}</span>
+              <span class="payload__type">{p.type}</span>
+              <span class="payload__role">{p.role}{p.primary && <em> ← primary</em>}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="schem__rule schem__rule--bottom">
+        <span class="label">XMP · cv: namespace</span><span class="label">SHA-256 per payload</span>
+      </div>
+      <figcaption class="label" data-rise style="--d: 740ms">Fig.1 · one container, every copy verified in sync</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ THREE PATHS ============ -->
+  <section class="sheet">
+    <div class="block">
+      <div class="block__marg"><span class="sec">§01</span><span class="label">Paths</span></div>
+      <div class="block__body">
+        <h2>Pick the path that matches your role.</h2>
+        <p>The same file serves three audiences. Start where you stand.</p>
+        <div class="paths">
+          {PATHS.map((path) => (
+            <a class="path" href={path.href}>
+              <div class="path__head">
+                <span class="path__n">{path.n}</span>
+                <span class="label">{path.tag}</span>
+              </div>
+              <h3>{path.title}</h3>
+              <p>{path.body}</p>
+              <span class="path__cta">{path.cta} <span class="arrow">→</span></span>
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   </section>
 
-  <section>
-    <h2>Pick the path that matches your role</h2>
-    <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 1rem;">
-      <a href="/create/" style="display: block; padding: 1.25rem; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: inherit;">
-        <strong>I'm writing my resume.</strong>
-        <p style="margin: 0.5rem 0 0; color: var(--muted); font-size: 0.95rem">
-          Fill a form. Download a <code>.cv</code> file. Upload it to Workday,
-          Greenhouse, Lever, LinkedIn, your site. One file, every audience.
+  <!-- ============ WHY ============ -->
+  <section class="sheet">
+    <div class="block">
+      <div class="block__marg"><span class="sec">§02</span><span class="label">Rationale</span></div>
+      <div class="block__body">
+        <h2>Four artifacts drift. One file does not.</h2>
+        <p>
+          Today a person sends three different artifacts to three different
+          audiences: a polished PDF to recruiters, a Markdown copy to ATS
+          systems, a web bio for their site. They fall out of sync within weeks.
+          AI tools re-OCR and re-embed the same documents over and over.
         </p>
-      </a>
-      <a href="/ecosystem/" style="display: block; padding: 1.25rem; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: inherit;">
-        <strong>I'm building a RAG / AI tool.</strong>
-        <p style="margin: 0.5rem 0 0; color: var(--muted); font-size: 0.95rem">
-          Use the LangChain, LlamaIndex, or Haystack loader. Or the 200-line
-          <code>cvfile-cv-detector</code> sniffer. Skip OCR, skip re-embedding.
+        <p>
+          <code>.cv</code> collapses them into one. One file, one source of
+          truth, opens in any PDF reader on day one. Bots that ask for
+          <code>text/markdown</code> get the Markdown back. RAG pipelines that
+          recognise the format read precomputed BGE-M3 vectors directly instead
+          of re-embedding.
         </p>
-      </a>
-      <a href="/install/" style="display: block; padding: 1.25rem; border: 1px solid var(--border); border-radius: 10px; text-decoration: none; color: inherit;">
-        <strong>I run an ATS or job board.</strong>
-        <p style="margin: 0.5rem 0 0; color: var(--muted); font-size: 0.95rem">
-          Use the server middleware (Express, Fastify, Hono, FastAPI, Django,
-          Go <code>net/http</code>). Content negotiation makes the wrapper
-          invisible to existing crawlers.
-        </p>
-      </a>
+      </div>
     </div>
   </section>
 
-  <section>
-    <h2>Why .cv exists</h2>
-    <p>
-      Today a person sends three different artifacts to three different
-      audiences: a polished PDF to recruiters, a Markdown copy to ATS systems,
-      a web bio for their site. They drift out of sync within weeks. AI tools
-      re-embed the same documents over and over.
-    </p>
-    <p>
-      <code>.cv</code> fixes all three: one file, one source of truth, opens in
-      any PDF reader on day one. Bots that ask for <code>text/markdown</code>
-      get the markdown back. RAG pipelines that recognize the format read
-      pre-computed BGE-M3 vectors directly instead of re-embedding.
-    </p>
+  <!-- ============ COMPARISON ============ -->
+  <section class="sheet">
+    <div class="block">
+      <div class="block__marg"><span class="sec">§03</span><span class="label">Comparison</span></div>
+      <div class="block__body">
+        <h2>Schemas drop the design. PDFs drop the text. <code>.cv</code> keeps both.</h2>
+        <div class="table-scroll">
+          <table class="spec-table">
+            <thead>
+              <tr>
+                <th>Format</th>
+                <th>Visual PDF</th>
+                <th>Clean ATS text</th>
+                <th>Precomputed vectors</th>
+                <th>Opens anywhere</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="is-primary">
+                <td><code>.cv</code></td>
+                <td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td><td class="yes">yes</td>
+              </tr>
+              <tr>
+                <td>JSON Resume / FRESH</td>
+                <td class="no">data only</td><td class="yes">yes</td><td class="no">no</td><td class="no">no</td>
+              </tr>
+              <tr>
+                <td>Europass XML</td>
+                <td class="no">data only</td><td class="yes">yes</td><td class="no">no</td><td class="no">no</td>
+              </tr>
+              <tr>
+                <td>HR-XML / HR Open</td>
+                <td class="no">data only</td><td class="yes">yes</td><td class="no">no</td><td class="no">no</td>
+              </tr>
+              <tr>
+                <td>Plain PDF</td>
+                <td class="yes">yes</td><td class="no">OCR only</td><td class="no">no</td><td class="yes">yes</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section>
-    <h2>How is this different from JSON Resume or Europass?</h2>
-    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
-      <thead>
-        <tr style="border-bottom: 1px solid var(--border); text-align: left;">
-          <th style="padding: 0.5rem 0">Format</th>
-          <th>Visual PDF</th>
-          <th>Clean ATS text</th>
-          <th>Pre-computed vectors</th>
-          <th>Opens in any PDF reader</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="border-bottom: 1px solid var(--border)">
-          <td style="padding: 0.5rem 0"><code>.cv</code></td>
-          <td>yes</td><td>yes</td><td>yes</td><td>yes</td>
-        </tr>
-        <tr style="border-bottom: 1px solid var(--border)">
-          <td style="padding: 0.5rem 0">JSON Resume / FRESH</td>
-          <td>no (data only)</td><td>yes</td><td>no</td><td>no</td>
-        </tr>
-        <tr style="border-bottom: 1px solid var(--border)">
-          <td style="padding: 0.5rem 0">Europass XML</td>
-          <td>no (data only)</td><td>yes</td><td>no</td><td>no</td>
-        </tr>
-        <tr style="border-bottom: 1px solid var(--border)">
-          <td style="padding: 0.5rem 0">HR-XML / HR Open</td>
-          <td>no (data only)</td><td>yes</td><td>no</td><td>no</td>
-        </tr>
-        <tr>
-          <td style="padding: 0.5rem 0">Plain PDF</td>
-          <td>yes</td><td>no (OCR)</td><td>no</td><td>yes</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- ============ KILLER PROPERTY ============ -->
+  <section class="sheet">
+    <div class="block">
+      <div class="block__marg"><span class="sec">§04</span><span class="label">Invisible</span></div>
+      <div class="block__body">
+        <h2>The consumer never learns <code>.cv</code> exists.</h2>
+        <p>
+          A producer ships <strong>one</strong> file. The HTTP middleware reads
+          the <code>Accept</code> header and hands every consumer exactly the
+          representation it wants. The wrapper is producer-side convenience;
+          consumer-side it stays invisible.
+        </p>
+        <div class="negotiation">
+          {[
+            { accept: 'text/html, */*', who: 'LLM crawlers, browsers', sees: 'extracted resume.html' },
+            { accept: 'text/markdown', who: 'newer agents, our SDK', sees: 'extracted resume.md' },
+            { accept: 'application/pdf', who: 'PDF clients', sees: 'the visual PDF' },
+            { accept: 'no Accept header', who: 'anything else', sees: 'the visual PDF' },
+          ].map((row) => (
+            <div class="neg-row">
+              <code class="neg-accept">{row.accept}</code>
+              <span class="neg-who label">{row.who}</span>
+              <span class="neg-arrow" aria-hidden="true">→</span>
+              <span class="neg-sees">{row.sees}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section>
-    <h2>What ships today</h2>
-    <ul>
-      <li>Stable spec at <a href="/spec/">cv-1.0</a>.</li>
-      <li>Reference SDKs in <strong>JavaScript</strong>, <strong>Python</strong>, <strong>Go</strong>.</li>
-      <li>Single-binary CLI (<code>cv extract / inspect / validate / search</code>).</li>
-      <li><code>&lt;cv-embed&gt;</code> web component (Lit, ~10 KB shell, lazy PDF.js worker).</li>
-      <li>Server middleware for Express, Fastify, Hono, FastAPI, Flask, Django, Go <code>net/http</code>.</li>
-      <li>Optional BGE-M3 embedding generation (<code>@cvfile/embed</code>, <code>cvfile[embed]</code>).</li>
-      <li>LangChain, LlamaIndex, and Haystack document loaders.</li>
-      <li>200-line reference sniffer (<code>cvfile-cv-detector</code>) for crawler vendors.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>Hello, .cv</h2>
-    <pre><code>{`# Build a .cv from a markdown CV
+  <!-- ============ HELLO .CV ============ -->
+  <section class="sheet">
+    <div class="block">
+      <div class="block__marg"><span class="sec">§05</span><span class="label">Hello, .cv</span></div>
+      <div class="block__body">
+        <h2>Pack once. Read it any way you like.</h2>
+        <p class="plate-caption">terminal · cv command line</p>
+        <pre><code>{`# Build a .cv from a markdown CV
 cv pack \\
   --pdf resume.pdf \\
   --md resume.md \\
@@ -199,53 +292,216 @@ cv extract resume.cv --format md      # markdown stream
 cv inspect resume.cv --json           # XMP + payload metadata
 cv validate resume.cv --strict        # PDF/A-3u + cv-strict gate
 cv search  resume.cv "kubernetes"     # semantic search via BGE-M3`}</code></pre>
+      </div>
+    </div>
   </section>
 
-  <section>
-    <h2>The killer property</h2>
-    <p>
-      A producer ships <strong>one</strong> <code>.cv</code> file. The HTTP middleware
-      makes the wrapper invisible to consumers:
-    </p>
-    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
-      <thead>
-        <tr style="border-bottom: 1px solid var(--border); text-align: left;">
-          <th style="padding: 0.5rem 0">Consumer Accept header</th>
-          <th>Sees</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="border-bottom: 1px solid var(--border)">
-          <td style="padding: 0.5rem 0"><code>text/html, */*</code> (LLM crawlers, browsers)</td>
-          <td>Extracted <code>resume.html</code></td>
-        </tr>
-        <tr style="border-bottom: 1px solid var(--border)">
-          <td style="padding: 0.5rem 0"><code>text/markdown</code> (newer agents, our SDK)</td>
-          <td>Extracted <code>resume.md</code></td>
-        </tr>
-        <tr style="border-bottom: 1px solid var(--border)">
-          <td style="padding: 0.5rem 0"><code>application/pdf</code></td>
-          <td>The visual PDF</td>
-        </tr>
-        <tr>
-          <td style="padding: 0.5rem 0">No <code>Accept</code> header</td>
-          <td>The visual PDF (renders in built-in viewer)</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      The bot never needs to know <code>.cv</code> exists. The format is producer-side
-      convenience; consumer-side it is invisible.
-    </p>
+  <!-- ============ SHIPS TODAY ============ -->
+  <section class="sheet">
+    <div class="block">
+      <div class="block__marg"><span class="sec">§06</span><span class="label">Status</span></div>
+      <div class="block__body">
+        <h2>What ships today.</h2>
+        <ol class="feat-list">
+          <li><span>Stable spec at <a href="/spec/">cv-1.0</a>, frozen and versioned.</span></li>
+          <li><span>Reference SDKs in <strong>JavaScript</strong>, <strong>Python</strong>, and <strong>Go</strong>.</span></li>
+          <li><span>Single-binary CLI: <code>cv extract / inspect / validate / search</code>.</span></li>
+          <li><span><code>&lt;cv-embed&gt;</code> web component (Lit, ~10 KB shell, lazy PDF.js worker).</span></li>
+          <li><span>Server middleware for Express, Fastify, Hono, FastAPI, Flask, Django, Go <code>net/http</code>.</span></li>
+          <li><span>Optional BGE-M3 embedding generation (<code>@cvfile/embed</code>, <code>cvfile[embed]</code>).</span></li>
+          <li><span>LangChain, LlamaIndex, and Haystack document loaders.</span></li>
+          <li><span>200-line reference sniffer (<code>cvfile-cv-detector</code>) for crawler vendors.</span></li>
+        </ol>
+      </div>
+    </div>
   </section>
 
-  <section>
-    <h2>Frequently asked questions</h2>
-    {FAQS.map(({ question, answer }) => (
-      <details style="margin: 0.75rem 0; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px;">
-        <summary style="cursor: pointer; font-weight: 600;">{question}</summary>
-        <p style="margin: 0.75rem 0 0; color: var(--muted)">{answer}</p>
-      </details>
-    ))}
+  <!-- ============ FAQ ============ -->
+  <section class="sheet">
+    <div class="block">
+      <div class="block__marg"><span class="sec">§07</span><span class="label">FAQ</span></div>
+      <div class="block__body">
+        <h2>Frequently asked questions.</h2>
+        <div class="faq">
+          {FAQS.map((item, i) => (
+            <details class="faq__item">
+              <summary>
+                <span class="faq__n">{String(i + 1).padStart(2, '0')}</span>
+                <span class="faq__q">{item.question}</span>
+                <span class="faq__mark" aria-hidden="true"></span>
+              </summary>
+              <p>{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </div>
   </section>
+
+  <style>
+    /* ---------- Hero ---------- */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: var(--space-3xl);
+      align-items: center;
+      padding: clamp(var(--space-2xl), 6vw, var(--space-4xl)) var(--space-lg);
+    }
+    .hero__status {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-2xs) var(--space-sm);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin: 0 0 var(--space-lg);
+    }
+    .hero__status i { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+    .hero h1 { margin-bottom: var(--space-lg); }
+    .hero .lede { margin-bottom: var(--space-xl); }
+    .hero .lede code { white-space: nowrap; }
+    .hero__textlink {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-soft);
+      text-decoration: none;
+      align-self: center;
+      padding-left: var(--space-2xs);
+    }
+    .hero__textlink:hover { color: var(--accent); }
+
+    .legend { margin: var(--space-2xl) 0 0; display: grid; gap: var(--space-sm); max-width: none; }
+    .legend > div { display: grid; grid-template-columns: 13rem 1fr; gap: var(--space-md); align-items: baseline; padding-top: var(--space-sm); border-top: 1px solid var(--line); }
+    .legend dt { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); margin: 0; }
+    .legend dd { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
+
+    /* ---------- Schematic ---------- */
+    .schematic { margin: 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+    .schem__rule { display: flex; justify-content: space-between; align-items: center; padding: 0 var(--space-2xs); }
+    .schem__rule--top { padding-bottom: var(--space-2xs); }
+    .schem__frame {
+      position: relative;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: color-mix(in oklab, var(--paper-2) 60%, transparent);
+      padding: var(--space-md);
+    }
+    .tick { position: absolute; width: 9px; height: 9px; border: 1px solid var(--accent); }
+    .tick--tl { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+    .tick--tr { top: -1px; right: -1px; border-left: 0; border-bottom: 0; }
+    .tick--bl { bottom: -1px; left: -1px; border-right: 0; border-top: 0; }
+    .tick--br { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+
+    .payloads { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+    .payload {
+      display: grid;
+      grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+      grid-template-rows: auto auto;
+      align-items: center;
+      gap: 0 var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+    }
+    .payload__glyph { grid-row: 1 / 3; font-size: 1.1rem; color: var(--ink-soft); text-align: center; }
+    .payload__name { font-family: var(--mono); font-weight: 600; font-size: 0.9rem; color: var(--ink); }
+    .payload__type { grid-column: 2; font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); overflow-wrap: anywhere; }
+    .payload__role { grid-column: 3; grid-row: 1 / 3; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); text-align: right; }
+    @media (max-width: 520px) {
+      .payload { grid-template-columns: 1.5rem 1fr; }
+      .payload__role { grid-column: 2; grid-row: auto; text-align: left; margin-top: var(--space-2xs); }
+    }
+    .payload.is-primary { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 7%, var(--paper)); }
+    .payload.is-primary .payload__glyph,
+    .payload.is-primary .payload__role { color: var(--accent); }
+    .payload__role em { font-style: normal; color: var(--accent); font-weight: 600; }
+
+    figcaption.label { margin-top: var(--space-xs); text-align: right; }
+
+    /* ---------- Paths ---------- */
+    .paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0; margin-top: var(--space-xl); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .path {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      padding: var(--space-xl);
+      text-decoration: none;
+      color: var(--ink);
+      border-right: 1px solid var(--line);
+      transition: background 160ms;
+    }
+    .path:last-child { border-right: 0; }
+    .path:hover { background: var(--paper-2); }
+    .path__head { display: flex; align-items: baseline; gap: var(--space-sm); margin-bottom: var(--space-xs); }
+    .path__n { font-family: var(--display); font-weight: 800; font-size: 1.6rem; color: var(--accent); line-height: 1; }
+    .path h3 { margin: 0; }
+    .path p { color: var(--ink-soft); font-size: 0.95rem; margin: 0; flex: 1; }
+    .path__cta { font-family: var(--mono); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); margin-top: var(--space-sm); display: inline-flex; gap: var(--space-xs); }
+    .path:hover .path__cta { color: var(--accent); }
+    .path:hover .arrow { transform: translateX(3px); }
+    .path .arrow { transition: transform 160ms cubic-bezier(0.2,0.8,0.2,1); }
+    @media (max-width: 720px) {
+      .paths { grid-template-columns: 1fr; }
+      .path { border-right: 0; border-bottom: 1px solid var(--line); }
+      .path:last-child { border-bottom: 0; }
+    }
+
+    /* ---------- Negotiation ---------- */
+    .negotiation { margin-top: var(--space-lg); display: flex; flex-direction: column; }
+    .neg-row {
+      display: grid;
+      grid-template-columns: minmax(11rem, auto) 1fr 1.2rem minmax(10rem, auto);
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-top: 1px solid var(--line);
+    }
+    .neg-row:last-child { border-bottom: 1px solid var(--line); }
+    .neg-accept { white-space: nowrap; }
+    .neg-who { text-align: left; }
+    .neg-arrow { color: var(--accent); text-align: center; font-family: var(--mono); }
+    .neg-sees { font-family: var(--mono); font-size: 0.84rem; color: var(--ink); }
+    @media (max-width: 680px) {
+      .neg-row { grid-template-columns: 1fr auto; gap: var(--space-xs); }
+      .neg-who { grid-column: 1 / -1; order: 3; }
+      .neg-arrow { display: none; }
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    /* ---------- FAQ ---------- */
+    .faq { margin-top: var(--space-md); border-top: 1px solid var(--line); }
+    .faq__item { border-bottom: 1px solid var(--line); }
+    .faq__item summary {
+      display: grid;
+      grid-template-columns: 2.2rem 1fr 1.5rem;
+      align-items: baseline;
+      gap: var(--space-sm);
+      padding: var(--space-md) 0;
+      cursor: pointer;
+      list-style: none;
+    }
+    .faq__item summary::-webkit-details-marker { display: none; }
+    .faq__n { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-faint); }
+    .faq__q { font-family: var(--display); font-weight: 600; font-size: 1.05rem; color: var(--ink); letter-spacing: -0.01em; }
+    .faq__mark { position: relative; width: 13px; height: 13px; justify-self: end; align-self: center; }
+    .faq__mark::before, .faq__mark::after { content: ''; position: absolute; background: var(--accent); transition: transform 180ms ease; }
+    .faq__mark::before { top: 6px; left: 0; width: 13px; height: 1.5px; }
+    .faq__mark::after { left: 6px; top: 0; width: 1.5px; height: 13px; }
+    .faq__item[open] .faq__mark::after { transform: scaleY(0); }
+    .faq__item[open] .faq__q { color: var(--accent); }
+    .faq__item p { margin: 0 0 var(--space-lg); padding-left: calc(2.2rem + var(--space-sm)); color: var(--ink-soft); font-size: 0.96rem; }
+
+    /* ---------- Responsive hero ---------- */
+    @media (max-width: 940px) {
+      .hero { grid-template-columns: 1fr; gap: var(--space-2xl); }
+      .legend > div { grid-template-columns: 1fr; gap: var(--space-2xs); }
+    }
+  </style>
 </Page>

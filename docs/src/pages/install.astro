@@ -17,16 +17,22 @@ const jsonLd = graph([
   description="Install the cv CLI on macOS, Linux, Windows; or pull the @cvfile/sdk (npm), cvfile (PyPI), or cv-go (Go) SDKs. Web component and server middleware also one command away."
 >
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
-  <h1>Install</h1>
-  <p>
-    The <code>.cv</code> ecosystem ships in three languages plus a single binary CLI.
-    Pick whichever surface you need; all of them produce and consume the same
-    <a href="/spec/">spec-conformant</a> files.
-  </p>
 
-  <h2>Command-line (<code>cv</code>)</h2>
-  <p>One static binary, no runtime dependency.</p>
-  <pre><code>{`# macOS / Linux (Homebrew tap)
+  <div class="doc doc--narrow">
+    <header class="page-head">
+      <span class="kicker label">§04 / Install</span>
+      <h1>Three languages, one binary, one source of truth.</h1>
+      <p>
+        The <code>.cv</code> ecosystem ships in JavaScript, Python and Go plus a
+        single static CLI. Every surface produces and consumes the same
+        <a href="/spec/">spec-conformant</a> file.
+      </p>
+    </header>
+
+    <h2><span class="hx">CLI</span> Command line (<code>cv</code>)</h2>
+    <p>One static binary, no runtime dependency.</p>
+    <p class="plate-caption">shell · install the cv binary</p>
+    <pre><code>{`# macOS / Linux (Homebrew tap)
 brew tap cvfile/tap
 brew install cv
 
@@ -40,16 +46,17 @@ winget install cvfile.cv
 # Anywhere with Go 1.22+
 go install github.com/cvfile/cv-go/cmd/cv@latest`}</code></pre>
 
-  <h2>JavaScript / TypeScript</h2>
-  <pre><code>{`pnpm add @cvfile/sdk
+    <h2><span class="hx">JS</span> JavaScript / TypeScript</h2>
+    <p class="plate-caption">shell · npm packages</p>
+    <pre><code>{`pnpm add @cvfile/sdk
 # Optional embedding generation:
 pnpm add @cvfile/embed
 # Server middleware (Express/Fastify/Hono):
 pnpm add @cvfile/server
 # Drop-in viewer web component:
 pnpm add @cvfile/viewer-web`}</code></pre>
-
-  <pre><code>{`import { pack, extract, validate } from '@cvfile/sdk';
+    <p class="plate-caption">typescript · pack and extract</p>
+    <pre><code>{`import { pack, extract, validate } from '@cvfile/sdk';
 const cv = await pack({
   pdf: pdfBytes,
   markdown: '# Jane Doe\\n\\n…',
@@ -62,12 +69,13 @@ const cv = await pack({
 });
 const file = await extract(cv);`}</code></pre>
 
-  <h2>Python</h2>
-  <pre><code>{`pip install cvfile
+    <h2><span class="hx">PY</span> Python</h2>
+    <p class="plate-caption">shell · pip</p>
+    <pre><code>{`pip install cvfile
 # With BGE-M3 embedding generation:
 pip install "cvfile[embed]"`}</code></pre>
-
-  <pre><code>{`from cvfile import pack, extract, validate
+    <p class="plate-caption">python · pack and extract</p>
+    <pre><code>{`from cvfile import pack, extract, validate
 cv = pack(
     pdf=pdf_bytes,
     markdown=md,
@@ -76,25 +84,30 @@ cv = pack(
 )
 file = extract(cv)`}</code></pre>
 
-  <h2>Go</h2>
-  <pre><code>{`go get github.com/cvfile/cv-go`}</code></pre>
-
-  <pre><code>{`import cv "github.com/cvfile/cv-go/cv"
+    <h2><span class="hx">GO</span> Go</h2>
+    <p class="plate-caption">shell · go get</p>
+    <pre><code>{`go get github.com/cvfile/cv-go`}</code></pre>
+    <p class="plate-caption">go · extract and validate</p>
+    <pre><code>{`import cv "github.com/cvfile/cv-go/cv"
 
 file, err := cv.Extract(cvBytes)
 report := cv.Validate(cvBytes, cv.ValidateOptions{Strict: true})`}</code></pre>
 
-  <h2>Web component (drop into any HTML page)</h2>
-  <pre><code>{`<script type="module" src="https://cdn.cvfile.org/embed/1/cv-embed.js"></script>
+    <h2><span class="hx">WEB</span> Web component</h2>
+    <p>Drop the viewer into any HTML page from the CDN.</p>
+    <p class="plate-caption">html · cv-embed</p>
+    <pre><code>{`<script type="module" src="https://cdn.cvfile.org/embed/1/cv-embed.js"></script>
 <cv-embed src="resume.cv" view="auto" theme="auto"></cv-embed>`}</code></pre>
 
-  <h2>HTTP middleware</h2>
-  <p>
-    Serves a directory of <code>.cv</code> files with full content negotiation —
-    any consumer that asks for <code>text/markdown</code> gets the markdown back,
-    no special-case handling required.
-  </p>
-  <pre><code>{`# Node (Express/Fastify/Hono)
+    <h2><span class="hx">HTTP</span> Server middleware</h2>
+    <p>
+      Serve a directory of <code>.cv</code> files with full content
+      negotiation. Any consumer that asks for <code>text/markdown</code> gets
+      the Markdown back, no special-case handling on either side. This is the
+      integration path for ATS, CRM and recruitment platforms.
+    </p>
+    <p class="plate-caption">node · python · go</p>
+    <pre><code>{`# Node (Express/Fastify/Hono)
 import express from 'express';
 import { cvHandler } from '@cvfile/server';
 
@@ -112,4 +125,5 @@ app.mount("/cv", build_cv_asgi_app(root="./resumes"))
 import "github.com/cvfile/cv-go/middleware"
 h, _ := middleware.Handler(middleware.Options{Root: "./resumes"})
 http.Handle("/cv/", http.StripPrefix("/cv", h))`}</code></pre>
+  </div>
 </Page>

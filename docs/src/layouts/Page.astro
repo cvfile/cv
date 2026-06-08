@@ -17,6 +17,15 @@ const siteUrl = Astro.site?.origin ?? 'https://cvfile.org';
 const pathname = Astro.url.pathname;
 const canonical = new URL(pathname, siteUrl).toString();
 const ogImageAbs = new URL(ogImage, siteUrl).toString();
+
+const NAV = [
+  { href: '/create/', label: 'Create', n: '01' },
+  { href: '/view/', label: 'Demo', n: '02' },
+  { href: '/spec/', label: 'Spec', n: '03' },
+  { href: '/install/', label: 'Install', n: '04' },
+  { href: '/ecosystem/', label: 'Ecosystem', n: '05' },
+];
+const isActive = (href: string) => pathname === href || pathname === href.replace(/\/$/, '');
 ---
 
 <!doctype html>
@@ -29,8 +38,8 @@ const ogImageAbs = new URL(ogImage, siteUrl).toString();
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex,nofollow" />}
 
-    <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1814" media="(prefers-color-scheme: dark)" />
     <meta name="author" content="cvfile.org" />
 
     <meta property="og:type" content="website" />
@@ -51,87 +60,504 @@ const ogImageAbs = new URL(ogImage, siteUrl).toString();
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="alternate" type="application/rss+xml" title="cvfile.org changelog" href="https://github.com/cvfile/cv/releases.atom" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap"
+    />
+
+    <script is:inline>
+      // Theme override on top of the OS preference. The palette is built on
+      // CSS light-dark(), so forcing the root color-scheme is enough; "auto"
+      // restores `light dark` and the OS decides. Runs pre-paint to avoid FOUC.
+      (function () {
+        var KEY = 'cv-theme';
+        var ORDER = ['auto', 'light', 'dark'];
+        var LABEL = { auto: '◐ Auto', light: '○ Light', dark: '● Dark' };
+        function current() {
+          try {
+            var v = localStorage.getItem(KEY);
+            return v === 'light' || v === 'dark' ? v : 'auto';
+          } catch (e) { return 'auto'; }
+        }
+        function apply(mode) {
+          document.documentElement.style.colorScheme = mode === 'auto' ? 'light dark' : mode;
+        }
+        apply(current());
+        document.addEventListener('DOMContentLoaded', function () {
+          var btn = document.getElementById('theme-toggle');
+          if (!btn) return;
+          function render() { btn.textContent = LABEL[current()]; btn.setAttribute('aria-label', 'Theme: ' + current() + ', tap to change'); }
+          render();
+          btn.addEventListener('click', function () {
+            var next = ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length];
+            try { next === 'auto' ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, next); } catch (e) {}
+            apply(next); render();
+          });
+        });
+      })();
+    </script>
     <slot name="head" />
     <style is:global>
       :root {
         color-scheme: light dark;
-        --bg: #fafaf9;
-        --fg: #111;
-        --muted: #6b7280;
-        --border: #e5e5e3;
-        --accent: #4f46e5;
-        --code-bg: #1e1e2e;
-        --max-width: 880px;
+
+        /* Surfaces (warm engineering vellum in light, warm ink in dark) */
+        --paper:      light-dark(oklch(0.972 0.006 86),  oklch(0.185 0.010 72));
+        --paper-2:    light-dark(oklch(0.942 0.009 84),  oklch(0.225 0.012 72));
+        --paper-3:    light-dark(oklch(0.905 0.011 82),  oklch(0.270 0.013 72));
+
+        /* Ink */
+        --ink:        light-dark(oklch(0.245 0.013 66),  oklch(0.925 0.008 84));
+        --ink-soft:   light-dark(oklch(0.455 0.012 70),  oklch(0.700 0.012 80));
+        --ink-faint:  light-dark(oklch(0.585 0.010 74),  oklch(0.560 0.012 78));
+
+        /* Structure */
+        --line:       light-dark(oklch(0.862 0.012 80),  oklch(0.320 0.013 72));
+        --line-strong:light-dark(oklch(0.760 0.014 78),  oklch(0.420 0.015 72));
+        --grid:       light-dark(oklch(0.918 0.010 84),  oklch(0.250 0.011 72));
+
+        /* Draftsman's vermilion accent */
+        --accent:     light-dark(oklch(0.560 0.205 33),  oklch(0.680 0.175 35));
+        --accent-2:   light-dark(oklch(0.505 0.190 31),  oklch(0.740 0.150 38));
+        --on-accent:  oklch(0.985 0.004 86);
+
+        /* Code plate (constant across themes) */
+        --plate:      oklch(0.205 0.014 72);
+        --plate-ink:  oklch(0.880 0.010 84);
+        --plate-line: oklch(0.320 0.014 72);
+
+        /* Type */
+        --display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+        --body: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+        --mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+        /* 4pt spacing scale */
+        --space-2xs: 4px;
+        --space-xs: 8px;
+        --space-sm: 12px;
+        --space-md: 16px;
+        --space-lg: 24px;
+        --space-xl: 32px;
+        --space-2xl: 48px;
+        --space-3xl: 64px;
+        --space-4xl: 96px;
+
+        --sheet: 1180px;
+        --measure: 68ch;
+        --rail: 8.5rem;
+        --radius: 3px;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0b0b0d;
-          --fg: #f3f4f6;
-          --muted: #9ca3af;
-          --border: #2a2a2e;
-          --accent: #818cf8;
-        }
-      }
+
       * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+      }
+
       body {
         margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-        background: var(--bg);
-        color: var(--fg);
-        line-height: 1.65;
+        font-family: var(--body);
+        font-size: 1.0625rem;
+        line-height: 1.62;
+        background: var(--paper);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
       }
-      header.site, footer.site {
-        max-width: var(--max-width);
-        margin: 0 auto;
-        padding: 1.25rem 1.5rem;
+
+      /* Faint drafting grid, strongest at the top, fading down. */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 32px 32px;
+        background-position: -1px -1px;
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent 70%);
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent 70%);
       }
-      header.site { display: flex; align-items: baseline; gap: 1.5rem; border-bottom: 1px solid var(--border); }
-      header.site h1 { font-size: 1.1rem; margin: 0; }
-      header.site nav { margin-left: auto; display: flex; gap: 1.25rem; font-size: 0.95rem; flex-wrap: wrap; }
-      header.site a { color: inherit; text-decoration: none; }
-      header.site a:hover { color: var(--accent); }
-      main { max-width: var(--max-width); margin: 0 auto; padding: 2rem 1.5rem 4rem; }
-      h2 { margin-top: 2.5rem; }
-      pre {
-        background: var(--code-bg);
-        color: #e2e8f0;
-        padding: 1rem 1.25rem;
-        border-radius: 8px;
-        overflow-x: auto;
-        font-size: 0.9rem;
-        line-height: 1.55;
+
+      /* ---------- Typography ---------- */
+      h1, h2, h3 {
+        font-family: var(--display);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.04;
+        color: var(--ink);
+        text-wrap: balance;
       }
+      h1 { font-size: clamp(2.5rem, 1.6rem + 4vw, 4.4rem); font-weight: 800; margin: 0 0 var(--space-lg); }
+      h2 { font-size: clamp(1.7rem, 1.3rem + 1.6vw, 2.35rem); margin: 0 0 var(--space-md); }
+      h3 { font-size: 1.22rem; letter-spacing: -0.01em; margin: 0 0 var(--space-xs); }
+
+      p { margin: 0 0 var(--space-md); max-width: var(--measure); }
+
+      a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+      a:hover { color: var(--accent-2); }
+
+      strong { font-weight: 600; color: var(--ink); }
+
+      /* Mono annotation label, the blueprint dimension text */
+      .label {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+
+      /* ---------- Inline + block code ---------- */
       code:not(pre code) {
-        background: rgba(127, 127, 127, 0.12);
-        padding: 0.1rem 0.35rem;
-        border-radius: 4px;
-        font-size: 0.92em;
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--paper-2);
+        border: 1px solid var(--line);
+        padding: 0.08em 0.36em;
+        border-radius: 2px;
+        color: var(--ink);
+        overflow-wrap: anywhere;
       }
-      a { color: var(--accent); }
-      footer.site {
-        border-top: 1px solid var(--border);
-        font-size: 0.85rem;
-        color: var(--muted);
+      pre {
+        position: relative;
+        background: var(--plate);
+        color: var(--plate-ink);
+        border: 1px solid var(--plate-line);
+        border-radius: var(--radius);
+        padding: var(--space-lg) var(--space-lg);
+        overflow-x: auto;
+        font-family: var(--mono);
+        font-size: 0.84rem;
+        line-height: 1.62;
+        margin: var(--space-md) 0 var(--space-lg);
       }
+      pre code { font-family: var(--mono); color: inherit; }
+      .plate-caption {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin: var(--space-lg) 0 var(--space-2xs);
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+      }
+      .plate-caption::before {
+        content: '';
+        width: 6px; height: 6px;
+        background: var(--accent);
+        display: inline-block;
+      }
+
+      /* ---------- Layout chrome ---------- */
+      .titleblock {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: color-mix(in oklab, var(--paper) 86%, transparent);
+        backdrop-filter: blur(8px) saturate(1.2);
+        border-bottom: 1px solid var(--line);
+      }
+      .titleblock__inner {
+        max-width: var(--sheet);
+        margin: 0 auto;
+        padding: var(--space-sm) var(--space-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+      }
+      .brand { display: flex; align-items: baseline; gap: var(--space-sm); text-decoration: none; color: var(--ink); }
+      .brand__mark {
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 1.3rem;
+        letter-spacing: -0.03em;
+      }
+      .brand__mark .dot { color: var(--accent); }
+      .brand__tag { display: none; }
+      @media (min-width: 760px) { .brand__tag { display: inline; } }
+
+      .nav { margin-left: auto; display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+      .nav a {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        text-decoration: none;
+        padding: var(--space-2xs) 0;
+        position: relative;
+      }
+      .nav a:hover { color: var(--ink); }
+      .nav a[aria-current='page'] { color: var(--ink); }
+      .nav a[aria-current='page']::after {
+        content: '';
+        position: absolute;
+        left: 0; right: 0; bottom: -2px;
+        height: 2px;
+        background: var(--accent);
+      }
+      .nav a .num { color: var(--ink-faint); margin-right: 0.4em; font-size: 0.72rem; }
+      .nav .gh { color: var(--ink); }
+
+      .theme-toggle {
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        background: transparent;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        padding: 0.32rem 0.6rem;
+        min-height: 30px;
+        cursor: pointer;
+        transition: color 140ms, border-color 140ms;
+      }
+      .theme-toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
+      .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+      @media (max-width: 640px) {
+        .titleblock__inner {
+          flex-direction: column;
+          align-items: stretch;
+          gap: var(--space-sm);
+          padding: var(--space-sm) var(--space-md);
+        }
+        .nav {
+          margin-left: 0;
+          gap: var(--space-md) var(--space-lg);
+          padding-top: var(--space-xs);
+          border-top: 1px solid var(--line);
+        }
+        .nav a { padding: var(--space-2xs) 0; min-height: 28px; display: inline-flex; align-items: center; }
+        .nav a .num { display: none; }
+      }
+
+      /* Sheet = the drawing surface */
+      .sheet { max-width: var(--sheet); margin: 0 auto; padding: 0 var(--space-lg); }
+
+      /* A block is a ruled drawing section with a left margin annotation */
+      .block {
+        display: grid;
+        grid-template-columns: var(--rail) minmax(0, 1fr);
+        gap: var(--space-xl);
+        padding: var(--space-3xl) 0;
+        border-top: 1px solid var(--line);
+      }
+      .block__marg {
+        position: sticky;
+        top: 5rem;
+        align-self: start;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2xs);
+      }
+      .block__marg .sec { font-family: var(--mono); font-weight: 600; color: var(--accent); font-size: 0.82rem; letter-spacing: 0.04em; }
+      .block__body > :first-child { margin-top: 0; }
+      .block__body > p { color: var(--ink-soft); }
+      .block__body { min-width: 0; }
+
+      @media (max-width: 860px) {
+        .block { grid-template-columns: 1fr; gap: var(--space-md); padding: var(--space-2xl) 0; }
+        .block__marg { position: static; flex-direction: row; align-items: baseline; gap: var(--space-sm); }
+      }
+
+      /* ---------- Buttons ---------- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        text-decoration: none;
+        padding: 0.7rem 1.15rem;
+        border-radius: var(--radius);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1), background 140ms, color 140ms, border-color 140ms;
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn--primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+      .btn--primary:hover { background: var(--accent-2); color: var(--on-accent); border-color: var(--accent-2); }
+      .btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+      .btn--ghost:hover { border-color: var(--ink); color: var(--ink); }
+      .btn .arrow { transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+      .btn:hover .arrow { transform: translateX(3px); }
+
+      /* ---------- Tables as spec sheets ---------- */
+      .spec-table { width: 100%; border-collapse: collapse; margin: var(--space-md) 0 var(--space-lg); font-size: 0.94rem; }
+      .spec-table th {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        text-align: left;
+        font-weight: 500;
+        padding: 0 var(--space-md) var(--space-xs) 0;
+        border-bottom: 1px solid var(--line-strong);
+        vertical-align: bottom;
+      }
+      .spec-table td { padding: var(--space-sm) var(--space-md) var(--space-sm) 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink-soft); }
+      .spec-table td:first-child, .spec-table th:first-child { padding-left: var(--space-sm); }
+      .spec-table tr.is-primary td { color: var(--ink); background: color-mix(in oklab, var(--accent) 8%, transparent); }
+      .spec-table tr.is-primary td:first-child { font-weight: 600; }
+      .yes { color: var(--accent); font-weight: 600; }
+      .no { color: var(--ink-faint); }
+
+      /* ---------- Lists ---------- */
+      .feat-list { list-style: none; margin: var(--space-md) 0; padding: 0; counter-reset: li; }
+      .feat-list li {
+        padding: var(--space-sm) 0;
+        border-bottom: 1px solid var(--line);
+        color: var(--ink-soft);
+        display: grid;
+        grid-template-columns: 1.4rem 1fr;
+        gap: var(--space-sm);
+      }
+      .feat-list li::before {
+        content: counter(li, decimal-leading-zero);
+        counter-increment: li;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--ink-faint);
+        padding-top: 0.18rem;
+      }
+      .feat-list li strong, .feat-list li code { color: var(--ink); }
+
+      /* ---------- Utility ---------- */
+      .visually-hidden-file {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+      }
+      .cta-row { display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center; }
+      .lede { font-size: clamp(1.08rem, 1rem + 0.5vw, 1.3rem); color: var(--ink-soft); line-height: 1.55; }
+
+      /* ---------- Footer title block ---------- */
+      footer.titleblock-foot {
+        border-top: 1px solid var(--line-strong);
+        margin-top: var(--space-3xl);
+      }
+      .foot-grid {
+        max-width: var(--sheet);
+        margin: 0 auto;
+        padding: var(--space-xl) var(--space-lg);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--space-lg);
+        border-bottom: 1px solid var(--line);
+      }
+      .foot-field { display: flex; flex-direction: column; gap: var(--space-2xs); }
+      .foot-field dt { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+      .foot-field dd { margin: 0; font-size: 0.9rem; color: var(--ink); }
+      .foot-field dd a { color: var(--ink); text-decoration: none; }
+      .foot-field dd a:hover { color: var(--accent); }
+      .foot-note {
+        max-width: var(--sheet);
+        margin: 0 auto;
+        padding: var(--space-md) var(--space-lg) var(--space-2xl);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+        color: var(--ink-faint);
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-md);
+        flex-wrap: wrap;
+      }
+
+      /* ---------- Document pages (spec, install, ecosystem, create, view) ---------- */
+      .doc { max-width: var(--sheet); margin: 0 auto; padding: var(--space-2xl) var(--space-lg) var(--space-3xl); }
+      .doc--narrow { max-width: 940px; }
+      .page-head { padding-bottom: var(--space-xl); margin-bottom: var(--space-2xl); border-bottom: 1px solid var(--line); }
+      .page-head .kicker { display: block; margin-bottom: var(--space-md); }
+      .page-head h1 { font-size: clamp(2rem, 1.5rem + 2.4vw, 3.1rem); margin: 0 0 var(--space-md); }
+      .page-head p { color: var(--ink-soft); font-size: 1.08rem; }
+      .doc h2 {
+        margin: var(--space-3xl) 0 var(--space-md);
+        padding-top: var(--space-md);
+        border-top: 1px solid var(--line);
+        font-size: clamp(1.45rem, 1.2rem + 1vw, 1.9rem);
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-sm);
+      }
+      .doc h2 .hx { font-family: var(--mono); font-size: 0.72rem; font-weight: 500; color: var(--accent); letter-spacing: 0.04em; }
+      .doc > h2:first-of-type { margin-top: 0; }
+      .doc p { color: var(--ink-soft); }
+      .doc p strong, .doc li strong { color: var(--ink); }
+
+      /* Staggered page-load reveal */
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: none; }
+      }
+      [data-rise] { animation: rise 600ms cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: var(--d, 0ms); }
     </style>
   </head>
   <body>
-    <header class="site">
-      <h1><a href="/">cvfile.org</a></h1>
-      <nav>
-        <a href="/create/">Create</a>
-        <a href="/view/">Demo</a>
-        <a href="/spec/">Spec</a>
-        <a href="/install/">Install</a>
-        <a href="/ecosystem/">Ecosystem</a>
-        <a href="https://github.com/cvfile/cv">GitHub</a>
-      </nav>
+    <header class="titleblock">
+      <div class="titleblock__inner">
+        <a href="/" class="brand">
+          <span class="brand__mark"><span class="dot">.</span>cv</span>
+          <span class="brand__tag label">Open Resume File Format</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          {NAV.map((item) => (
+            <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+              <span class="num">{item.n}</span>{item.label}
+            </a>
+          ))}
+          <a class="gh" href="https://github.com/cvfile/cv" rel="noopener">GitHub ↗</a>
+          <button id="theme-toggle" type="button" class="theme-toggle" aria-label="Theme: auto, tap to change">◐ Auto</button>
+        </nav>
+      </div>
     </header>
+
     <main>
       <slot />
     </main>
-    <footer class="site">
-      <div>Apache-2.0 / spec CC-BY-4.0 — built by the cvfile.org community.</div>
+
+    <footer class="titleblock-foot">
+      <dl class="foot-grid">
+        <div class="foot-field">
+          <dt>Specification</dt>
+          <dd><a href="/spec/">cv 1.0 · stable</a></dd>
+        </div>
+        <div class="foot-field">
+          <dt>Media Type</dt>
+          <dd>application/vnd.cv+pdf</dd>
+        </div>
+        <div class="foot-field">
+          <dt>Code License</dt>
+          <dd>Apache 2.0</dd>
+        </div>
+        <div class="foot-field">
+          <dt>Spec License</dt>
+          <dd>CC BY 4.0</dd>
+        </div>
+        <div class="foot-field">
+          <dt>Source</dt>
+          <dd><a href="https://github.com/cvfile/cv" rel="noopener">github.com/cvfile/cv</a></dd>
+        </div>
+      </dl>
+      <div class="foot-note">
+        <span>Drawn by the cvfile.org community.</span>
+        <span>No vendor · No viewer lock · No paywall on the basics.</span>
+      </div>
     </footer>
   </body>
 </html>
