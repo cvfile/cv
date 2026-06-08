@@ -12,7 +12,7 @@ const jsonLd = graph([
 ]);
 ---
 <Page
-  title="Create your .cv file in the browser — cvfile.org"
+  title="Create your .cv file in the browser · cvfile.org"
   description="Drop your existing PDF resume and Markdown copy. Get a spec-conformant .cv with PDF + Markdown + HTML + optional BGE-M3 embeddings. Runs entirely in your browser. No upload, no account."
 >
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
@@ -315,7 +315,7 @@ ${body}
 
         const name = (filenameInput.value.trim() || 'resume.cv').replace(/[^a-zA-Z0-9._-]/g, '_');
         downloadBytes(cvBytes, name.endsWith('.cv') ? name : `${name}.cv`);
-        setStatus(`Done — packed PDF + Markdown + HTML into ${(cvBytes.length / 1024).toFixed(1)} KB.`);
+        setStatus(`Done. Packed PDF + Markdown + HTML into ${(cvBytes.length / 1024).toFixed(1)} KB.`);
       } catch (e) {
         setStatus(`Failed: ${(e as Error).message}`);
       } finally {
