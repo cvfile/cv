@@ -3,11 +3,18 @@ import Page from '../layouts/Page.astro';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { marked } from 'marked';
 import { graph, ORGANIZATION, WEBSITE, breadcrumbs } from '../lib/structured-data';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const specPath = join(here, '..', '..', '..', 'spec', 'cv-1.0.md');
 const specSource = readFileSync(specPath, 'utf8');
+
+// The spec file is a trusted artifact from this repository, rendered once at
+// build time (static output, no client JS). Demote every heading one level so
+// the page keeps a single h1 (the page header) and the spec body starts at h2.
+const demoted = specSource.replace(/^(#{1,5})\s/gm, '#$1 ');
+const specHtml = marked.parse(demoted, { async: false }) as string;
 
 const jsonLd = graph([
   ORGANIZATION,
@@ -31,11 +38,75 @@ const jsonLd = graph([
 ---
 <Page title="cv-1.0 specification — cvfile.org" description="Normative specification of the .cv open file format (PDF/A-3u + /AF Associated Files + cv XMP namespace). CC-BY-4.0.">
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
-  <article style="max-width: 760px;">
-    <p style="color: var(--muted)">
-      Source of truth: <a href="https://github.com/cvfile/cv/blob/main/spec/cv-1.0.md">spec/cv-1.0.md</a>.
-      Spec licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>.
-    </p>
-    <pre style="white-space: pre-wrap; word-wrap: break-word; line-height: 1.55; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 0.85rem; background: var(--code-bg); color: #e2e8f0; padding: 1.5rem; border-radius: 8px;"><code>{specSource}</code></pre>
+  <article class="doc doc--narrow">
+    <header class="page-head">
+      <span class="kicker label">§03 / Specification</span>
+      <h1>The <code>.cv</code> format, version 1.0.</h1>
+      <p>
+        Source of truth:
+        <a href="https://github.com/cvfile/cv/blob/main/spec/cv-1.0.md">spec/cv-1.0.md</a>.
+        Licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        Frozen and versioned; changes ship as a new spec number.
+      </p>
+    </header>
+    <p class="plate-caption">normative text · cv-1.0.md</p>
+    <div class="spec-doc" set:html={specHtml} />
   </article>
+
+  <style>
+    .spec-doc { font-size: 1rem; }
+    .spec-doc > :first-child { margin-top: 0; }
+
+    /* Headings: the global .doc h2/h3 rules already style depth 2 and 3.
+       Style the deeper levels the rendered spec can reach. */
+    .spec-doc h4 { font-family: var(--display); font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; margin: var(--space-xl) 0 var(--space-xs); }
+    .spec-doc h5, .spec-doc h6 { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin: var(--space-lg) 0 var(--space-xs); }
+
+    .spec-doc ul, .spec-doc ol { padding-left: 1.4rem; margin: 0 0 var(--space-md); color: var(--ink-soft); }
+    .spec-doc li { margin: var(--space-2xs) 0; max-width: var(--measure); }
+    .spec-doc li::marker { color: var(--ink-faint); }
+
+    .spec-doc a { overflow-wrap: anywhere; }
+
+    .spec-doc blockquote {
+      margin: var(--space-md) 0;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+    }
+    .spec-doc blockquote > :first-child { margin-top: 0; }
+    .spec-doc blockquote > :last-child { margin-bottom: 0; }
+
+    .spec-doc hr { border: 0; border-top: 1px solid var(--line); margin: var(--space-2xl) 0; }
+
+    .spec-doc table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: var(--space-md) 0 var(--space-lg);
+      font-size: 0.92rem;
+      display: block;
+      overflow-x: auto;
+    }
+    .spec-doc thead th {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      text-align: left;
+      font-weight: 500;
+      padding: 0 var(--space-md) var(--space-xs) 0;
+      border-bottom: 1px solid var(--line-strong);
+      white-space: nowrap;
+    }
+    .spec-doc tbody td {
+      padding: var(--space-sm) var(--space-md) var(--space-sm) 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      color: var(--ink-soft);
+    }
+    .spec-doc tbody td:first-child { color: var(--ink); }
+  </style>
 </Page>

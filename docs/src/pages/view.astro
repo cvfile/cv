@@ -17,48 +17,45 @@ const jsonLd = graph([
 >
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
 
-  <h1>Live <code>&lt;cv-embed&gt;</code> viewer</h1>
-  <p>
-    Drop any <code>.cv</code> file below or load the sample. The web component
-    parses the bundle entirely in your browser and lets you flip between the
-    PDF, Markdown, and HTML representations.
-  </p>
+  <div class="doc doc--narrow">
+    <header class="page-head">
+      <span class="kicker label">§02 / Demo</span>
+      <h1>See all three payloads, side by side.</h1>
+      <p>
+        Drop any <code>.cv</code> file below or load the sample. The
+        <code>&lt;cv-embed&gt;</code> web component parses the bundle entirely in
+        your browser and lets you flip between the PDF, Markdown and HTML copies.
+      </p>
+    </header>
 
-  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 1.25rem 0 1.5rem;">
-    <button id="load-sample" type="button" style="background: var(--accent); color: #fff; padding: 0.55rem 1.1rem; border: 0; border-radius: 8px; font-weight: 600; cursor: pointer;">
-      Load sample .cv
-    </button>
-    <a href="/samples/jane-doe.cv" download="jane-doe.cv" style="border: 1px solid var(--border); padding: 0.55rem 1.1rem; border-radius: 8px; text-decoration: none; color: inherit;">
-      Download sample
-    </a>
+    <div class="viewer-actions">
+      <button id="load-sample" type="button" class="btn btn--primary">Load sample .cv <span class="arrow">→</span></button>
+      <a href="/samples/jane-doe.cv" download="jane-doe.cv" class="btn btn--ghost">Download sample</a>
+    </div>
+
+    <label id="dropzone" class="dz">
+      <strong>Drop a .cv file here</strong>
+      <span class="dz__sub">or click to choose</span>
+      <input id="picker" class="visually-hidden-file" type="file" accept=".cv,application/pdf,application/vnd.cv+pdf" />
+    </label>
+
+    <cv-embed id="viewer" view="auto" theme="auto" style="display: none;"></cv-embed>
   </div>
 
-  <label
-    id="dropzone"
-    style="display: block; border: 2px dashed var(--border); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; margin: 0 0 1.5rem;"
-  >
-    <strong>Drop a .cv file here</strong>
-    <div style="color: var(--muted); margin-top: 0.5rem;">or click to choose</div>
-    <input id="picker" class="visually-hidden-file" type="file" accept=".cv,application/pdf,application/vnd.cv+pdf" />
-  </label>
-
   <style>
-    /* Visually hide the native file input while keeping it focusable and in the
-       accessibility tree, so the styled label acts as the visible control. */
-    .visually-hidden-file {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+    .viewer-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-lg); }
+    .dz {
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; gap: var(--space-2xs);
+      border: 1.5px dashed var(--line-strong); border-radius: var(--radius);
+      padding: var(--space-3xl) var(--space-lg); text-align: center; cursor: pointer;
+      background: color-mix(in oklab, var(--paper-2) 50%, transparent);
+      transition: background 140ms, border-color 140ms;
     }
+    .dz:hover { border-color: var(--ink-faint); }
+    .dz strong { color: var(--ink); font-family: var(--mono); font-size: 0.92rem; }
+    .dz__sub { color: var(--ink-faint); font-family: var(--mono); font-size: 0.74rem; }
   </style>
-
-  <cv-embed id="viewer" view="auto" theme="auto" style="display: none;"></cv-embed>
 
   <script>
     import '@cvfile/viewer-web';
