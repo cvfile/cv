@@ -2,7 +2,7 @@
 package cv
 
 // Spec version emitted by this SDK.
-const SpecVersion = "0.1"
+const SpecVersion = "1.0"
 
 // Namespace and prefix for the cv: XMP vocabulary.
 const (

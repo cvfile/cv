@@ -2,6 +2,14 @@
 
 All notable changes to the `.cv` format and reference tooling are documented here. The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] (2026-06-08)
+
+Promote the format to spec **1.0**. The SDKs and CLI now emit `cv:version 1.0`, matching the stable spec at `spec/cv-1.0.md` and the cvfile.org documentation. The 0.x and 1.x lines share the same field set, so 0.1 files remain readable without a warning; only a MAJOR of 2+ triggers the spec §8.3 forward-compatibility notice.
+
+### Changed
+- **Emitted spec version is now `1.0`** across all three SDKs (`SpecVersion`, `CV_SPEC_VERSION`). `cv version` reports `spec 1.0`; every freshly packed file declares `cv:version 1.0`. Tooling package versions move to 0.3.0, distinct from the format version.
+- **Committed fixtures and demo samples regenerated at 1.0** (`jane-doe.cv`, `python-produced.cv`, viewer and middleware samples, unicode integration fixture). veraPDF PDF/A-3u conformance reverified on the regenerated output (148 rules, 1559 checks, 0 failures).
+
 ## [0.2.1] (2026-06-07)
 
 Coherent, working, veraPDF-gated pack and validate across all three SDKs. Every producer now emits files that pass veraPDF PDF/A-3u and round-trip byte-identically through every reader (full 3x3 matrix verified).

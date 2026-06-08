@@ -30,7 +30,7 @@ describe('JS reads Python-produced .cv (interop)', () => {
   it('inspects the metadata', async () => {
     const bytes = new Uint8Array(await readFile(FIXTURE));
     const meta = await inspect(bytes);
-    expect(meta.version).toBe('0.1');
+    expect(meta.version).toBe('1.0');
     expect(meta.primaryLanguage).toBe('en');
     expect(meta.primaryPayload).toBe('resume.md');
     expect(meta.generator).toContain('cvfile-py-examples');

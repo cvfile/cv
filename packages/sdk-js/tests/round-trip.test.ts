@@ -83,7 +83,7 @@ describe('pack → extract round-trip', () => {
     });
 
     const meta = await inspect(cv);
-    expect(meta.version).toBe('0.1');
+    expect(meta.version).toBe('1.0');
     expect(meta.primaryLanguage).toBe('fr');
     expect(meta.generator).toBe('test/1.0');
     expect(meta.integrity).toHaveLength(1);
