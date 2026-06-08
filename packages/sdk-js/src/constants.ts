@@ -1,4 +1,4 @@
-export const CV_SPEC_VERSION = '0.1';
+export const CV_SPEC_VERSION = '1.0';
 
 export const CV_NAMESPACE_URI = 'http://ns.cvfile.org/cv/1.0/';
 export const CV_NAMESPACE_PREFIX = 'cv';

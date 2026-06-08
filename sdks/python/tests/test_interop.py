@@ -34,7 +34,7 @@ def test_python_recognises_js_produced_cv(js_fixture_bytes: bytes) -> None:
 
 def test_python_inspects_js_metadata(js_fixture_bytes: bytes) -> None:
     meta = inspect(js_fixture_bytes)
-    assert meta.version == "0.1"
+    assert meta.version == "1.0"
     assert meta.primary_language == "en"
     assert meta.primary_payload == "resume.md"
     assert meta.generator is not None and "cv-examples" in meta.generator

@@ -76,7 +76,7 @@ def test_inspect_returns_metadata_with_integrity() -> None:
         metadata={"primary_language": "fr", "generator": "test/1.0"},
     )
     meta = inspect(cv)
-    assert meta.version == "0.1"
+    assert meta.version == "1.0"
     assert meta.primary_language == "fr"
     assert meta.generator == "test/1.0"
     assert len(meta.integrity) == 1

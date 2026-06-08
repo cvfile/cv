@@ -219,11 +219,11 @@ describe('validate: newer-format-version warning (fix 6)', () => {
       metadata: { primaryLanguage: 'en' },
     });
     const text = new TextDecoder('latin1').decode(cv);
-    expect(text).toContain('<cv:version>0.1</cv:version>');
+    expect(text).toContain('<cv:version>1.0</cv:version>');
 
     // Rewrite the cv:version to a future major. The XMP stream is uncompressed
     // metadata so we can patch the bytes in place (same byte length).
-    const patched = patchBytes(cv, '<cv:version>0.1</cv:version>', '<cv:version>2.0</cv:version>');
+    const patched = patchBytes(cv, '<cv:version>1.0</cv:version>', '<cv:version>2.0</cv:version>');
     const report = await validate(patched);
     expect(report.issues.map((i) => i.code)).toContain('newer-format-version');
     const versionIssue = report.issues.find((i) => i.code === 'newer-format-version');
@@ -238,9 +238,13 @@ describe('validate: newer-format-version warning (fix 6)', () => {
       markdown: '# Hi\n',
       metadata: { primaryLanguage: 'en' },
     });
-    const v10 = patchBytes(cv, '<cv:version>0.1</cv:version>', '<cv:version>1.0</cv:version>');
-    const report = await validate(v10);
-    expect(report.issues.map((i) => i.code)).not.toContain('newer-format-version');
+    // Freshly packed files declare 1.0 (current spec major); must not warn.
+    const report10 = await validate(cv);
+    expect(report10.issues.map((i) => i.code)).not.toContain('newer-format-version');
+    // The 0.x pre-stable line is also a known major; patch down and re-check.
+    const v01 = patchBytes(cv, '<cv:version>1.0</cv:version>', '<cv:version>0.1</cv:version>');
+    const report01 = await validate(v01);
+    expect(report01.issues.map((i) => i.code)).not.toContain('newer-format-version');
   });
 });
 
