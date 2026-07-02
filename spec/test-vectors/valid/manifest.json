@@ -1,0 +1,68 @@
+{
+  "note": "Positive and boundary vectors. \"expected\": \"valid\" fixtures must validate ok and extract losslessly; \"warning\" fixtures must validate ok while surfacing expectedCode as a warning without blocking extraction; \"error\" fixtures must fail validation with expectedCode among the issues.",
+  "fixtures": [
+    {
+      "filename": "minimal.cv",
+      "expected": "valid",
+      "description": "Minimal conforming cv-lenient file: one page of PDF plus a markdown payload.",
+      "primaryPayload": "resume.md",
+      "primaryLanguage": "en",
+      "payloadNames": [
+        "resume.md"
+      ]
+    },
+    {
+      "filename": "full.cv",
+      "expected": "valid",
+      "description": "All four payloads: markdown, HTML, JSON Resume, and an embeddings.cbor with a tiny deterministic fake space (2 chunks, dimension 8, model \"test/fake-model\"). Canonical embeddings.cbor example.",
+      "primaryPayload": "resume.md",
+      "primaryLanguage": "en",
+      "payloadNames": [
+        "resume.md",
+        "resume.html",
+        "resume.json",
+        "embeddings.cbor"
+      ]
+    },
+    {
+      "filename": "multilingual.cv",
+      "expected": "valid",
+      "description": "Primary language fr with an English alternate markdown payload declared in cv:alternates.",
+      "primaryPayload": "resume.md",
+      "primaryLanguage": "fr",
+      "payloadNames": [
+        "resume.md",
+        "resume.en.md"
+      ]
+    },
+    {
+      "filename": "integrity-mismatch.cv",
+      "expected": "error",
+      "description": "Valid file whose resume.md payload bytes were replaced after packing; the cv:integrity sha-256 digest no longer matches the payload.",
+      "expectedCode": "integrity-mismatch"
+    },
+    {
+      "filename": "oversized-payload.cv",
+      "expected": "error",
+      "description": "The markdown payload inflates past the 16 MiB per-payload cap (spec §7.3) but FlateDecode-compresses to a few kilobytes on disk. Validators must report payload-too-large; capped extractors must refuse to expand it by default.",
+      "expectedCode": "payload-too-large"
+    },
+    {
+      "filename": "future-major.cv",
+      "expected": "warning",
+      "description": "cv:version declares \"2.0\". Per spec §8.3 a consumer MUST surface a newer-format-version warning, SHOULD still render the PDF, and MUST NOT drop payloads from extraction; validation stays ok.",
+      "expectedCode": "newer-format-version",
+      "primaryPayload": "resume.md",
+      "primaryLanguage": "en",
+      "payloadNames": [
+        "resume.md"
+      ]
+    },
+    {
+      "filename": "missing-xmp.cv",
+      "expected": "error",
+      "description": "PDF with /AF attachments and an XMP packet, but the packet carries none of the required cv: properties (spec §6.2).",
+      "expectedCode": "xmp-missing-cv"
+    }
+  ]
+}
