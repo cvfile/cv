@@ -69,3 +69,12 @@ src-tauri/target/
 # Launch material (HN/PH drafts, runbook, screenshots) and private outreach
 # data (PII): kept local, purged from history, never published.
 launch/
+
+# Internal planning documents: business strategy, launch gates, monetization.
+# Kept local, never published.
+PLAN.md
+ROADMAP.md
+
+# Generated demo/build artefacts that escape the dist/ pattern
+dist-demo/
+docs/public/embed/
