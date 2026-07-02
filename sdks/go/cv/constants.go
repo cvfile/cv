@@ -1,6 +1,10 @@
 // Package cv is the reference SDK for the .cv open file format.
 package cv
 
+// Version is the release version of this SDK package, distinct from the
+// .cv spec version it implements (SpecVersion).
+const Version = "0.3.1"
+
 // Spec version emitted by this SDK.
 const SpecVersion = "1.0"
 
@@ -10,8 +14,9 @@ const (
 	NamespacePrefix = "cv"
 )
 
-// DefaultGenerator is emitted in cv:generator when not overridden.
-const DefaultGenerator = "cv-go/" + SpecVersion
+// DefaultGenerator is emitted in cv:generator when not overridden. It stamps
+// the SDK version (the tool that produced the file), not the spec version.
+const DefaultGenerator = "cv-go/" + Version
 
 // Default filenames for the canonical payloads.
 const (
