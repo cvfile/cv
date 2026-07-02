@@ -1,13 +1,16 @@
 {
   "name": "@cvfile/viewer-web",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "<cv-embed> web component and standalone viewer for the .cv open file format.",
   "license": "Apache-2.0",
   "homepage": "https://cvfile.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cvfile/cv",
+    "url": "git+https://github.com/cvfile/cv.git",
     "directory": "packages/viewer-web"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -32,21 +35,21 @@
     "./src/index.ts"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsup --config tsup.cdn.config.ts",
     "dev": "vite",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@cvfile/sdk": "workspace:*",
+    "@cvfile/sdk": "workspace:^",
     "dompurify": "^3.2.0",
     "lit": "^3.2.0",
     "marked": "^14.1.0",
     "pdfjs-dist": "^4.7.76"
   },
   "devDependencies": {
-    "@types/dompurify": "^3.0.5",
     "happy-dom": "^15",
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",

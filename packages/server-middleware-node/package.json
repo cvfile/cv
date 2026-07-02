@@ -1,38 +1,74 @@
 {
   "name": "@cvfile/server",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "Server middleware that serves .cv files with HTTP Link header content negotiation. Express, Fastify, Hono adapters.",
   "license": "Apache-2.0",
   "homepage": "https://cvfile.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cvfile/cv",
+    "url": "git+https://github.com/cvfile/cv.git",
     "directory": "packages/server-middleware-node"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./express": {
-      "types": "./dist/express.d.ts",
-      "import": "./dist/express.js",
-      "require": "./dist/express.cjs"
+      "import": {
+        "types": "./dist/express.d.ts",
+        "default": "./dist/express.js"
+      },
+      "require": {
+        "types": "./dist/express.d.cts",
+        "default": "./dist/express.cjs"
+      }
     },
     "./fastify": {
-      "types": "./dist/fastify.d.ts",
-      "import": "./dist/fastify.js",
-      "require": "./dist/fastify.cjs"
+      "import": {
+        "types": "./dist/fastify.d.ts",
+        "default": "./dist/fastify.js"
+      },
+      "require": {
+        "types": "./dist/fastify.d.cts",
+        "default": "./dist/fastify.cjs"
+      }
     },
     "./hono": {
-      "types": "./dist/hono.d.ts",
-      "import": "./dist/hono.js",
-      "require": "./dist/hono.cjs"
+      "import": {
+        "types": "./dist/hono.d.ts",
+        "default": "./dist/hono.js"
+      },
+      "require": {
+        "types": "./dist/hono.d.cts",
+        "default": "./dist/hono.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "express": [
+        "./dist/express.d.cts"
+      ],
+      "fastify": [
+        "./dist/fastify.d.cts"
+      ],
+      "hono": [
+        "./dist/hono.d.cts"
+      ]
     }
   },
   "files": [
@@ -44,10 +80,11 @@
     "build": "tsup",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@cvfile/sdk": "workspace:*"
+    "@cvfile/sdk": "workspace:^"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
