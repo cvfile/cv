@@ -196,6 +196,7 @@ app.use(cvHandler({ root: './public' }));
 | `@cvfile/embed` | npm | Markdown chunker + transformers.js / HF Inference embedding backends |
 | `@cvfile/server` | npm | content negotiation for Express, Fastify, Hono, vanilla `http` |
 | `@cvfile/viewer-web` | npm | `<cv-embed>` Lit component (PDF / Markdown / HTML tabs, lazy PDF.js) |
+| `@cvfile/mcp` | npm | MCP server: list, validate, read, pack, and semantic search over local .cv files from AI agents |
 | `cvfile` | PyPI | full Python SDK + `cvfile.embed` + `cvfile.server` (ASGI / WSGI) |
 | `cv` CLI | Homebrew / Scoop (WinGet planned) | single Go binary: pack, inspect, extract, validate, search |
 | Go SDK | `go get` | pack, extract, inspect, validate + `net/http` middleware |
