@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
 
-# Sitemap pointer so every crawler — including LLM training and search
-# bots — finds every page in one hop.
+# Sitemap pointer so every crawler (including LLM training and search
+# bots) finds every page in one hop.
 Sitemap: https://cvfile.org/sitemap-index.xml

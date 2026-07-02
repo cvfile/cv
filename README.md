@@ -1,4 +1,4 @@
-# .cv — the open resume file format
+# .cv, the open resume file format
 
 [![spec](https://img.shields.io/badge/spec-cv%201.0-blue)](https://cvfile.org/spec/)
 [![npm @cvfile/sdk](https://img.shields.io/npm/v/@cvfile/sdk?label=%40cvfile%2Fsdk)](https://www.npmjs.com/package/@cvfile/sdk)
@@ -14,7 +14,7 @@
 brew install cvfile/tap/cv      # CLI (single Go binary)
 pnpm add @cvfile/sdk            # JavaScript / TypeScript
 pip install cvfile             # Python
-go get github.com/cvfile/cv/sdks/go   # Go (reader)
+go get github.com/cvfile/cv/sdks/go   # Go
 ```
 
 ---
@@ -89,14 +89,14 @@ pnpm add @cvfile/viewer-web   # <cv-embed> web component
 pip install cvfile            # core SDK
 pip install "cvfile[embed]"   # + chunking and embedding helpers
 
-# Go (reader path; writer planned)
+# Go (reader + writer)
 go get github.com/cvfile/cv/sdks/go
 ```
 
 Web component via CDN:
 
 ```html
-<script type="module" src="https://cdn.cvfile.org/embed/1/cv-embed.js"></script>
+<script type="module" src="https://cvfile.org/embed/1/cv-embed.js"></script>
 <cv-embed src="resume.cv" view="auto" theme="auto"></cv-embed>
 ```
 
@@ -146,14 +146,15 @@ cv validate resume.cv --strict        # conformance + integrity + security check
 cv search   resume.cv "python kubernetes Lyon" --k 5   # semantic search (needs HF_TOKEN)
 ```
 
-### Go (reader)
+### Go
 
 ```go
-import cv "github.com/cvfile/cv/sdks/go"
+import cv "github.com/cvfile/cv/sdks/go/cv"
 
 file, _ := cv.Extract(data)        // metadata + every payload
 report := cv.Validate(data, cv.ValidateOptions{})
 md, _ := cv.ExtractMarkdown(data, "")
+out, _ := cv.Pack(cv.PackInput{PDF: pdfBytes, Markdown: []byte(md)})
 ```
 
 ### Server content negotiation
@@ -196,12 +197,12 @@ app.use(cvHandler({ root: './public' }));
 | `@cvfile/server` | npm | content negotiation for Express, Fastify, Hono, vanilla `http` |
 | `@cvfile/viewer-web` | npm | `<cv-embed>` Lit component (PDF / Markdown / HTML tabs, lazy PDF.js) |
 | `cvfile` | PyPI | full Python SDK + `cvfile.embed` + `cvfile.server` (ASGI / WSGI) |
-| `cv` CLI | Homebrew / Scoop / WinGet | single Go binary: inspect, extract, validate, search |
-| Go SDK | `go get` | reader library + `net/http` middleware |
+| `cv` CLI | Homebrew / Scoop (WinGet planned) | single Go binary: pack, inspect, extract, validate, search |
+| Go SDK | `go get` | pack, extract, inspect, validate + `net/http` middleware |
 | `langchain-cvfile` | PyPI | LangChain document loader (loads text + per-chunk vectors) |
 | `llama-index-readers-cvfile` | PyPI | LlamaIndex reader |
 | `cvfile-haystack` | PyPI | Haystack 2.x converter |
-| `cvfile-cv-detector` | npm / PyPI | dependency-free `.cv` sniffer for crawler vendors (Go / Python / TS) |
+| `@cvfile/cv-detector` (npm), `cvfile-cv-detector` (PyPI) | npm / PyPI | dependency-free `.cv` sniffer for crawler vendors (Go / Python / TS) |
 
 ## Specification and conformance
 
@@ -223,6 +224,8 @@ A conformant validator rejects files that try to weaponize the PDF container (sp
 - `/SubmitForm` actions targeting non-`mailto:` URIs.
 
 Integrity digests are verified on read and validation fails on mismatch. The web component renders untrusted HTML payloads inside a locked-down sandboxed iframe and sanitizes Markdown before display. See [`SECURITY.md`](./SECURITY.md).
+
+**Untrusted files.** `extract()` in all SDKs returns payloads as-is: it does not run the forbidden-construct scan, verify integrity digests, or enforce size caps. Consumers accepting `.cv` files from untrusted sources MUST call `validate()` first and reject the file on any error (CLI: `cv validate`). Only extract from files that passed validation.
 
 ## FAQ
 
@@ -248,7 +251,7 @@ Yes. The reference code is Apache 2.0 and the specification is CC BY 4.0. There 
 JavaScript/TypeScript, Python, and Go SDKs; a CLI; a web component; HTTP content-negotiation middleware for Express, Fastify, Hono, ASGI (FastAPI/Starlette), WSGI (Flask/Django), and Go `net/http`; and LangChain, LlamaIndex, and Haystack loaders.
 
 **How do I create a `.cv` file?**
-Use `@cvfile/sdk` (JavaScript) or `cvfile` (Python) to `pack` a PDF together with its Markdown/HTML/JSON copies and optional embeddings. The Go SDK currently reads `.cv` files; writing is planned.
+Use `@cvfile/sdk` (JavaScript), `cvfile` (Python), or the Go SDK to `pack` a PDF together with its Markdown/HTML/JSON copies and optional embeddings, or run `cv pack` from the CLI.
 
 ## Project status
 

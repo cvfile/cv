@@ -14,7 +14,7 @@ const jsonLd = graph([
 ---
 <Page
   title="Install the .cv CLI and SDKs · cvfile.org"
-  description="Install the cv CLI on macOS, Linux, Windows; or pull the @cvfile/sdk (npm), cvfile (PyPI), or cv-go (Go) SDKs. Web component and server middleware also one command away."
+  description="Install the cv CLI on macOS, Linux, Windows; or pull the @cvfile/sdk (npm), cvfile (PyPI), or Go SDKs. Web component and server middleware also one command away."
 >
   <script type="application/ld+json" slot="head" set:html={jsonLd} />
 
@@ -36,15 +36,12 @@ const jsonLd = graph([
 brew tap cvfile/tap
 brew install cv
 
-# Windows (Scoop)
+# Windows (Scoop; WinGet coming soon)
 scoop bucket add cvfile https://github.com/cvfile/scoop-bucket
 scoop install cv
 
-# Windows (WinGet)
-winget install cvfile.cv
-
 # Anywhere with Go 1.22+
-go install github.com/cvfile/cv-go/cmd/cv@latest`}</code></pre>
+go install github.com/cvfile/cv/sdks/go/cmd/cv@latest`}</code></pre>
 
     <h2><span class="hx">JS</span> JavaScript / TypeScript</h2>
     <p class="plate-caption">shell · npm packages</p>
@@ -86,9 +83,9 @@ file = extract(cv)`}</code></pre>
 
     <h2><span class="hx">GO</span> Go</h2>
     <p class="plate-caption">shell · go get</p>
-    <pre><code>{`go get github.com/cvfile/cv-go`}</code></pre>
+    <pre><code>{`go get github.com/cvfile/cv/sdks/go`}</code></pre>
     <p class="plate-caption">go · extract and validate</p>
-    <pre><code>{`import cv "github.com/cvfile/cv-go/cv"
+    <pre><code>{`import cv "github.com/cvfile/cv/sdks/go/cv"
 
 file, err := cv.Extract(cvBytes)
 report := cv.Validate(cvBytes, cv.ValidateOptions{Strict: true})`}</code></pre>
@@ -96,7 +93,7 @@ report := cv.Validate(cvBytes, cv.ValidateOptions{Strict: true})`}</code></pre>
     <h2><span class="hx">WEB</span> Web component</h2>
     <p>Drop the viewer into any HTML page from the CDN.</p>
     <p class="plate-caption">html · cv-embed</p>
-    <pre><code>{`<script type="module" src="https://cdn.cvfile.org/embed/1/cv-embed.js"></script>
+    <pre><code>{`<script type="module" src="https://cvfile.org/embed/1/cv-embed.js"></script>
 <cv-embed src="resume.cv" view="auto" theme="auto"></cv-embed>`}</code></pre>
 
     <h2><span class="hx">HTTP</span> Server middleware</h2>
@@ -122,7 +119,7 @@ app = FastAPI()
 app.mount("/cv", build_cv_asgi_app(root="./resumes"))
 
 # Go (net/http)
-import "github.com/cvfile/cv-go/middleware"
+import "github.com/cvfile/cv/sdks/go/middleware"
 h, _ := middleware.Handler(middleware.Options{Root: "./resumes"})
 http.Handle("/cv/", http.StripPrefix("/cv", h))`}</code></pre>
   </div>

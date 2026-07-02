@@ -10,6 +10,8 @@
  *      short, declarative, sourced.
  */
 
+import sdkPkg from '../../../packages/sdk-js/package.json';
+
 export const ORGANIZATION = {
   '@type': 'Organization',
   '@id': 'https://cvfile.org/#org',
@@ -45,7 +47,7 @@ export const SOFTWARE_APPLICATION = {
     'Reference CLI and SDKs (JavaScript, Python, Go) for the .cv open file format. Pack, extract, inspect, validate, and search .cv files. Apache-2.0.',
   url: 'https://cvfile.org/install/',
   downloadUrl: 'https://github.com/cvfile/cv/releases',
-  softwareVersion: '0.1.0',
+  softwareVersion: sdkPkg.version,
   license: 'https://www.apache.org/licenses/LICENSE-2.0',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   author: { '@id': 'https://cvfile.org/#org' },
