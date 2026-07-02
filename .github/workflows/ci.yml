@@ -28,6 +28,8 @@ jobs:
           # Set HF_TOKEN as a repo secret to enable the live BGE-M3 round-trip
           # in @cvfile/embed; otherwise that single test self-skips.
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      - run: pnpm lint
+      - run: pnpm typecheck
 
   python:
     name: Python (cvfile + cvfile.embed + cvfile.server)
@@ -60,12 +62,73 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.26"
           cache-dependency-path: sdks/go/go.sum
       - working-directory: sdks/go
         run: go test ./...
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+  integrations:
+    name: Python integrations (langchain + llama-index + haystack)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        integration:
+          - integrations/langchain-cvfile
+          - integrations/llama-index-readers-cvfile
+          - integrations/cvfile-haystack
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pipx install uv
+      - name: Install package + dev extras
+        working-directory: ${{ matrix.integration }}
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+      - name: Run tests
+        working-directory: ${{ matrix.integration }}
+        run: .venv/bin/pytest -q
+
+  cv-detector:
+    name: cv-detector (Go + TS + Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: tools/cv-detector/go/go.sum
+      - name: Go detector tests
+        working-directory: tools/cv-detector/go
+        run: go test ./...
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TS detector dependencies
+        working-directory: tools/cv-detector/typescript
+        # No --ignore-workspace: this package has its own pnpm-workspace.yaml
+        # (with the esbuild build approval pnpm 11 requires); --ignore-workspace
+        # would skip it and fail with ERR_PNPM_IGNORED_BUILDS.
+        run: pnpm install --frozen-lockfile
+      - name: TS detector tests
+        working-directory: tools/cv-detector/typescript
+        run: pnpm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pipx install uv
+      - name: Python detector tests
+        # `uv run` provisions the project plus its dev dependency group
+        # (pytest) on the fly; no explicit venv step needed.
+        working-directory: tools/cv-detector/python
+        run: uv run pytest -q
 
   verapdf:
     name: PDF/A-3u conformance gate (veraPDF)

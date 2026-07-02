@@ -1,0 +1,36 @@
+name: Spec issue
+description: A question, ambiguity, or proposed change concerning the .cv format specification or conformance.
+labels: ["spec"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The current spec is `spec/cv-1.0.md`. Spec edits require rationale and test-vector updates; see CONTRIBUTING.md.
+  - type: input
+    id: section
+    attributes:
+      label: Spec section
+      description: The section(s) of spec/cv-1.0.md this concerns.
+      placeholder: "e.g. 4.1 Filespec dictionary requirements"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Ambiguity / clarification needed
+        - Conformance question (is this file/producer conformant?)
+        - Editorial (typo, wording, broken reference)
+        - Proposed normative change
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: Details
+      description: |
+        Quote the spec text in question and explain the issue. For conformance questions,
+        include the relevant validator output (e.g. `cv validate`, veraPDF report).
+    validations:
+      required: true

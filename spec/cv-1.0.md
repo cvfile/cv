@@ -24,7 +24,7 @@ A `.cv` file **IS** a valid PDF. Existing PDF readers open it without modificati
 - AI-ready: optional pre-computed embeddings let RAG pipelines index the file without re-embedding.
 - Forward-compatible: unknown fields are ignored within the same major version.
 
-### 1.2 Non-goals (in 0.x)
+### 1.2 Non-goals (in 1.0)
 
 - Encryption (revisit in 1.1).
 - Digital signatures (revisit in 1.x via PAdES).
@@ -32,7 +32,7 @@ A `.cv` file **IS** a valid PDF. Existing PDF readers open it without modificati
 
 ### 1.3 Conformance levels
 
-- **`cv-strict`**: passes `veraPDF` PDF/A-3u conformance and satisfies every **MUST** in this spec.
+- **`cv-strict`**: conforms to PDF/A-3u (ISO 19005-3, Unicode level) and satisfies every **MUST** in this spec. Conformance is verified with an ISO 19005-3 validator; [veraPDF](https://verapdf.org/) is the reference validator used by this project's CI.
 - **`cv-lenient`**: is a valid PDF, carries the `cv:version` XMP marker, and contains at least one valid content payload. Useful for environments where producing PDF/A-3u is impractical.
 
 Implementations **MUST** state which level they produce and **SHOULD** support reading both.
@@ -71,7 +71,7 @@ A `.cv` file **MUST NOT** contain:
 - `/Launch` actions.
 - `/ImportData` actions.
 - `/SubmitForm` actions targeting any URI other than `mailto:`.
-- An `/Encrypt` dictionary (no encryption in 0.x).
+- An `/Encrypt` dictionary (encryption is a non-goal in 1.0, see §1.2).
 - External stream references (`/F` filespecs pointing to files outside the container).
 
 Validators **MUST** reject files containing any of these.
@@ -180,7 +180,7 @@ prefix: cv
 
 | Property | Type | Notes |
 | --- | --- | --- |
-| `cv:version` | text | Spec version, e.g. `"0.1"` or `"1.0"` |
+| `cv:version` | text | Spec version, e.g. `"1.0"` |
 | `cv:created` | xs:dateTime | ISO 8601 UTC, e.g. `"2026-05-10T12:00:00Z"` |
 | `cv:primaryLanguage` | text | BCP-47 tag, e.g. `"en"`, `"fr-CA"` |
 | `cv:primaryPayload` | text | Filename of the canonical text payload, e.g. `"resume.md"` |
@@ -190,7 +190,7 @@ prefix: cv
 | Property | Type | Notes |
 | --- | --- | --- |
 | `cv:modified` | xs:dateTime | Last modification |
-| `cv:generator` | text | Producer string, e.g. `"@cvfile/sdk/0.1.0"` |
+| `cv:generator` | text | Producer string, e.g. `"@cvfile/sdk/0.3.1"` |
 | `cv:alternates` | Text (JSON-encoded array) | One entry per alternate payload: `{ payload, language, mimeType }` |
 | `cv:integrity` | Text (JSON-encoded array) | One entry per payload: `{ payload, algorithm, digest }` |
 | `cv:embeddings` | Text (JSON-encoded array) | One entry per embedding space: `{ model, dimension, metric, chunks }` |
@@ -217,7 +217,7 @@ A conformant validator **MUST** reject files that contain any construct listed i
 
 Viewers **MUST**:
 
-- Render embedded HTML inside a sandboxed iframe with no `allow-scripts allow-same-origin`.
+- Render embedded HTML inside an iframe whose `sandbox` attribute is present and includes neither the `allow-scripts` nor the `allow-same-origin` token.
 - Disable raw HTML when rendering Markdown by default. Producers may opt in to relaxed rendering with explicit sanitisation.
 - Strip `javascript:` URIs from links.
 - Cap decompressed payload size; default 16 MiB per payload.
@@ -230,7 +230,7 @@ XMP and any other XML inside the file **MUST** be parsed without DTD resolution 
 
 ### 8.1 Version format
 
-`cv:version` follows `MAJOR.MINOR`. Pre-stable releases use `0.MINOR`.
+`cv:version` follows `MAJOR.MINOR`. Pre-stable releases (the historical `0.x` series) used `0.MINOR`.
 
 ### 8.2 Same-major compatibility
 
@@ -291,11 +291,11 @@ A minimal `cv-strict` file contains:
 - An XMP packet containing:
   ```xml
   <rdf:Description xmlns:cv="http://ns.cvfile.org/cv/1.0/">
-    <cv:version>0.1</cv:version>
+    <cv:version>1.0</cv:version>
     <cv:created>2026-05-10T12:00:00Z</cv:created>
     <cv:primaryLanguage>en</cv:primaryLanguage>
     <cv:primaryPayload>resume.md</cv:primaryPayload>
-    <cv:generator>@cvfile/sdk/0.1.0</cv:generator>
+    <cv:generator>@cvfile/sdk/0.3.1</cv:generator>
   </rdf:Description>
   ```
 

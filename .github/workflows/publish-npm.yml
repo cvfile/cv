@@ -28,6 +28,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build all packages
         run: pnpm -r build
+      - name: Test all packages (skip live HF when no token)
+        # Run the full suite, not just the tagged package: sibling packages
+        # depend on @cvfile/sdk via workspace:*, so a regression anywhere
+        # should block the publish.
+        run: pnpm -r test
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
       - name: Publish package matching the tag
         run: |
           # npm's OIDC trusted publishing is implemented by the npm CLI (>= 11.5.1),

@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in an SDK, the CLI, or the viewer does not behave as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Security vulnerabilities go to `security@cvfile.org` (see SECURITY.md), not here.
+  - type: dropdown
+    id: component
+    attributes:
+      label: SDK / component
+      description: Where does the bug live?
+      options:
+        - JS/TS SDK (@cvfile/sdk)
+        - JS/TS embed (@cvfile/embed)
+        - Node server middleware
+        - Web viewer (<cv-embed>)
+        - Python SDK (cvfile)
+        - Go SDK / cv CLI
+        - LangChain integration
+        - LlamaIndex integration
+        - Haystack integration
+        - cv-detector (any language)
+        - Docs / website
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Package/CLI version (e.g. 0.3.1) and, if relevant, runtime (Node, Python, Go) version.
+      placeholder: "@cvfile/sdk 0.3.1, Node 22"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: |
+        A sample `.cv` file (attach or link it) or minimal steps/code that reproduce the problem.
+        Strip any personal data from sample files before attaching.
+      placeholder: |
+        1. Build a file with ...
+        2. Run `cv validate ...`
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include full error output or validator report where applicable.
+    validations:
+      required: true

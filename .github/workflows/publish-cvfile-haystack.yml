@@ -18,6 +18,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install uv
+        run: pipx install uv
+      - name: Install package + dev extras
+        working-directory: integrations/cvfile-haystack
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+      - name: Run tests before publishing
+        working-directory: integrations/cvfile-haystack
+        run: .venv/bin/pytest -q
       - name: Install build tools
         run: python -m pip install --upgrade build
       - name: Build wheel + sdist
