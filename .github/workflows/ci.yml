@@ -87,9 +87,13 @@ jobs:
         run: pipx install uv
       - name: Install package + dev extras
         working-directory: ${{ matrix.integration }}
+        # The workspace cvfile SDK is installed first so CI tests the code in
+        # this checkout. Resolving cvfile from PyPI instead would race every
+        # release: the integrations pin the new SDK floor before the wheel is
+        # published, which is exactly the window a push lands in.
         run: |
           uv venv
-          uv pip install -e ".[dev]"
+          uv pip install -e ../../sdks/python -e ".[dev]"
       - name: Run tests
         working-directory: ${{ matrix.integration }}
         run: .venv/bin/pytest -q
