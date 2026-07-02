@@ -24,10 +24,10 @@ Description: |-
   reader, parses cleanly in any applicant tracking system, embeds on any
   webpage, and answers semantic queries from any retrieval pipeline.
 
-  v0.1 ships the reader path: extract a payload, inspect XMP metadata,
+  The CLI ships the full reader and writer paths: pack a PDF plus text
+  representations into a .cv, extract a payload, inspect XMP metadata,
   validate against the cv 1.0 specification, and run semantic search over
-  the embedded vectors using the Hugging Face Inference API. Pack support
-  is planned for v0.2.
+  the embedded vectors using the Hugging Face Inference API.
 
   The full specification, the JavaScript and Python SDKs, the web
   component, and the LangChain and LlamaIndex integrations live at
@@ -46,6 +46,6 @@ Tags:
   - search
   - rag
   - ai
-ReleaseNotesUrl: https://github.com/cvfile/cv/releases/tag/sdks%2Fgo%2Fv__VERSION__
+ReleaseNotesUrl: https://github.com/cvfile/cv/releases/tag/v__VERSION__
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

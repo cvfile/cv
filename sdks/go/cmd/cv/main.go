@@ -12,16 +12,23 @@ import (
 	cv "github.com/cvfile/cv/sdks/go/cv"
 )
 
-// cliVersion is the version of this command-line tool, distinct from the
-// .cv spec version (cv.SpecVersion) and any SDK package version.
-const cliVersion = "0.3.0"
+// Build metadata injected at release time by GoReleaser via
+// -ldflags "-X main.version=... -X main.commit=... -X main.date=...".
+// The defaults deliberately mark a build that did not go through the
+// release pipeline, so a "-dev" version is never mistaken for a release.
+var (
+	version = "0.3.1-dev"
+	commit  = "unknown"
+	date    = ""
+)
 
-const usage = `cv — the .cv open file format CLI
+const usage = `cv: the .cv open file format CLI
 
 Usage:
   cv pack    --pdf <file.pdf> -o <out.cv> [--md <f>] [--html <f>] [--json <f>]
              [--lang <bcp47>] [--primary <name>] [--embeddings <f>]
-  cv extract <file.cv> [--format pdf|md|html]   (--format defaults to pdf)
+  cv extract <file.cv> [--format pdf|md|html] [--require-valid]
+             (--format defaults to pdf)
   cv inspect <file.cv> [--json]
   cv validate <file.cv> [--strict]
   cv search  <file.cv> "<query>" [--k 5] [--model BAAI/bge-m3]
@@ -31,6 +38,10 @@ Usage:
 Notes:
   cv pack wraps an input PDF plus one or more text representations (markdown,
   html, json) into a .cv. At least one of --md / --html / --json is required.
+
+  cv extract warns on stderr when the file fails validation (for example a
+  forbidden JavaScript action) but still writes the payload to stdout. Pass
+  --require-valid to refuse extraction from an invalid file instead.
 
   cv search calls the Hugging Face Inference API to embed the query in the
   same model space the file was packed with. Set HF_TOKEN in the env.
@@ -58,12 +69,25 @@ func main() {
 	case "search":
 		os.Exit(cmdSearch(rest))
 	case "version", "--version", "-v":
-		fmt.Printf("cv %s (spec %s)\n", cliVersion, cv.SpecVersion)
+		printVersion()
 	case "help", "--help", "-h":
 		fmt.Print(usage)
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n\n%s", cmd, usage)
 		os.Exit(64)
+	}
+}
+
+// printVersion reports the CLI build version (ldflags-injected on releases,
+// "-dev" otherwise), the SDK package version, the spec version, and, when the
+// build was stamped by the release pipeline, the commit and build date.
+func printVersion() {
+	fmt.Printf("cv %s (sdk %s, spec %s)\n", version, cv.Version, cv.SpecVersion)
+	if commit != "" && commit != "unknown" {
+		fmt.Printf("commit: %s\n", commit)
+	}
+	if date != "" {
+		fmt.Printf("built:  %s\n", date)
 	}
 }
 
@@ -176,6 +200,11 @@ func cmdPack(args []string) int {
 	return 0
 }
 
+// cmdExtract writes the requested payload to stdout. Before emitting anything
+// it validates the file: an invalid file (for example one carrying a forbidden
+// JavaScript action that a verbatim --format pdf passthrough would propagate)
+// produces a one-line warning on stderr while stdout stays untouched, so piping
+// is unaffected. With --require-valid the extraction is refused instead.
 func cmdExtract(args []string) int {
 	if len(args) == 0 {
 		fmt.Fprintln(os.Stderr, "extract: missing <file.cv>")
@@ -183,16 +212,25 @@ func cmdExtract(args []string) int {
 	}
 	path := args[0]
 	format := "pdf"
+	requireValid := false
 	for i := 1; i < len(args); i++ {
-		if args[i] == "--format" && i+1 < len(args) {
-			format = args[i+1]
-			i++
+		switch args[i] {
+		case "--format":
+			if i+1 < len(args) {
+				format = args[i+1]
+				i++
+			}
+		case "--require-valid":
+			requireValid = true
 		}
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "read %s: %v\n", path, err)
 		return 66
+	}
+	if code := warnOrRejectInvalid(path, data, requireValid); code != 0 {
+		return code
 	}
 	switch format {
 	case "md", "markdown":
@@ -219,6 +257,31 @@ func cmdExtract(args []string) int {
 		fmt.Fprintf(os.Stderr, "extract: unknown format %q (try: md, html, pdf)\n", format)
 		return 64
 	}
+	return 0
+}
+
+// warnOrRejectInvalid runs the lenient validator (which includes the forbidden
+// construct scan of spec section 3.4) over the file about to be extracted.
+// A clean file returns 0 silently. An invalid file returns 65 when
+// requireValid is set; otherwise it prints a one-line warning to stderr and
+// returns 0 so the extraction proceeds and stdout piping is unaffected.
+func warnOrRejectInvalid(path string, data []byte, requireValid bool) int {
+	report := cv.Validate(data, cv.ValidateOptions{})
+	if report.OK {
+		return 0
+	}
+	codes := make([]string, 0, len(report.Issues))
+	for _, i := range report.Issues {
+		if i.Level == "error" {
+			codes = append(codes, i.Code)
+		}
+	}
+	summary := strings.Join(codes, ", ")
+	if requireValid {
+		fmt.Fprintf(os.Stderr, "extract: %s fails validation (%s); refusing to extract (--require-valid)\n", path, summary)
+		return 65
+	}
+	fmt.Fprintf(os.Stderr, "warning: %s fails validation (%s); output may be unsafe, run 'cv validate %s' for details\n", path, summary, path)
 	return 0
 }
 

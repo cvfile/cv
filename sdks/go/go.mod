@@ -1,12 +1,14 @@
 module github.com/cvfile/cv/sdks/go
 
-go 1.26.3
+go 1.26
 
-require github.com/pdfcpu/pdfcpu v0.12.0
+require (
+	github.com/fxamacker/cbor/v2 v2.9.2
+	github.com/pdfcpu/pdfcpu v0.12.0
+)
 
 require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
-	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
 	github.com/hhrutter/lzw v1.0.0 // indirect
 	github.com/hhrutter/pkcs7 v0.2.2 // indirect
 	github.com/hhrutter/tiff v1.0.3 // indirect

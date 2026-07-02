@@ -3,13 +3,17 @@
 # and substitute the placeholders below with the values printed by
 # GoReleaser (or read from the GitHub release page).
 #
-# Required substitutions:
-#   __VERSION__         e.g. 0.1.1
-#   __RELEASE_DATE__    ISO 8601 date, e.g. 2026-05-12
-#   __URL_X64__         download URL for cv_<VERSION>_windows_x86_64.zip
+# Required substitutions (example values for the 0.3.1 release):
+#   __VERSION__         e.g. 0.3.1
+#   __RELEASE_DATE__    ISO 8601 date, e.g. 2026-07-02
+#   __URL_X64__         e.g. https://github.com/cvfile/cv/releases/download/v0.3.1/cv_0.3.1_windows_x86_64.zip
 #   __SHA256_X64__      SHA 256 of the x64 zip (from checksums.txt)
-#   __URL_ARM64__       download URL for cv_<VERSION>_windows_arm64.zip
+#   __URL_ARM64__       e.g. https://github.com/cvfile/cv/releases/download/v0.3.1/cv_0.3.1_windows_arm64.zip
 #   __SHA256_ARM64__    SHA 256 of the arm64 zip (from checksums.txt)
+#
+# Note: the GitHub release lives under the plain `v__VERSION__` tag; the
+# `sdks/go/` prefix used to trigger the release workflow never appears in
+# download URLs.
 
 PackageIdentifier: cvfile.cv
 PackageVersion: __VERSION__
