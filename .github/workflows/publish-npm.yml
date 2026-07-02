@@ -7,6 +7,7 @@ on:
       - "embed-js/v*"
       - "server-node/v*"
       - "viewer-web/v*"
+      - "mcp/v*"
   # Manual re-fire for an existing tag. GitHub suppresses tag events when
   # more than three tags land in a single push, so a batch release push can
   # silently skip this workflow; dispatching with the tag name recovers it.
@@ -60,6 +61,7 @@ jobs:
             embed-js/v*)    dir="packages/embed-js" ;;
             server-node/v*) dir="packages/server-middleware-node" ;;
             viewer-web/v*)  dir="packages/viewer-web" ;;
+            mcp/v*)         dir="packages/mcp" ;;
             *) echo "unknown tag: $tag" && exit 1 ;;
           esac
           cd "$dir"
