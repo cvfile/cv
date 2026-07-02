@@ -7,6 +7,14 @@ on:
       - "embed-js/v*"
       - "server-node/v*"
       - "viewer-web/v*"
+  # Manual re-fire for an existing tag. GitHub suppresses tag events when
+  # more than three tags land in a single push, so a batch release push can
+  # silently skip this workflow; dispatching with the tag name recovers it.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag (for example embed-js/v0.3.1)"
+        required: true
 
 permissions:
   contents: read
@@ -17,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -36,13 +46,15 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
       - name: Publish package matching the tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
           # npm's OIDC trusted publishing is implemented by the npm CLI (>= 11.5.1),
           # not by `pnpm publish` (whose token exchange 404s against npm). So we
           # pack with pnpm (which rewrites the workspace:* dep on @cvfile/sdk to a
           # real version inside the tarball) and publish that tarball with npm.
           echo "node $(node -v), npm $(npm -v), oidc=${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
-          tag="${GITHUB_REF##refs/tags/}"
+          tag="${INPUT_TAG:-${GITHUB_REF##refs/tags/}}"
           case "$tag" in
             sdk-js/v*)      dir="packages/sdk-js" ;;
             embed-js/v*)    dir="packages/embed-js" ;;
