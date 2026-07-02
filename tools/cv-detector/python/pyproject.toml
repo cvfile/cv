@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Topic :: Text Processing",
 ]
-dependencies = ["pypdf>=4,<6"]
+dependencies = ["pypdf>=4,<7"]
 
 [dependency-groups]
 dev = ["pytest>=8"]
