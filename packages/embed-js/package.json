@@ -1,23 +1,31 @@
 {
   "name": "@cvfile/embed",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "Open-source embedding generation for the .cv format. BGE-M3 by default; pluggable.",
   "license": "Apache-2.0",
   "homepage": "https://cvfile.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cvfile/cv",
+    "url": "git+https://github.com/cvfile/cv.git",
     "directory": "packages/embed-js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "files": [
@@ -31,10 +39,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@cvfile/sdk": "workspace:*",
+    "@cvfile/sdk": "workspace:^",
     "@huggingface/transformers": "^3.0.0"
   },
   "devDependencies": {

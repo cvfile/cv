@@ -8,7 +8,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { encodeEmbeddings, pack } from '@cvfile/sdk';
+import { pack } from '@cvfile/sdk';
 import { embed } from '../src/embed.js';
 import { createHuggingFaceBackend } from '../src/huggingface-backend.js';
 
@@ -28,11 +28,13 @@ async function main(): Promise<void> {
   });
   process.stdout.write(`  ${payload.spaces[0]?.chunks.length} chunks, ${payload.spaces[0]?.dimension}-dim\n`);
 
+  // Pass the parsed payload (not pre-encoded bytes) so pack() can emit the
+  // cv:embeddings space summaries into the XMP metadata.
   const cvBytes = await pack({
     pdf: pdfBytes,
     markdown: md,
     html,
-    embeddings: encodeEmbeddings(payload),
+    embeddings: payload,
     metadata: {
       primaryLanguage: 'en',
       primaryPayload: 'resume.md',

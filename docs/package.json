@@ -6,12 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev --port 6737",
-    "build": "astro build",
+    "build": "node scripts/copy-embed.mjs && astro build",
     "preview": "astro preview --port 6737"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.2",
-    "@cvfile/sdk": "^0.1.0",
+    "@cvfile/sdk": "workspace:*",
     "@cvfile/viewer-web": "workspace:*",
     "astro": "^5.0.0",
     "marked": "^14.1.4",
