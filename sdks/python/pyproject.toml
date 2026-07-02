@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "pypdf>=5.0,<6",
+  "pypdf>=5.0,<7",
   # embeddings.cbor is a first-class payload of the format; reading it must
   # work without extras. The embed extra only adds the network backend.
   "cbor2>=5.6",
