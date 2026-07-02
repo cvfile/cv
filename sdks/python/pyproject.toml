@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cvfile"
-version = "0.3.1"
-description = "Reference SDK for the .cv open file format — pack, extract, inspect, validate."
+version = "0.3.2"
+description = "Reference SDK for the .cv open file format: pack, extract, inspect, validate."
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.10"
@@ -23,6 +23,9 @@ classifiers = [
 ]
 dependencies = [
   "pypdf>=5.0,<6",
+  # embeddings.cbor is a first-class payload of the format; reading it must
+  # work without extras. The embed extra only adds the network backend.
+  "cbor2>=5.6",
 ]
 
 [project.urls]
@@ -32,14 +35,12 @@ Issues = "https://github.com/cvfile/cv/issues"
 
 [project.optional-dependencies]
 embed = [
-  "cbor2>=5.6",
   "httpx>=0.27",
 ]
 dev = [
   "pytest>=8.0",
   "ruff>=0.7",
   "mypy>=1.13",
-  "cbor2>=5.6",
   "httpx>=0.27",
 ]
 

@@ -2,6 +2,11 @@
 
 All notable changes to the `.cv` format and reference tooling are documented here. The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.2] (2026-07-02, Python only)
+
+### Fixed
+- **`cbor2` is a core dependency of `cvfile`** instead of living in the `embed` extra. Reading `embeddings.cbor` is first class format functionality; without `cbor2` the RAG loaders' chunks mode silently yielded documents with no vectors (caught by the new integrations CI job on its first run). The `embed` extra now only adds `httpx` for the network embedding backend. The three integrations move to 0.3.2 with a `cvfile>=0.3.2` floor; the JS and Go packages are unaffected and stay at 0.3.1.
+
 ## [0.3.1] (2026-07-02)
 
 Launch hardening sweep across every component, driven by a full end-to-end audit. All SDKs, the CLI, and the three RAG integrations move to 0.3.1.
