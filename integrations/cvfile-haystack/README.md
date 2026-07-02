@@ -38,6 +38,20 @@ alternates and supplements:
 converter = CVFileToDocument(primary_only=True)
 ```
 
+### Untrusted files
+
+By default the converter runs `cvfile.validate()` on every source before
+extracting anything. Files carrying forbidden active content (JavaScript,
+launch or submit actions, external references), encryption, integrity digest
+mismatches, or payloads over the spec size cap make `run()` raise
+`ValueError` listing the issue codes. Resumes are classic untrusted input,
+so keep the default when converting files you did not produce yourself.
+
+```python
+converter = CVFileToDocument()              # verify=True (default)
+converter = CVFileToDocument(verify=False)  # trusted files only
+```
+
 ### Pipeline use
 
 ```python

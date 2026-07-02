@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
-from cvfile import CvFile, ExtractedPayload, extract
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import Document
+
+from cvfile import CvFile, ExtractedPayload, extract, validate
 
 _TEXT_MIME_PREFIXES: tuple[str, ...] = (
     "text/",
@@ -24,7 +24,7 @@ def _payload_to_document(
     payload: ExtractedPayload,
     file: CvFile,
     source: str,
-    extra_info: Optional[dict] = None,
+    extra_info: dict | None = None,
 ) -> Document:
     metadata: dict = {
         "source": source,
@@ -40,6 +40,24 @@ def _payload_to_document(
     if extra_info:
         metadata.update(extra_info)
     return Document(text=payload.text(), metadata=metadata)
+
+
+def _verify_cv(data: bytes, source: str) -> None:
+    """Refuse to load a .cv file that fails ``cvfile.validate()`` (lenient level).
+
+    Validation rejects forbidden active content (JavaScript, launch and submit
+    actions, external references), encryption, integrity digest mismatches, and
+    payloads over the spec size cap, which is the right default for untrusted
+    input.
+    """
+    report = validate(data)
+    if report.ok:
+        return
+    codes = ", ".join(sorted({issue.code for issue in report.issues if issue.level == "error"}))
+    raise ValueError(
+        f".cv validation failed for {source}: {codes}. "
+        "The file was rejected before extraction; pass verify=False only for trusted files."
+    )
 
 
 def _resolve_chunks(file: CvFile) -> list:
@@ -70,21 +88,31 @@ class CVFileReader(BaseReader):
       the chunk's vector attached on ``Document.embedding`` and the chunk text
       sliced from the markdown using UTF-8 byte offsets. Falls back to a single
       Markdown ``Document`` when the file carries no embeddings.
+
+    By default (``verify=True``) each file is checked with ``cvfile.validate()``
+    before extraction: files carrying forbidden active content (JavaScript,
+    launch or submit actions, external references), encryption, integrity
+    digest mismatches, or oversized payloads raise ``ValueError`` listing the
+    issue codes. Set ``verify=False`` to skip the check for trusted files only.
     """
 
-    def __init__(self, *, mode: str = "payloads") -> None:
+    def __init__(self, *, mode: str = "payloads", verify: bool = True) -> None:
         if mode not in ("payloads", "chunks"):
             raise ValueError("mode must be 'payloads' or 'chunks'")
         self.mode = mode
+        self.verify = verify
 
     def load_data(
         self,
         file: Path,
-        extra_info: Optional[dict] = None,
+        extra_info: dict | None = None,
     ) -> list[Document]:
         path = Path(file)
-        cv_file = extract(path.read_bytes())
+        data = path.read_bytes()
         source = str(path)
+        if self.verify:
+            _verify_cv(data, source)
+        cv_file = extract(data)
 
         if self.mode == "chunks":
             return self._load_chunks(cv_file, source, extra_info)
@@ -99,7 +127,7 @@ class CVFileReader(BaseReader):
         self,
         cv_file: CvFile,
         source: str,
-        extra_info: Optional[dict],
+        extra_info: dict | None,
     ) -> list[Document]:
         chunks = _resolve_chunks(cv_file)
         if not chunks:

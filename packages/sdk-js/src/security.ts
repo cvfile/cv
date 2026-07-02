@@ -30,7 +30,7 @@ export function scanForbiddenConstructs(pdfDoc: PDFDocument): ValidationIssue[] 
     issues.push({
       code: 'encrypted-document',
       level: 'error',
-      message: 'Document declares an /Encrypt dictionary; encryption is forbidden in cv 0.x (spec §3.4)',
+      message: 'Document declares an /Encrypt dictionary; encryption is forbidden in cv 1.0 (spec §3.4)',
     });
   }
 

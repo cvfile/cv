@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Union
 
-from cvfile import CvFile, ExtractedPayload, extract
+from cvfile import CvFile, ExtractedPayload, extract, validate
 from langchain_core.document_loaders import BaseLoader
 from langchain_core.documents import Document
 
@@ -34,6 +33,24 @@ def _payload_to_document(payload: ExtractedPayload, file: CvFile, source: str) -
             "cv_version": file.metadata.version,
             "cv_generator": file.metadata.generator,
         },
+    )
+
+
+def _verify_cv(data: bytes, source: str) -> None:
+    """Refuse to load a .cv file that fails ``cvfile.validate()`` (lenient level).
+
+    Validation rejects forbidden active content (JavaScript, launch and submit
+    actions, external references), encryption, integrity digest mismatches, and
+    payloads over the spec size cap, which is the right default for untrusted
+    input.
+    """
+    report = validate(data)
+    if report.ok:
+        return
+    codes = ", ".join(sorted({issue.code for issue in report.issues if issue.level == "error"}))
+    raise ValueError(
+        f".cv validation failed for {source}: {codes}. "
+        "The file was rejected before extraction; pass verify=False only for trusted files."
     )
 
 
@@ -69,18 +86,27 @@ class CVFileLoader(BaseLoader):
       the chunk's vector attached as ``metadata["embedding"]`` and the chunk
       text sliced from the markdown using UTF-8 byte offsets. Falls back to a
       single Markdown ``Document`` when the file carries no embeddings.
+
+    By default (``verify=True``) the file is checked with ``cvfile.validate()``
+    before extraction: files carrying forbidden active content (JavaScript,
+    launch or submit actions, external references), encryption, integrity
+    digest mismatches, or oversized payloads raise ``ValueError`` listing the
+    issue codes. Set ``verify=False`` to skip the check for trusted files only.
     """
 
-    def __init__(self, file_path: Union[str, Path], *, mode: str = "payloads") -> None:
+    def __init__(self, file_path: str | Path, *, mode: str = "payloads", verify: bool = True) -> None:
         if mode not in ("payloads", "chunks"):
             raise ValueError("mode must be 'payloads' or 'chunks'")
         self.file_path = Path(file_path)
         self.mode = mode
+        self.verify = verify
 
     def lazy_load(self) -> Iterator[Document]:
         data = self.file_path.read_bytes()
-        file = extract(data)
         source = str(self.file_path)
+        if self.verify:
+            _verify_cv(data, source)
+        file = extract(data)
 
         if self.mode == "chunks":
             yield from self._lazy_load_chunks(file, source)

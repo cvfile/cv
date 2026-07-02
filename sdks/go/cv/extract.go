@@ -2,8 +2,54 @@ package cv
 
 import "fmt"
 
-// Extract parses a .cv file's metadata and embedded payloads.
+// ExtractOptions controls payload extraction.
+type ExtractOptions struct {
+	// MaxPayloadBytes caps the decompressed size of each payload (spec §7.3).
+	// Zero means DefaultMaxPayloadBytes. To disable the cap entirely, set
+	// NoPayloadLimit; a bare zero keeps the default so existing callers stay
+	// protected.
+	MaxPayloadBytes int
+	// NoPayloadLimit disables the decompressed-size cap. Only set this for
+	// trusted inputs: a hostile file can inflate a few compressed kilobytes
+	// into an arbitrarily large decompressed payload.
+	NoPayloadLimit bool
+}
+
+// PayloadTooLargeError reports a payload whose decompressed size exceeds the
+// configured cap. It mirrors the Python SDK's PayloadTooLargeError and the JS
+// SDK's maxPayloadBytes abort.
+type PayloadTooLargeError struct {
+	Payload string
+	Size    int
+	Limit   int
+}
+
+func (e *PayloadTooLargeError) Error() string {
+	return fmt.Sprintf("payload %q is %d bytes decompressed; cap is %d (spec §7.3)", e.Payload, e.Size, e.Limit)
+}
+
+// Extract parses a .cv file's metadata and embedded payloads. Payloads are
+// capped at DefaultMaxPayloadBytes decompressed; use ExtractWithOptions to
+// raise or disable the cap.
 func Extract(data []byte) (*File, error) {
+	return ExtractWithOptions(data, ExtractOptions{})
+}
+
+// ExtractWithOptions is Extract with an explicit payload-size policy. When a
+// payload exceeds the cap the whole extraction fails with a
+// *PayloadTooLargeError: the spec forbids silent truncation, so a reader
+// either refuses the payload or returns it in full. pdfcpu inflates streams
+// in one shot (no streaming abort hook), so the cap is enforced immediately
+// post-decode, before the payload is retained or returned.
+func ExtractWithOptions(data []byte, opts ExtractOptions) (*File, error) {
+	maxPayload := opts.MaxPayloadBytes
+	if maxPayload <= 0 {
+		maxPayload = DefaultMaxPayloadBytes
+	}
+	if opts.NoPayloadLimit {
+		maxPayload = 0
+	}
+
 	ctx, err := loadContext(data)
 	if err != nil {
 		return nil, err
@@ -20,7 +66,7 @@ func Extract(data []byte) (*File, error) {
 		return nil, fmt.Errorf("not a .cv file: XMP missing required cv: properties")
 	}
 
-	rawList, err := readAssociatedFiles(ctx)
+	rawList, err := readAssociatedFiles(ctx, maxPayload)
 	if err != nil {
 		return nil, err
 	}

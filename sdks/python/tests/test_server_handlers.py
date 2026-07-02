@@ -53,7 +53,9 @@ def test_serve_cv_bytes_query_overrides_accept() -> None:
 # --- ASGI ---
 
 
-async def _call_asgi(app, path: str, headers: list[tuple[bytes, bytes]] | None = None) -> tuple[int, dict[str, str], bytes]:
+async def _call_asgi(
+    app, path: str, headers: list[tuple[bytes, bytes]] | None = None
+) -> tuple[int, dict[str, str], bytes]:
     sent: list[dict[str, object]] = []
 
     async def receive() -> dict[str, object]:

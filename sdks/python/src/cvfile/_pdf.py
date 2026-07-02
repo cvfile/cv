@@ -27,6 +27,7 @@ from pypdf.generic import (
 )
 
 from cvfile._srgb_profile import SRGB_ICC_COMPONENTS, SRGB_ICC_VERSION, srgb_icc_profile
+from cvfile.errors import PayloadTooLargeError
 
 AFRelationshipKind = Literal["Alternative", "Data", "Supplement"]
 
@@ -174,7 +175,16 @@ def _ensure_trailer_id(writer: PdfWriter) -> None:
     writer._ID = ArrayObject([ByteStringObject(id_hex), ByteStringObject(id_hex)])
 
 
-def read_associated_files(reader: PdfReader) -> list[RawPayload]:
+def read_associated_files(reader: PdfReader, *, max_payload_bytes: int | None = None) -> list[RawPayload]:
+    """List the catalog's /AF payloads.
+
+    When ``max_payload_bytes`` is set, each embedded stream is capped: the
+    still-encoded stream bytes are checked before decoding (heuristic; a
+    flate-compressed bomb can be much smaller than its decoded form) and the
+    decoded bytes are checked immediately after ``get_data()`` returns.
+    pypdf decodes embedded file streams in a single buffer, so an oversized
+    payload is materialised once in memory before the cap rejects it.
+    """
     catalog = reader.trailer.get("/Root")
     if catalog is None:
         return []
@@ -190,7 +200,7 @@ def read_associated_files(reader: PdfReader) -> list[RawPayload]:
     out: list[RawPayload] = []
     for entry in af:
         filespec = entry.get_object() if isinstance(entry, IndirectObject) else entry
-        payload = _parse_filespec(filespec)
+        payload = _parse_filespec(filespec, max_payload_bytes=max_payload_bytes)
         if payload:
             out.append(payload)
     return out
@@ -215,7 +225,7 @@ def read_metadata_xml(reader: PdfReader) -> str | None:
     return None
 
 
-def _parse_filespec(filespec: object) -> RawPayload | None:
+def _parse_filespec(filespec: object, *, max_payload_bytes: int | None = None) -> RawPayload | None:
     if not isinstance(filespec, DictionaryObject):
         return None
     ef = filespec.get("/EF")
@@ -231,6 +241,14 @@ def _parse_filespec(filespec: object) -> RawPayload | None:
     if not isinstance(stream, StreamObject):
         return None
 
+    name_obj = filespec.get("/UF") or filespec.get("/F")
+    if name_obj is None:
+        return None
+    name = str(name_obj)
+
+    if max_payload_bytes is not None:
+        _reject_oversized_encoded_stream(stream, name, max_payload_bytes)
+
     raw_data: object = stream.get_data()
     if isinstance(raw_data, str):
         data = raw_data.encode("latin-1", errors="replace")
@@ -239,10 +257,8 @@ def _parse_filespec(filespec: object) -> RawPayload | None:
     else:
         return None
 
-    name_obj = filespec.get("/UF") or filespec.get("/F")
-    if name_obj is None:
-        return None
-    name = str(name_obj)
+    if max_payload_bytes is not None and len(data) > max_payload_bytes:
+        raise PayloadTooLargeError(name, len(data), max_payload_bytes)
 
     subtype = stream.get("/Subtype") or filespec.get("/Subtype")
     mime_type = _name_to_mime(str(subtype)) if subtype else "application/octet-stream"
@@ -257,6 +273,17 @@ def _parse_filespec(filespec: object) -> RawPayload | None:
     rel: AFRelationshipKind = rel_str  # type: ignore[assignment]
 
     return RawPayload(name=name, mime_type=mime_type, relationship=rel, bytes_=bytes(data), description=description)
+
+
+def _reject_oversized_encoded_stream(stream: StreamObject, name: str, max_payload_bytes: int) -> None:
+    """Pre-decode heuristic: reject when the stored (still-encoded) stream
+    already exceeds the cap. pypdf offers no incremental decoding for embedded
+    file streams, so this is the closest check to decompression available; the
+    decoded size is re-checked right after ``get_data()``.
+    """
+    encoded: object = stream._data
+    if isinstance(encoded, bytes) and len(encoded) > max_payload_bytes:
+        raise PayloadTooLargeError(name, len(encoded), max_payload_bytes)
 
 
 def _mime_to_name(mime: str) -> str:

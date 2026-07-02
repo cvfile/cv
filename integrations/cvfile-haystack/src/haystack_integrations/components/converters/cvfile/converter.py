@@ -5,10 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from cvfile import CvFile, ExtractedPayload, extract
 from haystack import Document, component, logging
 from haystack.components.converters.utils import get_bytestream_from_source, normalize_metadata
 from haystack.dataclasses import ByteStream
+
+from cvfile import CvFile, ExtractedPayload, extract, validate
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,24 @@ def _payload_meta(payload: ExtractedPayload, file: CvFile) -> dict[str, Any]:
         "cv_version": file.metadata.version,
         "cv_generator": file.metadata.generator,
     }
+
+
+def _verify_cv(data: bytes, source: str) -> None:
+    """Refuse to convert a .cv file that fails ``cvfile.validate()`` (lenient level).
+
+    Validation rejects forbidden active content (JavaScript, launch and submit
+    actions, external references), encryption, integrity digest mismatches, and
+    payloads over the spec size cap, which is the right default for untrusted
+    input.
+    """
+    report = validate(data)
+    if report.ok:
+        return
+    codes = ", ".join(sorted({issue.code for issue in report.issues if issue.level == "error"}))
+    raise ValueError(
+        f".cv validation failed for {source}: {codes}. "
+        "The file was rejected before extraction; pass verify=False only for trusted files."
+    )
 
 
 def _resolve_chunks(file: CvFile) -> list:
@@ -83,9 +102,18 @@ class CVFileToDocument:
     UTF-8 byte offsets. Files without an embeddings payload fall back to a single
     Markdown ``Document``. In ``mode="chunks"`` the ``primary_only`` flag is
     ignored (chunks already index a single text payload).
+
+    By default (``verify=True``) each source is checked with
+    ``cvfile.validate()`` before extraction: files carrying forbidden active
+    content (JavaScript, launch or submit actions, external references),
+    encryption, integrity digest mismatches, or oversized payloads make
+    ``run()`` raise ``ValueError`` listing the issue codes. Unlike unreadable
+    sources, which are logged and skipped, a validation failure is a security
+    signal and is never silently dropped. Set ``verify=False`` to skip the
+    check for trusted files only.
     """
 
-    def __init__(self, primary_only: bool = False, *, mode: str = "payloads") -> None:
+    def __init__(self, primary_only: bool = False, *, mode: str = "payloads", verify: bool = True) -> None:
         """Create a CVFileToDocument component.
 
         :param primary_only:
@@ -97,11 +125,16 @@ class CVFileToDocument:
             ``"payloads"`` (default) emits one ``Document`` per textual payload.
             ``"chunks"`` emits one ``Document`` per pre-computed embedding chunk
             with its vector attached.
+        :param verify:
+            If ``True`` (default), run ``cvfile.validate()`` on every source
+            and raise ``ValueError`` when a file fails validation. Set to
+            ``False`` only for trusted files.
         """
         if mode not in ("payloads", "chunks"):
             raise ValueError("mode must be 'payloads' or 'chunks'")
         self.primary_only = primary_only
         self.mode = mode
+        self.verify = verify
 
     @component.output_types(documents=list[Document])
     def run(
@@ -120,6 +153,11 @@ class CVFileToDocument:
             inputs (the same dictionary is merged into every document
             produced from that source).
 
+        :raises ValueError:
+            When ``verify=True`` (the default) and a source fails
+            ``cvfile.validate()``. The message lists the validation issue
+            codes.
+
         :returns:
             A dictionary with key ``documents`` containing the list of
             ``Document`` objects extracted from every source.
@@ -133,6 +171,9 @@ class CVFileToDocument:
             except Exception as e:
                 logger.warning("Could not read {source}. Skipping it. Error: {error}", source=source, error=e)
                 continue
+
+            if self.verify:
+                _verify_cv(bytestream.data, str(source))
 
             try:
                 file = extract(bytestream.data)

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llama-index-readers-cvfile"
-version = "0.2.0"
+version = "0.3.1"
 description = "LlamaIndex reader for the .cv open file format."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -19,9 +19,10 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "cvfile>=0.1,<2",
+  "cvfile>=0.3.1,<2",
   "llama-index-core>=0.11,<0.15",
 ]
 
