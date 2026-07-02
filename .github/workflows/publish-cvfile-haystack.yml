@@ -3,6 +3,14 @@ name: publish cvfile-haystack
 on:
   push:
     tags: ["cvfile-haystack/v*"]
+  # Manual re-fire for an existing tag (tag events are suppressed when more
+  # than three tags land in one push, and PyPI index propagation can race
+  # a fresh dependency floor).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to publish"
+        required: true
 
 permissions:
   contents: read
@@ -15,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -24,7 +34,10 @@ jobs:
         working-directory: integrations/cvfile-haystack
         run: |
           uv venv
-          uv pip install -e ".[dev]"
+          # The workspace cvfile SDK is installed first so the gate tests the
+          # code in this checkout; resolving cvfile from PyPI would race index
+          # propagation whenever the SDK floor was bumped in the same release.
+          uv pip install -e ../../sdks/python -e ".[dev]"
       - name: Run tests before publishing
         working-directory: integrations/cvfile-haystack
         run: .venv/bin/pytest -q
