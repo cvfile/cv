@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "langchain-cvfile"
-version = "0.3.1"
+version = "0.3.2"
 description = "LangChain document loader for the .cv open file format."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -22,7 +22,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "cvfile>=0.3.1,<2",
+  "cvfile>=0.3.2,<2",
   "langchain-core>=0.3,<1",
 ]
 
