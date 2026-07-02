@@ -14,7 +14,7 @@
     "@cvfile/sdk": "workspace:*",
     "@cvfile/viewer-web": "workspace:*",
     "astro": "^5.0.0",
-    "marked": "^14.1.4",
+    "marked": "^18.0.5",
     "pdf-lib": "^1.17.1"
   }
 }
