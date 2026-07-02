@@ -18,13 +18,30 @@
       "headers": [
         { "key": "Content-Type", "value": "text/markdown; charset=utf-8" }
       ]
+    },
+    {
+      "source": "/samples-src/(.*)\\.cv",
+      "headers": [
+        { "key": "Content-Type", "value": "application/pdf" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/samples-src/(.*)\\.md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" }
+      ]
     }
   ],
   "rewrites": [
     {
       "source": "/samples/jane-doe.cv",
       "has": [{ "type": "header", "key": "accept", "value": ".*text/markdown.*" }],
-      "destination": "/samples/jane-doe.md"
+      "destination": "/samples-src/jane-doe.md"
+    },
+    {
+      "source": "/samples/:path*",
+      "destination": "/samples-src/:path*"
     },
     {
       "source": "/sitemap.xml",
