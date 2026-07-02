@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "cvfile>=0.3.2,<2",
-  "langchain-core>=0.3,<1",
+  "langchain-core>=0.3,<2",
 ]
 
 [project.urls]
