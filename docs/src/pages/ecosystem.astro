@@ -18,14 +18,14 @@ const GROUPS = [
     items: [
       { name: '@cvfile/sdk', desc: 'JavaScript / TypeScript pack, extract, inspect, validate. Browser and Node.' },
       { name: 'cvfile', desc: 'Python equivalent. Same API surface, idiomatic naming.' },
-      { name: 'cv-go', desc: 'Go equivalent. Reader path complete; pack writer lands in v0.2.' },
+      { name: 'github.com/cvfile/cv/sdks/go', desc: 'Go equivalent. Full pack, extract, inspect, validate surface.' },
     ],
   },
   {
     hx: 'CLI',
     title: 'Command line',
     items: [
-      { name: 'cv', desc: 'Single Go binary. Subcommands: extract, inspect, validate, search.' },
+      { name: 'cv', desc: 'Single Go binary. Subcommands: pack, extract, inspect, validate, search.' },
     ],
   },
   {
@@ -49,7 +49,7 @@ const GROUPS = [
     items: [
       { name: '@cvfile/server', desc: 'Node Express, Fastify and Hono adapters plus a vanilla http handler.' },
       { name: 'cvfile.server', desc: 'Python ASGI (FastAPI/Starlette) and WSGI (Flask/Django).' },
-      { name: 'cv-go/middleware', desc: 'Go net/http handler.' },
+      { name: 'github.com/cvfile/cv/sdks/go/middleware', desc: 'Go net/http handler.' },
     ],
   },
   {
@@ -59,7 +59,7 @@ const GROUPS = [
       { name: 'langchain-cvfile', desc: 'CVFileLoader emits LangChain Documents, optionally one per embedding chunk.' },
       { name: 'llama-index-readers-cvfile', desc: 'CVFileReader emits LlamaIndex Documents with .embedding populated.' },
       { name: 'cvfile-haystack', desc: 'Haystack 2.x CVFileToDocument converter component.' },
-      { name: 'cvfile-cv-detector', desc: '200-line reference sniffer (PyPI / npm / Go) that detects .cv wrapping inside any application/pdf and unwraps the /AF Markdown payload. For crawler vendors who want .cv awareness without adopting an SDK.' },
+      { name: 'cvfile-cv-detector', desc: '200-line reference sniffer (cvfile-cv-detector on PyPI, @cvfile/cv-detector on npm, plus Go) that detects .cv wrapping inside any application/pdf and unwraps the /AF Markdown payload. For crawler vendors who want .cv awareness without adopting an SDK.' },
     ],
   },
 ];

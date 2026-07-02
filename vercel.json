@@ -4,5 +4,31 @@
   "buildCommand": "pnpm --filter @cvfile/sdk build && pnpm --filter @cvfile/viewer-web build && pnpm --filter @cvfile/docs build",
   "outputDirectory": "docs/dist",
   "installCommand": "pnpm install --filter @cvfile/docs... --filter @cvfile/viewer-web... --frozen-lockfile --ignore-scripts",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- docs/ packages/viewer-web/ packages/sdk-js/ spec/cv-1.0.md vercel.json"
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- docs/ packages/viewer-web/ packages/sdk-js/ spec/cv-1.0.md vercel.json",
+  "headers": [
+    {
+      "source": "/samples/(.*)\\.cv",
+      "headers": [
+        { "key": "Content-Type", "value": "application/pdf" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/samples/(.*)\\.md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/samples/jane-doe.cv",
+      "has": [{ "type": "header", "key": "accept", "value": ".*text/markdown.*" }],
+      "destination": "/samples/jane-doe.md"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap-index.xml"
+    }
+  ]
 }

@@ -1,0 +1,32 @@
+# .cv file format
+
+> The .cv file is an open file format for CVs and resumes: a standard PDF that doubles as a machine-readable document. It embeds Markdown, HTML, and JSON payloads plus optional vector embeddings inside the PDF container, so the same file renders in any PDF viewer and parses losslessly in ATS pipelines, LLM tools, and search systems. Spec 1.0 is frozen; SDKs exist for JavaScript/TypeScript, Python, and Go.
+
+## Pages
+
+- [Home](https://cvfile.org/): what the .cv format is and why it exists
+- [Specification](https://cvfile.org/spec/): the normative .cv 1.0 file format specification
+- [Create](https://cvfile.org/create/): build a .cv file in the browser from Markdown
+- [View](https://cvfile.org/view/): open and inspect any .cv file in the browser
+- [Install](https://cvfile.org/install/): install the CLI and SDKs (npm, PyPI, Go, Homebrew, Scoop)
+- [Ecosystem](https://cvfile.org/ecosystem/): integrations, framework loaders, and tooling
+
+## Source
+
+- [GitHub repository](https://github.com/cvfile/cv): spec, SDKs, CLI, and reference tooling
+
+## Packages
+
+- [@cvfile/sdk](https://www.npmjs.com/package/@cvfile/sdk): JavaScript/TypeScript SDK (pack, extract, validate, inspect)
+- [@cvfile/embed](https://www.npmjs.com/package/@cvfile/embed): drop-in web component for rendering .cv files
+- [@cvfile/server](https://www.npmjs.com/package/@cvfile/server): server-side helpers for serving and negotiating .cv files
+- [@cvfile/viewer-web](https://www.npmjs.com/package/@cvfile/viewer-web): browser viewer used by cvfile.org
+- [cvfile](https://pypi.org/project/cvfile/): Python SDK and CLI
+- [langchain-cvfile](https://pypi.org/project/langchain-cvfile/): LangChain document loader for .cv files
+- [llama-index-readers-cvfile](https://pypi.org/project/llama-index-readers-cvfile/): LlamaIndex reader for .cv files
+- [cvfile-haystack](https://pypi.org/project/cvfile-haystack/): Haystack converter for .cv files
+- [Go module](https://pkg.go.dev/github.com/cvfile/cv/sdks/go): Go SDK and `cv` CLI (github.com/cvfile/cv/sdks/go)
+
+## Sample
+
+- [jane-doe.cv](https://cvfile.org/samples/jane-doe.cv): a complete sample .cv file (send Accept: text/markdown to get the Markdown payload)

@@ -6,8 +6,8 @@ Email `security@cvfile.org` with details. Do not open public GitHub issues for v
 
 We follow a 90-day coordinated-disclosure window:
 - Day 0: report received, ack within 72 hours.
-- Day 0–30: triage and fix.
-- Day 30–90: coordinated release.
+- Day 0 to 30: triage and fix.
+- Day 30 to 90: coordinated release.
 - Day 90: public disclosure.
 
 ## Threat model
@@ -21,4 +21,4 @@ The following are rejected by the validator and MUST NOT be present in a conform
 - Encrypted streams (`/Encrypt` dictionary)
 - External stream references (`/F` filespecs pointing outside the file)
 
-Viewers render embedded HTML in a sandboxed iframe with no `allow-scripts allow-same-origin`. Markdown is rendered with raw HTML disabled by default.
+Viewers render embedded HTML in a sandboxed iframe whose `sandbox` attribute includes neither `allow-scripts` nor `allow-same-origin`. Markdown is rendered with raw HTML disabled by default.
