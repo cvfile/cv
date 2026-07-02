@@ -6,7 +6,7 @@
  * pinpoint which rule it missed. The manifest pairs each fixture with the
  * stable error code its validator must emit.
  *
- * Run with `pnpm tsx tools/malicious-corpus/build.ts`.
+ * Run with `pnpm dlx tsx tools/build-malicious.ts` from packages/sdk-js.
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
