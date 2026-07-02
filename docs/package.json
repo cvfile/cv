@@ -13,7 +13,7 @@
     "@astrojs/sitemap": "^3.7.3",
     "@cvfile/sdk": "workspace:*",
     "@cvfile/viewer-web": "workspace:*",
-    "astro": "^5.0.0",
+    "astro": "^7.0.5",
     "marked": "^14.1.4",
     "pdf-lib": "^1.17.1"
   }
