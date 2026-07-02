@@ -22,7 +22,7 @@ func scanForbiddenConstructs(ctx *model.Context) []ValidationIssue {
 		issues = append(issues, ValidationIssue{
 			Code:    "encrypted-document",
 			Level:   "error",
-			Message: "Trailer declares /Encrypt; encryption is forbidden in cv 0.x (spec §3.4)",
+			Message: "Trailer declares /Encrypt; encryption is forbidden in cv 1.0 (spec §3.4)",
 		})
 	}
 

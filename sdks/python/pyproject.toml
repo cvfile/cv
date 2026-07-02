@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cvfile"
-version = "0.3.0"
+version = "0.3.1"
 description = "Reference SDK for the .cv open file format — pack, extract, inspect, validate."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -19,6 +19,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "pypdf>=5.0,<6",
@@ -27,6 +28,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://cvfile.org"
 Repository = "https://github.com/cvfile/cv"
+Issues = "https://github.com/cvfile/cv/issues"
 
 [project.optional-dependencies]
 embed = [

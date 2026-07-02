@@ -47,7 +47,7 @@ func Validate(data []byte, opts ValidateOptions) *ValidationReport {
 		msg := err.Error()
 		if isEncryptionError(err) {
 			code = "encrypted-document"
-			msg = "Trailer declares /Encrypt; encryption is forbidden in cv 0.x (spec §3.4)"
+			msg = "Trailer declares /Encrypt; encryption is forbidden in cv 1.0 (spec §3.4)"
 		}
 		issues = append(issues, ValidationIssue{
 			Code:    code,
@@ -90,7 +90,10 @@ func Validate(data []byte, opts ValidateOptions) *ValidationReport {
 		})
 	}
 
-	rawList, err := readAssociatedFiles(ctx)
+	// The validator reads uncapped: it must see oversized payloads to report
+	// payload-too-large below (and to run integrity checks on them), rather
+	// than fail-fast the way the extract path does.
+	rawList, err := readAssociatedFiles(ctx, 0)
 	if err != nil {
 		issues = append(issues, ValidationIssue{
 			Code:    "af-read-failed",

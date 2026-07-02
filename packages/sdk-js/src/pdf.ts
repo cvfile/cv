@@ -10,6 +10,7 @@ import {
   PDFString,
 } from 'pdf-lib';
 import * as pako from 'pako';
+import { CvError } from './errors.js';
 import type { AFRelationshipKind, ExtractedPayload } from './types.js';
 import { utf8 } from './normalize.js';
 
@@ -31,6 +32,20 @@ export interface RawPayload {
   description?: string;
   relationship: AFRelationshipKind;
   bytes: Uint8Array;
+  /**
+   * True when the payload's decoded size exceeded the caller's cap and
+   * decompression was aborted mid-stream; `bytes` is empty in that case.
+   */
+  oversize?: boolean;
+}
+
+export interface ReadAssociatedFilesOptions {
+  /**
+   * Per-payload decoded-byte cap (spec §7.3). Decompression aborts as soon as
+   * the inflated output crosses the cap, so a small compressed "bomb" is never
+   * fully expanded in memory; the payload is returned with `oversize: true`.
+   */
+  maxPayloadBytes?: number;
 }
 
 export async function loadDocument(bytes: Uint8Array): Promise<PDFDocument> {
@@ -44,7 +59,7 @@ export async function loadDocument(bytes: Uint8Array): Promise<PDFDocument> {
   });
 }
 
-export function readAssociatedFiles(pdfDoc: PDFDocument): RawPayload[] {
+export function readAssociatedFiles(pdfDoc: PDFDocument, opts: ReadAssociatedFilesOptions = {}): RawPayload[] {
   const catalog = pdfDoc.catalog;
   const afRaw = catalog.get(AF_NAME);
   if (!afRaw) return [];
@@ -54,13 +69,13 @@ export function readAssociatedFiles(pdfDoc: PDFDocument): RawPayload[] {
   for (let i = 0; i < afArray.size(); i += 1) {
     const filespecRaw = afArray.get(i)!;
     const filespec = pdfDoc.context.lookup(filespecRaw, PDFDict);
-    const payload = parseFilespec(pdfDoc, filespec);
+    const payload = parseFilespec(pdfDoc, filespec, opts);
     if (payload) out.push(payload);
   }
   return out;
 }
 
-function parseFilespec(pdfDoc: PDFDocument, filespec: PDFDict): RawPayload | null {
+function parseFilespec(pdfDoc: PDFDocument, filespec: PDFDict, opts: ReadAssociatedFilesOptions): RawPayload | null {
   const efRaw = filespec.get(EF_NAME);
   if (!efRaw) return null;
   const efDict = pdfDoc.context.lookup(efRaw, PDFDict);
@@ -70,11 +85,24 @@ function parseFilespec(pdfDoc: PDFDocument, filespec: PDFDict): RawPayload | nul
   const stream = pdfDoc.context.lookup(streamRef);
   if (!(stream instanceof PDFStream)) return null;
 
-  const bytes = decodeStream(stream);
-  if (!bytes) return null;
-
   const name = readString(filespec, UF_NAME) ?? readString(filespec, F_NAME) ?? '';
   if (!name) return null;
+
+  let bytes: Uint8Array | null;
+  let oversize = false;
+  try {
+    bytes = decodeStream(stream, opts.maxPayloadBytes !== undefined ? { maxBytes: opts.maxPayloadBytes } : {});
+  } catch (err) {
+    if (err instanceof CvError && err.code === 'payload-too-large') {
+      // Decompression was aborted at the cap; surface the payload as oversize
+      // so callers can report it (validate) or reject it (extract) by name.
+      bytes = new Uint8Array(0);
+      oversize = true;
+    } else {
+      throw err;
+    }
+  }
+  if (!bytes) return null;
 
   const subtype = stream.dict.get(SUBTYPE_NAME) ?? filespec.get(SUBTYPE_NAME);
   const mimeType = subtype instanceof PDFName ? decodeMimeName(subtype) : 'application/octet-stream';
@@ -88,6 +116,7 @@ function parseFilespec(pdfDoc: PDFDocument, filespec: PDFDict): RawPayload | nul
     : 'Supplement';
 
   const payload: RawPayload = { name, mimeType, relationship, bytes };
+  if (oversize) payload.oversize = true;
   if (desc !== undefined) payload.description = desc;
   return payload;
 }
@@ -203,9 +232,15 @@ export function setMetadataXml(pdfDoc: PDFDocument, xml: string): void {
   pdfDoc.catalog.set(METADATA_NAME, ref);
 }
 
-function decodeStream(stream: PDFStream): Uint8Array | null {
+interface DecodeStreamOptions {
+  /** Decoded-byte cap; decoding aborts with a 'payload-too-large' CvError once crossed. */
+  maxBytes?: number;
+}
+
+function decodeStream(stream: PDFStream, opts: DecodeStreamOptions = {}): Uint8Array | null {
   const dict = stream.dict;
   const filter = dict.get(FILTER_NAME);
+  const maxBytes = opts.maxBytes ?? Number.POSITIVE_INFINITY;
 
   let raw: Uint8Array;
   if (stream instanceof PDFRawStream) {
@@ -215,7 +250,10 @@ function decodeStream(stream: PDFStream): Uint8Array | null {
     raw = buf instanceof Uint8Array ? buf : new Uint8Array(buf as ArrayBufferLike);
   }
 
-  if (!filter) return raw;
+  if (!filter) {
+    assertWithinCap(raw.length, maxBytes);
+    return raw;
+  }
 
   const filterName = filter instanceof PDFName ? filter.asString().slice(1) : null;
   const filters: string[] = [];
@@ -235,12 +273,57 @@ function decodeStream(stream: PDFStream): Uint8Array | null {
     const f = filters[i]!;
     if (f === 'FlateDecode') {
       assertNoPredictor(decodeParms[i]);
-      bytes = pako.inflate(bytes);
+      bytes = inflateCapped(bytes, maxBytes);
     } else {
       return null;
     }
   }
+  assertWithinCap(bytes.length, maxBytes);
   return bytes;
+}
+
+function assertWithinCap(length: number, maxBytes: number): void {
+  if (length > maxBytes) {
+    throw new CvError(
+      'payload-too-large',
+      `Decoded stream is ${length} bytes; cap is ${maxBytes} (spec §7.3)`,
+    );
+  }
+}
+
+/**
+ * Inflate through pako's streaming API with a hard output cap. `onData` fires
+ * per decompressed chunk, so a maliciously compressed stream (a "zip bomb")
+ * is aborted as soon as its output crosses `maxBytes` instead of being fully
+ * expanded into memory first.
+ */
+function inflateCapped(input: Uint8Array, maxBytes: number): Uint8Array {
+  const inflator = new pako.Inflate();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  inflator.onData = (chunk: pako.Data) => {
+    const data = chunk as Uint8Array;
+    total += data.length;
+    if (total > maxBytes) {
+      throw new CvError(
+        'payload-too-large',
+        `Decompressed stream exceeds the ${maxBytes}-byte cap (spec §7.3); decompression aborted`,
+      );
+    }
+    chunks.push(data);
+  };
+  inflator.push(input, true);
+  if (inflator.err) {
+    throw new Error(`FlateDecode failed: ${inflator.msg || `pako error ${inflator.err}`}`);
+  }
+  if (chunks.length === 1) return chunks[0]!;
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return out;
 }
 
 const DECODE_PARMS_NAME = PDFName.of('DecodeParms');

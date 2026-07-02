@@ -21,6 +21,11 @@ Each wrapper:
 * flags the primary payload (the one declared in the file's XMP
   `cv:primaryPayload`) with `metadata["primary"] = True` so chunkers can
   drop alternates if needed.
+* verifies each file with `cvfile.validate()` before extraction
+  (`verify=True` by default) and raises a `ValueError` listing the issue
+  codes when the file carries forbidden active content, encryption, broken
+  integrity digests, or oversized payloads. Pass `verify=False` only for
+  trusted files.
 * on LlamaIndex, also populates `Document.embedding` from the precomputed
   `embeddings.cbor` payload when the `.cv` ships one, so retrieval pipelines
   skip the embedding pass entirely.

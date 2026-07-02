@@ -1,7 +1,15 @@
 export { pack } from './pack.js';
-export { extract, extractMarkdown, extractHtml, extractEmbeddings, extractEmbeddingsParsed } from './extract.js';
+export {
+  extract,
+  extractMarkdown,
+  extractHtml,
+  extractEmbeddings,
+  extractEmbeddingsParsed,
+  type ExtractOptions,
+} from './extract.js';
 export { inspect } from './inspect.js';
 export { validate } from './validate.js';
+export { CvError } from './errors.js';
 export { isCvFile } from './detect.js';
 export {
   encodeEmbeddings,

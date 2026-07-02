@@ -26,7 +26,6 @@ export interface PdfaCheckResult {
 
 const TYPE = PDFName.of('Type');
 const SUBTYPE = PDFName.of('Subtype');
-const FONT = PDFName.of('Font');
 const FONT_DESCRIPTOR = PDFName.of('FontDescriptor');
 const DESCENDANT_FONTS = PDFName.of('DescendantFonts');
 const BASE_FONT = PDFName.of('BaseFont');

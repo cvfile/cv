@@ -7,14 +7,25 @@ import io
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
-from cvfile._constants import PAYLOAD_MIME_TYPES
+from cvfile._constants import MAX_PAYLOAD_BYTES_DEFAULT, PAYLOAD_MIME_TYPES
 from cvfile._pdf import read_associated_files, read_metadata_xml
 from cvfile._types import CvFile, ExtractedPayload
 from cvfile._xmp import parse_xmp
 
 
-def extract(data: bytes) -> CvFile:
-    """Parse a .cv file's metadata and embedded payloads."""
+def extract(data: bytes, *, max_payload_bytes: int | None = MAX_PAYLOAD_BYTES_DEFAULT) -> CvFile:
+    """Parse a .cv file's metadata and embedded payloads.
+
+    ``max_payload_bytes`` caps each embedded payload (default 16 MiB, the
+    spec §7.3 cap that ``validate()`` also enforces); an oversized payload
+    raises :class:`cvfile.PayloadTooLargeError`. Pass ``None`` to disable the
+    cap for trusted files.
+
+    Limitation: pypdf decodes embedded file streams into a single buffer, so
+    the cap is enforced on the still-encoded stream size before decoding
+    (heuristic) and on the decoded size immediately after. A highly compressed
+    payload is therefore decompressed into memory once before being rejected.
+    """
     try:
         reader = PdfReader(io.BytesIO(data))
     except (PdfReadError, KeyError, ValueError) as err:
@@ -28,7 +39,7 @@ def extract(data: bytes) -> CvFile:
     if not metadata:
         raise ValueError("Not a .cv file: XMP missing required cv: properties")
 
-    raws = read_associated_files(reader)
+    raws = read_associated_files(reader, max_payload_bytes=max_payload_bytes)
     alt_lang = {a.payload: a.language for a in metadata.alternates}
 
     payloads = tuple(
@@ -46,15 +57,25 @@ def extract(data: bytes) -> CvFile:
     return CvFile(bytes_=data, metadata=metadata, payloads=payloads)
 
 
-def extract_markdown(data: bytes, *, language: str | None = None) -> str | None:
+def extract_markdown(
+    data: bytes,
+    *,
+    language: str | None = None,
+    max_payload_bytes: int | None = MAX_PAYLOAD_BYTES_DEFAULT,
+) -> str | None:
     """Return the markdown payload as text, preferring the requested language."""
-    file = extract(data)
+    file = extract(data, max_payload_bytes=max_payload_bytes)
     return _pick_text(file, PAYLOAD_MIME_TYPES["markdown"], language or file.metadata.primary_language)
 
 
-def extract_html(data: bytes, *, language: str | None = None) -> str | None:
+def extract_html(
+    data: bytes,
+    *,
+    language: str | None = None,
+    max_payload_bytes: int | None = MAX_PAYLOAD_BYTES_DEFAULT,
+) -> str | None:
     """Return the HTML payload as text, preferring the requested language."""
-    file = extract(data)
+    file = extract(data, max_payload_bytes=max_payload_bytes)
     return _pick_text(file, PAYLOAD_MIME_TYPES["html"], language or file.metadata.primary_language)
 
 

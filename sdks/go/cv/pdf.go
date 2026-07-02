@@ -2,6 +2,7 @@ package cv
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -55,7 +56,13 @@ type rawPayload struct {
 }
 
 // readAssociatedFiles walks the catalog /AF array and returns each payload.
-func readAssociatedFiles(ctx *model.Context) ([]rawPayload, error) {
+// maxPayloadBytes caps the decompressed size of every payload; a value <= 0
+// disables the cap (the validator does its own size reporting and needs the
+// raw list). pdfcpu's StreamDict.Decode inflates a stream in one shot with no
+// streaming abort hook, so the cap is enforced immediately post-decode: the
+// bytes are inflated to memory once, then rejected before being retained or
+// returned to the caller.
+func readAssociatedFiles(ctx *model.Context, maxPayloadBytes int) ([]rawPayload, error) {
 	rootDict, err := ctx.XRefTable.Catalog()
 	if err != nil {
 		return nil, err
@@ -83,15 +90,25 @@ func readAssociatedFiles(ctx *model.Context) ([]rawPayload, error) {
 		if !ok {
 			continue
 		}
-		payload, err := parseFilespec(ctx, fs)
-		if err == nil && payload != nil {
+		payload, err := parseFilespec(ctx, fs, maxPayloadBytes)
+		if err != nil {
+			// An oversized payload must surface as a refusal, never as a
+			// silently shorter payload list. Other malformed filespecs are
+			// skipped, matching the historical lenient behavior.
+			var tooLarge *PayloadTooLargeError
+			if errors.As(err, &tooLarge) {
+				return nil, err
+			}
+			continue
+		}
+		if payload != nil {
 			out = append(out, *payload)
 		}
 	}
 	return out, nil
 }
 
-func parseFilespec(ctx *model.Context, fs pdfTypes.Dict) (*rawPayload, error) {
+func parseFilespec(ctx *model.Context, fs pdfTypes.Dict, maxPayloadBytes int) (*rawPayload, error) {
 	efObj, ok := fs.Find("EF")
 	if !ok {
 		return nil, nil
@@ -126,6 +143,13 @@ func parseFilespec(ctx *model.Context, fs pdfTypes.Dict) (*rawPayload, error) {
 	name := stringValue(fs, "UF")
 	if name == "" {
 		name = stringValue(fs, "F")
+	}
+
+	// Enforce the decompressed-size cap as close to decompression as pdfcpu
+	// allows (immediately after the one-shot Decode), before the bytes are
+	// copied out or retained.
+	if maxPayloadBytes > 0 && len(stream.Content) > maxPayloadBytes {
+		return nil, &PayloadTooLargeError{Payload: name, Size: len(stream.Content), Limit: maxPayloadBytes}
 	}
 	desc := stringValue(fs, "Desc")
 

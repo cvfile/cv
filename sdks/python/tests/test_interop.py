@@ -14,7 +14,6 @@ import pytest
 
 from cvfile import extract, extract_html, extract_markdown, inspect, is_cv_file
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 JS_FIXTURE = REPO_ROOT / "packages" / "sdk-js" / "examples" / "out" / "jane-doe.cv"
 JS_MD_SOURCE = REPO_ROOT / "packages" / "sdk-js" / "examples" / "jane-doe.md"
@@ -24,7 +23,10 @@ JS_HTML_SOURCE = REPO_ROOT / "packages" / "sdk-js" / "examples" / "jane-doe.html
 @pytest.fixture
 def js_fixture_bytes() -> bytes:
     if not JS_FIXTURE.exists():
-        pytest.skip(f"JS fixture missing at {JS_FIXTURE}; run `pnpm --filter @cvfile/sdk` then `npx tsx examples/build-jane-doe.ts`")
+        pytest.skip(
+            f"JS fixture missing at {JS_FIXTURE}; "
+            "run `pnpm --filter @cvfile/sdk` then `npx tsx examples/build-jane-doe.ts`"
+        )
     return JS_FIXTURE.read_bytes()
 
 

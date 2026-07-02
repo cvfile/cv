@@ -1,4 +1,4 @@
-import { CV_SPEC_VERSION } from './constants.js';
+import { CV_SPEC_VERSION, MAX_PAYLOAD_BYTES_DEFAULT } from './constants.js';
 import { sha256Hex } from './digest.js';
 import { toUint8Array } from './normalize.js';
 import { PORTABLE_NAME_RE } from './pack.js';
@@ -9,7 +9,7 @@ import type { BinaryInput, PdfaConformance, ValidationIssue, ValidationLevel, Va
 import { parseXmp } from './xmp.js';
 
 /** Default per-payload size cap, in bytes, per spec §7.3. */
-export const DEFAULT_MAX_PAYLOAD_BYTES = 16 * 1024 * 1024;
+export const DEFAULT_MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES_DEFAULT;
 
 export interface ValidateOptions {
   strict?: boolean;
@@ -37,7 +37,7 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
     issues.push({
       code: 'encrypted-document',
       level: 'error',
-      message: 'Document declares an /Encrypt dictionary; encryption is forbidden in cv 0.x (spec §3.4)',
+      message: 'Document declares an /Encrypt dictionary; encryption is forbidden in cv 1.0 (spec §3.4)',
     });
     return { ok: false, level, issues };
   }
@@ -61,13 +61,20 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
   const newerVersionIssue = checkVersion(meta.version);
   if (newerVersionIssue) issues.push(newerVersionIssue);
 
-  const payloads = readAssociatedFiles(pdfDoc);
+  const payloads = readAssociatedFiles(pdfDoc, { maxPayloadBytes });
   if (payloads.length === 0) {
     issues.push({ code: 'no-payloads', level: 'error', message: 'No /AF Associated Files present' });
   }
 
   for (const payload of payloads) {
-    if (payload.bytes.length > maxPayloadBytes) {
+    if (payload.oversize) {
+      issues.push({
+        code: 'payload-too-large',
+        level: 'error',
+        message: `Payload "${payload.name}" exceeds the ${maxPayloadBytes}-byte cap (spec §7.3); decompression aborted`,
+        payload: payload.name,
+      });
+    } else if (payload.bytes.length > maxPayloadBytes) {
       issues.push({
         code: 'payload-too-large',
         level: 'error',
@@ -102,6 +109,12 @@ export async function validate(input: BinaryInput, opts: ValidateOptions = {}): 
         message: `Integrity entry references unknown payload "${entry.payload}"`,
         payload: entry.payload,
       });
+      continue;
+    }
+    if (payload.oversize) {
+      // Bytes were discarded when decompression hit the cap, so a digest
+      // comparison would only add a misleading mismatch on top of the
+      // payload-too-large error already reported above.
       continue;
     }
     if (entry.algorithm === 'sha-256' || entry.algorithm === 'sha256') {

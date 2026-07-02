@@ -27,6 +27,20 @@ for doc in docs:
 You get one `Document` per textual payload found in the file. The Markdown
 copy (typically `resume.md`) is the one flagged with `metadata["primary"] = True`.
 
+## Untrusted files
+
+By default the loader runs `cvfile.validate()` before extracting anything.
+Files carrying forbidden active content (JavaScript, launch or submit
+actions, external references), encryption, integrity digest mismatches, or
+payloads over the spec size cap raise `ValueError` listing the issue codes.
+Resumes are classic untrusted input, so keep the default when loading files
+you did not produce yourself.
+
+```python
+loader = CVFileLoader("resume.cv")               # verify=True (default)
+loader = CVFileLoader("resume.cv", verify=False)  # trusted files only
+```
+
 ## Metadata fields
 
 | Key | Description |

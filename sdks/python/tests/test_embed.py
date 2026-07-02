@@ -121,17 +121,19 @@ def test_embeddings_cbor_round_trip() -> None:
     assert s.model == "dummy/test"
     assert s.dimension == 4
     assert len(s.chunks) == 2
-    for orig, got in zip(space.chunks, s.chunks):
+    for orig, got in zip(space.chunks, s.chunks, strict=True):
         assert got.id == orig.id
         assert got.text_offset == orig.text_offset
-        for a, b in zip(orig.vector, got.vector):
+        for a, b in zip(orig.vector, got.vector, strict=True):
             assert abs(a - b) < 1e-6
 
 
 def test_python_decodes_js_embeddings_fixture() -> None:
     """The .cv built by the JS SDK with real BGE-M3 vectors must decode in Python."""
     if not FIXTURE.exists():
-        pytest.skip(f"build fixture first: HF_TOKEN=... npx tsx packages/embed-js/examples/build-with-real-embeddings.ts")
+        pytest.skip(
+            "build fixture first: HF_TOKEN=... npx tsx packages/embed-js/examples/build-with-real-embeddings.ts"
+        )
     from cvfile import extract
 
     file = extract(FIXTURE.read_bytes())

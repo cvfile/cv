@@ -11,6 +11,7 @@ from langchain_cvfile import CVFileLoader
 
 FIXTURE = Path(__file__).parents[3] / "packages" / "sdk-js" / "tests" / "fixtures" / "python-produced.cv"
 UNICODE_FIXTURE = Path(__file__).parents[2] / "tests" / "fixtures" / "unicode.cv"
+MALICIOUS_FIXTURE = Path(__file__).parents[3] / "spec" / "test-vectors" / "malicious" / "js-action.cv"
 
 
 @pytest.fixture(scope="module")
@@ -65,6 +66,28 @@ def test_chunks_mode_attaches_a_vector_per_chunk() -> None:
 def test_invalid_mode_rejected() -> None:
     with pytest.raises(ValueError):
         CVFileLoader(FIXTURE, mode="bogus")
+
+
+def test_verify_rejects_malicious_file() -> None:
+    if not MALICIOUS_FIXTURE.exists():
+        pytest.skip(f"fixture not found: {MALICIOUS_FIXTURE}")
+    with pytest.raises(ValueError, match="javascript-action"):
+        CVFileLoader(MALICIOUS_FIXTURE).load()
+
+
+def test_verify_false_loads_malicious_file() -> None:
+    if not MALICIOUS_FIXTURE.exists():
+        pytest.skip(f"fixture not found: {MALICIOUS_FIXTURE}")
+    docs = CVFileLoader(MALICIOUS_FIXTURE, verify=False).load()
+    assert len(docs) >= 1
+
+
+def test_verify_default_passes_on_valid_file() -> None:
+    if not FIXTURE.exists():
+        pytest.skip(f"fixture not found: {FIXTURE}")
+    loader = CVFileLoader(FIXTURE)
+    assert loader.verify is True
+    assert len(loader.load()) >= 1
 
 
 def test_non_ascii_chunk_text_slices_on_byte_offsets() -> None:

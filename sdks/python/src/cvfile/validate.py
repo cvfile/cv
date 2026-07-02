@@ -11,13 +11,14 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from pypdf.generic import IndirectObject
 
+from cvfile._constants import MAX_PAYLOAD_BYTES_DEFAULT
 from cvfile._pdf import read_associated_files, read_metadata_xml
 from cvfile._pdfa import check_pdfa_conformance
 from cvfile._security import scan_forbidden_constructs
 from cvfile._types import PdfaConformance, ValidationIssue, ValidationReport
 from cvfile._xmp import parse_xmp
 
-DEFAULT_MAX_PAYLOAD_BYTES = 16 * 1024 * 1024
+DEFAULT_MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES_DEFAULT
 
 ValidationLevel = Literal["cv-strict", "cv-lenient"]
 
@@ -150,7 +151,7 @@ def _encrypted_report(level: ValidationLevel) -> ValidationReport:
     issue = ValidationIssue(
         code="encrypted-document",
         level="error",
-        message="Trailer declares /Encrypt; encryption is forbidden in cv 0.x (spec §3.4)",
+        message="Trailer declares /Encrypt; encryption is forbidden in cv 1.0 (spec §3.4)",
     )
     return ValidationReport(ok=False, level=level, issues=(issue,))
 
