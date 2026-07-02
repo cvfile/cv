@@ -1,0 +1,45 @@
+version: 2
+updates:
+  # JS/TS: the root pnpm workspace covers packages/* (Dependabot resolves
+  # pnpm-workspace.yaml from the repo root).
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # Python: one manifest per package (no shared workspace).
+  - package-ecosystem: pip
+    directories:
+      - "/sdks/python"
+      - "/integrations/langchain-cvfile"
+      - "/integrations/llama-index-readers-cvfile"
+      - "/integrations/cvfile-haystack"
+      - "/tools/cv-detector/python"
+    schedule:
+      interval: weekly
+    groups:
+      pip-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # Go: the SDK module and the standalone detector module.
+  - package-ecosystem: gomod
+    directories:
+      - "/sdks/go"
+      - "/tools/cv-detector/go"
+    schedule:
+      interval: weekly
+    groups:
+      gomod-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # Actions used across .github/workflows/.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and discussion
+    url: https://github.com/cvfile/cv/discussions
+    about: Ask usage questions or discuss ideas before they become issues.
+  - name: Security vulnerabilities
+    url: https://github.com/cvfile/cv/blob/main/SECURITY.md
+    about: Do not open public issues for vulnerabilities. Email security@cvfile.org instead.

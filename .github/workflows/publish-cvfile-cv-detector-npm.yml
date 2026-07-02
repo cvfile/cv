@@ -29,6 +29,9 @@ jobs:
       - name: Build
         working-directory: tools/cv-detector/typescript
         run: pnpm build
+      - name: Test before publishing
+        working-directory: tools/cv-detector/typescript
+        run: pnpm test
       - name: Publish
         working-directory: tools/cv-detector/typescript
         # Publish with the npm CLI (>= 11.5.1) so npm's OIDC trusted publishing
