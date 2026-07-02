@@ -44,8 +44,8 @@
   },
   "dependencies": {
     "@cvfile/sdk": "workspace:^",
-    "dompurify": "^3.2.0",
-    "lit": "^3.2.0",
+    "dompurify": "^3.4.11",
+    "lit": "^3.3.3",
     "marked": "^14.1.0",
     "pdfjs-dist": "^4.7.76"
   },
