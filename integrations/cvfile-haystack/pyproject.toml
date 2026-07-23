@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "cvfile>=0.3.2,<2",
-  "haystack-ai>=2.8,<3",
+  "haystack-ai>=2.8,<4",
 ]
 
 [project.urls]
