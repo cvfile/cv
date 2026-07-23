@@ -39,7 +39,7 @@ jobs:
         python: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
       - name: Install uv
@@ -80,7 +80,7 @@ jobs:
           - integrations/cvfile-haystack
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install uv
@@ -123,7 +123,7 @@ jobs:
       - name: TS detector tests
         working-directory: tools/cv-detector/typescript
         run: pnpm test
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install uv
