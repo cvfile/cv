@@ -10,7 +10,7 @@
     "preview": "astro preview --port 6737"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/sitemap": "^3.7.4",
     "@cvfile/sdk": "workspace:*",
     "@cvfile/viewer-web": "workspace:*",
     "astro": "^5.0.0",
