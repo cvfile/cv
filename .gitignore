@@ -45,7 +45,7 @@ coverage/
 .mypy_cache/
 .ruff_cache/
 
-# Secrets — never commit
+# Secrets, never committed
 .env
 .env.*
 !.env.example
@@ -53,7 +53,7 @@ coverage/
 *.key
 hf_*
 
-# Don't ignore generated fixtures — committing them keeps tests green on a
+# Generated fixtures stay tracked: committing them keeps tests green on a
 # fresh clone (no need to rebuild jane-doe.cv before running cross-SDK
 # interop / security / search tests).
 
@@ -78,3 +78,6 @@ ROADMAP.md
 # Generated demo/build artefacts that escape the dist/ pattern
 dist-demo/
 docs/public/embed/
+
+# Scratch work
+.tmp/

@@ -1,0 +1,32 @@
+# cvfile.org on the VPS: one container run by the cvfile account, reachable only
+# through Caddy on its loopback port. Deployed by that account with
+# vps-automation's containers/deploy-app.sh, as the cvfile app.
+#
+# The root filesystem is read only. nginx writes its pid and temp files under
+# /tmp, the tmpfs of the hardened service. The site is static and has no
+# volume. Its .env is empty: nothing reads it, and deploy-app.sh requires it.
+services:
+  site:
+    extends:
+      file: /opt/vps-automation/containers/hardened-service.yaml
+      service: hardened
+    image: cvfile:${RELEASE:?}
+    env_file:
+      - path: .env
+        format: raw
+    ports:
+      - 127.0.0.1:9524:8080
+    mem_limit: 64m
+    cpus: 0.25
+    stop_grace_period: 15s
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --quiet
+        - --spider
+        - http://127.0.0.1:8080/healthz
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
