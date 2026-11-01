@@ -1,0 +1,48 @@
+# The build context is the repository root. The image builds from the root
+# manifests, docs/, packages/sdk-js, packages/viewer-web and spec/cv-1.0.md;
+# the rest stays out.
+
+# Dependencies and build output are produced inside the image
+**/node_modules
+**/dist
+**/dist-demo
+**/.astro
+**/.next
+**/.turbo
+docs/public/embed
+
+# Environment files and scratch work
+**/.env*
+**/.tmp
+.vercel
+.git
+.github
+.claude
+
+# Hosting files. docs/vps/nginx.conf is copied into the image.
+docs/Dockerfile
+docs/Dockerfile.dockerignore
+docs/vps/compose.yaml
+docs/vps/site.caddy
+vercel.json
+
+# Everything the site does not build from
+integrations
+launch
+packages/embed-js
+packages/mcp
+packages/server-middleware-node
+sdks
+tools
+spec/test-vectors
+packages/sdk-js/tests
+packages/sdk-js/examples
+packages/viewer-web/tests
+packages/viewer-web/demo
+*.md
+
+# Tooling caches and local files
+*.tsbuildinfo
+.eslintcache
+**/*.log
+**/.DS_Store
