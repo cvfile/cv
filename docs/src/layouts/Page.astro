@@ -26,6 +26,7 @@ const NAV = [
   { href: '/ecosystem/', label: 'Ecosystem', n: '05' },
 ];
 const isActive = (href: string) => pathname === href || pathname === href.replace(/\/$/, '');
+const DESIGN_CREDIT_URL = 'https://laboetie.io?utm_source=cvfile&utm_medium=referral&utm_campaign=footer_credit';
 ---
 
 <!doctype html>
@@ -478,6 +479,14 @@ const isActive = (href: string) => pathname === href || pathname === href.replac
         gap: var(--space-md);
         flex-wrap: wrap;
       }
+      .foot-sep { margin-inline: 0.6em; }
+      .foot-credit {
+        color: inherit;
+        white-space: nowrap;
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+      }
+      .foot-credit:hover { color: var(--accent); }
 
       /* ---------- Document pages (spec, install, ecosystem, create, view) ---------- */
       .doc { max-width: var(--sheet); margin: 0 auto; padding: var(--space-2xl) var(--space-lg) var(--space-3xl); }
@@ -555,8 +564,14 @@ const isActive = (href: string) => pathname === href || pathname === href.replac
         </div>
       </dl>
       <div class="foot-note">
-        <span>Drawn by the cvfile.org community.</span>
-        <span>No vendor · No viewer lock · No paywall on the basics.</span>
+        <span>
+          Drawn by the cvfile.org community<span class="foot-sep" aria-hidden="true">·</span><a
+            class="foot-credit"
+            href={DESIGN_CREDIT_URL}
+            target="_blank"
+            rel="noopener">Designed by La Boétie</a>
+        </span>
+        <span>The format and its reference tools are free to use.</span>
       </div>
     </footer>
   </body>
