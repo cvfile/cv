@@ -11,6 +11,11 @@
 }
 
 cvfile.org {
+	# Edge guards rendered from vps-automation/host-hardening (caddy-edge.sh, site-policy.conf).
+	import edge_body_limit 64KB
+	import edge_no_public_health
+	import edge_cloudflare_only
+	import edge_allow_vps_and_vps2_path /api/revalidate
 	import security_headers
 	# Markdown twins for AI agents: <path>.md, or Accept: text/markdown (vps-automation/markdown-twins).
 	import markdown_twin
