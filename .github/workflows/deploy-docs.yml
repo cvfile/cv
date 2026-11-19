@@ -24,6 +24,11 @@ concurrency:
   group: docs-${{ github.ref }}
   cancel-in-progress: true
 
+# onnxruntime-node's postinstall downloads CUDA binaries when it finds CUDA on the runner, and that
+# download answered 404 on 19 November 2026. Every job runs on the CPU build the package ships.
+env:
+  ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+
 jobs:
   build:
     runs-on: ubuntu-latest
