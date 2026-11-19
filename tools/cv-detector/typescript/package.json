@@ -1,6 +1,6 @@
 {
   "name": "@cvfile/cv-detector",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Tiny reference sniffer for the .cv open file format. Detects .cv wrapping inside any application/pdf and unwraps the canonical Markdown payload.",
   "type": "module",
   "license": "Apache-2.0",

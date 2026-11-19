@@ -7,6 +7,11 @@ All notable changes to the `.cv` format and reference tooling are documented her
 ### Added
 - **`@cvfile/mcp` 0.1.0, an MCP server for the format.** AI agents (Claude, Cursor, any MCP client) get five tools over local .cv files: `list_cvs`, `validate_cv`, `read_cv`, `search_cvs`, and `pack_cv`. Semantic search needs no database or index: every .cv file already carries its own vectors, so the server embeds only the query (hosted HF API when `HF_TOKEN` is set, local transformers otherwise), auto-detecting the corpus's embedding model. Run it with `npx -y @cvfile/mcp`.
 
+## [0.3.2] (2026-11-19, JavaScript)
+
+### Changed
+- **The JavaScript packages move to 0.3.2 and `@cvfile/cv-detector` to 0.1.2, with the code of 0.3.1 and 0.1.1.** npm writes a package's maintainers at each publish, so this release shows the npm account's new contact address. `@cvfile/server` raises its `fastify` range to `^5.9.0` and its `hono` range to `^4.12.27`, and `@cvfile/viewer-web` raises `dompurify` to `^3.4.11` and `lit` to `^3.3.3`, as merged on `main` since 0.3.1.
+
 ## [0.3.2] (2026-07-02, Python only)
 
 ### Fixed
