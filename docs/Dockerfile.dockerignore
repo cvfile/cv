@@ -14,7 +14,6 @@ docs/public/embed
 # Environment files and scratch work
 **/.env*
 **/.tmp
-.vercel
 .git
 .github
 .claude
@@ -24,7 +23,6 @@ docs/Dockerfile
 docs/Dockerfile.dockerignore
 docs/vps/compose.yaml
 docs/vps/site.caddy
-vercel.json
 
 # Everything the site does not build from
 integrations
@@ -40,6 +38,23 @@ packages/sdk-js/examples
 packages/viewer-web/tests
 packages/viewer-web/demo
 *.md
+docs/tests
+
+# The docs tools index the READMEs and the changelog, and read each package's
+# version from its manifest (docs/scripts/docs-index).
+!README.md
+!CHANGELOG.md
+!SECURITY.md
+!packages/*/README.md
+!packages/*/package.json
+!integrations/README.md
+!integrations/*/README.md
+!integrations/*/pyproject.toml
+!sdks/*/README.md
+!sdks/python/pyproject.toml
+!tools/cv-detector/README.md
+!tools/cv-detector/typescript/package.json
+!tools/cv-detector/python/pyproject.toml
 
 # Tooling caches and local files
 *.tsbuildinfo
