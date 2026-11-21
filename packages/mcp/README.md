@@ -46,7 +46,7 @@ Example prompts once connected:
 `search_cvs` needs one embedding call for the query itself (the resumes' vectors are already inside the files). The server auto-detects the embedding model used by the corpus and resolves a backend for it:
 
 1. If `HF_TOKEN` (or `HUGGINGFACE_TOKEN`) is set, the hosted Hugging Face inference API is used: no downloads, fastest start.
-2. Otherwise the model runs locally via `@huggingface/transformers`; the first query downloads the model (BGE-M3 is around 1 GB) and subsequent queries are instant.
+2. Otherwise the model runs locally via `@huggingface/transformers`; the first query downloads the model (BGE-M3 is about 2.3 GB: 568 million parameters in fp32) and subsequent queries are instant.
 
 Set `CVFILE_MCP_MODEL` to force a specific model instead of auto-detection.
 

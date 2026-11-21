@@ -1,6 +1,6 @@
 import { LitElement, css, html, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { extract } from '@cvfile/sdk';
+import { extract, validate } from '@cvfile/sdk';
 import type { CvFile } from '@cvfile/sdk';
 import { renderMarkdown } from './render-markdown.js';
 import { pickPayloadByLanguage, selectCleanText } from './payload-selection.js';
@@ -348,6 +348,13 @@ export class CvEmbed extends LitElement {
   private async processBytes(bytes: Uint8Array): Promise<void> {
     this.loading = true;
     try {
+      // An embedded or dropped file is untrusted: it is validated before any payload is extracted
+      // (spec §7.3), so a file carrying JavaScript, launch actions or encryption is never read.
+      const report = await validate(bytes);
+      if (!report.ok) {
+        const codes = report.issues.filter((issue) => issue.level === 'error').map((issue) => issue.code);
+        throw new Error(`Not a valid .cv file: ${codes.join(', ')}`);
+      }
       const file = await extract(bytes);
       this.file = file;
       this.activeTab = this.pickInitialTab(file);

@@ -159,6 +159,12 @@ async function packCv(args: PackArgs, backend: () => EmbeddingBackend) {
 
 async function readCv(path: string, part: 'markdown' | 'json' | 'html' | 'metadata') {
   const bytes = await readFile(path);
+  // Untrusted files are validated before any payload is read (spec §7.3).
+  const report = await validate(bytes);
+  if (!report.ok) {
+    const codes = report.issues.filter((issue) => issue.level === 'error').map((issue) => issue.code);
+    return { content: [{ type: 'text' as const, text: `Invalid .cv file, not read: ${codes.join(', ')}` }], isError: true };
+  }
   if (part === 'metadata') return jsonContent(await inspect(bytes));
   if (part === 'markdown') return textContent((await extractMarkdown(bytes)) ?? missing(part));
   if (part === 'html') return textContent((await extractHtml(bytes)) ?? missing(part));

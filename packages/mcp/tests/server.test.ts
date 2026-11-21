@@ -112,6 +112,14 @@ describe('cvfile MCP server', () => {
     expect(JSON.parse(json.content[0].text).basics.name).toBe('ada.cv');
   });
 
+  it('refuses to read a file that fails validation', async () => {
+    const plain = join(dir, 'plain.pdf');
+    await writeFile(plain, await basePdf('Not a cv'));
+    const result: any = await client.callTool({ name: 'read_cv', arguments: { path: plain } });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Invalid .cv file');
+  });
+
   it('ranks the payments resume first for a payments query', async () => {
     const result = await callJson('search_cvs', {
       directory: dir,
