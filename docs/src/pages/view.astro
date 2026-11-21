@@ -12,6 +12,7 @@ const jsonLd = graph([
 ]);
 ---
 <Page
+  assistant="view"
   title="Live .cv viewer · cvfile.org"
   description="Drop a .cv file or load the sample to see all three payloads (PDF, Markdown, HTML) and the XMP metadata side by side, rendered entirely in your browser."
 >
@@ -25,12 +26,15 @@ const jsonLd = graph([
         Drop any <code>.cv</code> file below or load the sample. The
         <code>&lt;cv-embed&gt;</code> web component parses the bundle entirely in
         your browser and lets you flip between the PDF, Markdown and HTML copies.
+        Once a file is open, ask your own AI whether it is valid and whether
+        its Markdown says what its PDF shows.
       </p>
     </header>
 
     <div class="viewer-actions">
       <button id="load-sample" type="button" class="btn btn--primary">Load sample .cv <span class="arrow">→</span></button>
       <a href="/samples/jane-doe.cv" download="jane-doe.cv" class="btn btn--ghost">Download sample</a>
+      <button id="ask-file" type="button" class="btn btn--ghost" hidden>Ask about this file</button>
     </div>
 
     <label id="dropzone" class="dz">
@@ -39,7 +43,7 @@ const jsonLd = graph([
       <input id="picker" class="visually-hidden-file" type="file" accept=".cv,application/pdf,application/vnd.cv+pdf" />
     </label>
 
-    <cv-embed id="viewer" view="auto" theme="auto" style="display: none;"></cv-embed>
+    <cv-embed id="viewer" view="auto" theme="auto" hidden></cv-embed>
   </div>
 
   <style>
@@ -53,60 +57,15 @@ const jsonLd = graph([
       transition: background 140ms, border-color 140ms;
     }
     .dz:hover { border-color: var(--ink-faint); }
+    .dz.over { background: color-mix(in oklab, var(--accent) 8%, var(--paper)); border-color: var(--accent); }
+    .dz[hidden], #viewer[hidden], .viewer-actions [hidden] { display: none; }
     .dz strong { color: var(--ink); font-family: var(--mono); font-size: 0.92rem; }
     .dz__sub { color: var(--ink-faint); font-family: var(--mono); font-size: 0.74rem; }
   </style>
 
   <script>
-    import '@cvfile/viewer-web';
+    import { startViewer } from '../features/view/viewer.ts';
 
-    const dz = document.getElementById('dropzone')!;
-    const picker = document.getElementById('picker') as HTMLInputElement;
-    const loadSample = document.getElementById('load-sample') as HTMLButtonElement;
-    const viewer = document.getElementById('viewer') as HTMLElement & {
-      loadFromBytes(bytes: Uint8Array): Promise<void>;
-    };
-
-    function show(): void {
-      dz.style.display = 'none';
-      viewer.style.display = 'block';
-    }
-
-    async function handle(file: File | Blob): Promise<void> {
-      const buf = new Uint8Array(await file.arrayBuffer());
-      show();
-      await viewer.loadFromBytes(buf);
-    }
-
-    picker.addEventListener('change', () => {
-      const file = picker.files?.[0];
-      if (file) void handle(file);
-    });
-    dz.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dz.style.background = 'rgba(127,127,127,0.08)';
-    });
-    dz.addEventListener('dragleave', () => {
-      dz.style.background = '';
-    });
-    dz.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dz.style.background = '';
-      const file = e.dataTransfer?.files?.[0];
-      if (file) void handle(file);
-    });
-
-    loadSample.addEventListener('click', async () => {
-      loadSample.disabled = true;
-      loadSample.textContent = 'Loading sample…';
-      try {
-        const res = await fetch('/samples/jane-doe.cv');
-        const blob = await res.blob();
-        await handle(blob);
-      } finally {
-        loadSample.disabled = false;
-        loadSample.textContent = 'Load sample .cv';
-      }
-    });
+    startViewer();
   </script>
 </Page>
