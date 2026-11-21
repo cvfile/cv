@@ -2,19 +2,45 @@
   "name": "@cvfile/docs",
   "version": "0.1.0",
   "private": true,
-  "description": "cvfile.org · landing page, spec, install instructions, live cv-embed demo",
+  "description": "cvfile.org: landing page, spec, install instructions, the browser builder and viewer, and the AI mode with its MCP server",
   "type": "module",
   "scripts": {
     "dev": "astro dev --port 6737",
-    "build": "node scripts/copy-embed.mjs && astro build",
-    "preview": "astro preview --port 6737"
+    "dev:server": "node --env-file=.env --watch server/main.ts",
+    "build": "node scripts/copy-embed.mjs && astro build && node scripts/build-docs-index.mjs && node scripts/bundle-server.mjs",
+    "preview": "astro preview --port 6737",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "astro check && tsc --noEmit -p server/tsconfig.json",
+    "pentest": "sh scripts/pentest.sh"
   },
   "dependencies": {
+    "@astrojs/react": "^4.4.2",
     "@astrojs/sitemap": "^3.7.3",
     "@cvfile/sdk": "workspace:*",
     "@cvfile/viewer-web": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@tensorpass/aiconnect": "0.1.5",
+    "@tensorpass/aiconnect-react": "0.1.5",
     "astro": "^5.0.0",
     "marked": "^14.1.4",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.7.76",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "esbuild": "^0.27.0",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.0"
   }
 }

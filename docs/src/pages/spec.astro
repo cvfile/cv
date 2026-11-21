@@ -3,18 +3,14 @@ import Page from '../layouts/Page.astro';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { marked } from 'marked';
+import { specHtml } from '../lib/specHtml';
 import { graph, ORGANIZATION, WEBSITE, breadcrumbs } from '../lib/structured-data';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const specPath = join(here, '..', '..', '..', 'spec', 'cv-1.0.md');
 const specSource = readFileSync(specPath, 'utf8');
 
-// The spec file is a trusted artifact from this repository, rendered once at
-// build time (static output, no client JS). Demote every heading one level so
-// the page keeps a single h1 (the page header) and the spec body starts at h2.
-const demoted = specSource.replace(/^(#{1,5})\s/gm, '#$1 ');
-const specHtml = marked.parse(demoted, { async: false }) as string;
+const rendered = specHtml(specSource);
 
 const jsonLd = graph([
   ORGANIZATION,
@@ -50,7 +46,7 @@ const jsonLd = graph([
       </p>
     </header>
     <p class="plate-caption">normative text · cv-1.0.md</p>
-    <div class="spec-doc" set:html={specHtml} />
+    <div class="spec-doc" set:html={rendered} />
   </article>
 
   <style>

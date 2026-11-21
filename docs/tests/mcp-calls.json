@@ -1,0 +1,10 @@
+[
+  { "tool": "search_docs", "args": { "query": "integrity digest" }, "expect": "results" },
+  { "tool": "search_docs", "args": { "query": "LlamaIndex reader vectors", "limit": 3 }, "expect": "results" },
+  { "tool": "search_docs", "args": { "query": "zzqx flurbleplonk" }, "expect": "empty" },
+  { "tool": "read_doc_page", "args": { "path": "/install/" }, "expect": "results" },
+  { "tool": "read_doc_page", "args": { "path": "/spec/#s7" }, "expect": "results" },
+  { "tool": "read_doc_page", "args": { "path": "/admin/" }, "expect": "error" },
+  { "tool": "list_packages", "args": {}, "expect": "results" },
+  { "tool": "list_packages", "args": { "language": "python" }, "expect": "results" }
+]
