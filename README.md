@@ -196,7 +196,7 @@ app.use(cvHandler({ root: './public' }));
 | `@cvfile/embed` | npm | Markdown chunker + transformers.js / HF Inference embedding backends |
 | `@cvfile/server` | npm | content negotiation for Express, Fastify, Hono, vanilla `http` |
 | `@cvfile/viewer-web` | npm | `<cv-embed>` Lit component (PDF / Markdown / HTML tabs, lazy PDF.js) |
-| `@cvfile/mcp` | npm | MCP server: list, validate, read, pack, and semantic search over local .cv files from AI agents |
+| `@cvfile/mcp` | source (npm release pending) | MCP server: list, validate, read, pack, and semantic search over local .cv files from AI agents |
 | `cvfile` | PyPI | full Python SDK + `cvfile.embed` + `cvfile.server` (ASGI / WSGI) |
 | `cv` CLI | Homebrew / Scoop (WinGet planned) | single Go binary: pack, inspect, extract, validate, search |
 | Go SDK | `go get` | pack, extract, inspect, validate + `net/http` middleware |
@@ -204,6 +204,13 @@ app.use(cvHandler({ root: './public' }));
 | `llama-index-readers-cvfile` | PyPI | LlamaIndex reader |
 | `cvfile-haystack` | PyPI | Haystack 2.x converter |
 | `@cvfile/cv-detector` (npm), `cvfile-cv-detector` (PyPI) | npm / PyPI | dependency-free `.cv` sniffer for crawler vendors (Go / Python / TS) |
+
+cvfile.org also serves a public, read only MCP server at `https://cvfile.org/api/mcp` (Streamable HTTP, no
+account). Its three tools search the docs, read one docs page and list the packages, from the specification, the
+site and these READMEs; add it as a connector in Claude, ChatGPT or any MCP client. The site's AI mode runs on each
+visitor's own AI account through [AI Connect](https://tensorpass.app/docs). It answers from the same tools,
+validates a dropped `.cv` file and drafts the Markdown copy of a PDF resume in the page, and cvfile.org receives
+none of the file.
 
 ## Specification and conformance
 

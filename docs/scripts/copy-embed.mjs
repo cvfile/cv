@@ -1,7 +1,7 @@
 /**
  * Copies the self-contained viewer CDN bundle into the docs public tree so it
  * ships at https://cvfile.org/embed/1/cv-embed.js. Runs as part of the docs
- * build; the Vercel build command builds @cvfile/viewer-web first, so the
+ * build; the build (docs/Dockerfile, CI) builds @cvfile/viewer-web first, so the
  * source bundle is guaranteed to exist. Fails loudly otherwise: a docs deploy
  * without the embed script would break the public install snippet.
  */

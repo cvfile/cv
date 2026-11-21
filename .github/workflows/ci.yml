@@ -35,6 +35,8 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
       - run: pnpm lint
       - run: pnpm typecheck
+      - name: Pen test of the AI mode's guards (aiconnect-hardening --unit)
+        run: pnpm --filter @cvfile/docs pentest --unit
 
   python:
     name: Python (cvfile + cvfile.embed + cvfile.server)

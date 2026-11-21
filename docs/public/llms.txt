@@ -6,8 +6,8 @@
 
 - [Home](https://cvfile.org/): what the .cv format is and why it exists
 - [Specification](https://cvfile.org/spec/): the normative .cv 1.0 file format specification
-- [Create](https://cvfile.org/create/): build a .cv file in the browser from Markdown
-- [View](https://cvfile.org/view/): open and inspect any .cv file in the browser
+- [Create](https://cvfile.org/create/): build a .cv file in the browser from a PDF resume and its Markdown copy, which the visitor's own AI can draft
+- [View](https://cvfile.org/view/): open, validate and inspect any .cv file in the browser, and ask the visitor's own AI about it
 - [Install](https://cvfile.org/install/): install the CLI and SDKs (npm, PyPI, Go, Homebrew, Scoop)
 - [Ecosystem](https://cvfile.org/ecosystem/): integrations, framework loaders, and tooling
 
@@ -18,14 +18,20 @@
 ## Packages
 
 - [@cvfile/sdk](https://www.npmjs.com/package/@cvfile/sdk): JavaScript/TypeScript SDK (pack, extract, validate, inspect)
-- [@cvfile/embed](https://www.npmjs.com/package/@cvfile/embed): drop-in web component for rendering .cv files
+- [@cvfile/embed](https://www.npmjs.com/package/@cvfile/embed): Markdown chunker and embedding backends (BGE-M3 by default) that build the embeddings payload
 - [@cvfile/server](https://www.npmjs.com/package/@cvfile/server): server-side helpers for serving and negotiating .cv files
-- [@cvfile/viewer-web](https://www.npmjs.com/package/@cvfile/viewer-web): browser viewer used by cvfile.org
-- [cvfile](https://pypi.org/project/cvfile/): Python SDK and CLI
+- [@cvfile/viewer-web](https://www.npmjs.com/package/@cvfile/viewer-web): the `<cv-embed>` web component, the viewer cvfile.org uses
+- [@cvfile/mcp](https://github.com/cvfile/cv/tree/main/packages/mcp): MCP server for AI agents on a local machine (list, validate, read, pack and search .cv files), not yet published on npm
+- [@cvfile/cv-detector](https://www.npmjs.com/package/@cvfile/cv-detector): dependency free sniffer that finds a .cv inside any PDF
+- [cvfile](https://pypi.org/project/cvfile/): Python SDK, with the cvfile.embed helpers and the cvfile.server ASGI and WSGI middleware
 - [langchain-cvfile](https://pypi.org/project/langchain-cvfile/): LangChain document loader for .cv files
 - [llama-index-readers-cvfile](https://pypi.org/project/llama-index-readers-cvfile/): LlamaIndex reader for .cv files
 - [cvfile-haystack](https://pypi.org/project/cvfile-haystack/): Haystack converter for .cv files
 - [Go module](https://pkg.go.dev/github.com/cvfile/cv/sdks/go): Go SDK and `cv` CLI (github.com/cvfile/cv/sdks/go)
+
+## MCP server
+
+- [cvfile.org MCP server](https://cvfile.org/api/mcp): a public, read only Streamable HTTP MCP endpoint with three tools: search the docs, read one docs page, list the packages with their install commands
 
 ## Sample
 

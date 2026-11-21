@@ -1,9 +1,9 @@
 name: docs build check
 
-# Verifies the docs site still builds on every PR that touches docs, the
-# viewer, or the spec. Vercel handles the actual deployment via cvfile.org —
-# this workflow exists so a broken docs build is caught at PR review time
-# instead of on the next Vercel deploy.
+# Verifies the docs site, its AI mode API and the API's docs index still build
+# on every PR that touches docs, the viewer, the spec or the READMEs the index
+# reads. cvfile.org is deployed from main by the maintainer's server, which
+# builds docs/Dockerfile; this workflow catches a broken build at review time.
 
 on:
   push:
@@ -12,12 +12,14 @@ on:
       - "docs/**"
       - "spec/cv-1.0.md"
       - "packages/viewer-web/**"
+      - "**/README.md"
       - ".github/workflows/deploy-docs.yml"
   pull_request:
     paths:
       - "docs/**"
       - "spec/cv-1.0.md"
       - "packages/viewer-web/**"
+      - "**/README.md"
   workflow_dispatch:
 
 concurrency:
@@ -53,4 +55,9 @@ jobs:
           test -f install/index.html
           test -f view/index.html
           test -f ecosystem/index.html
-          echo "5/5 expected pages present"
+          test -f create/index.html
+          test -f aiconnect/callback/index.html
+          test -f ../server/dist/server.mjs
+          test -f ../server/dist/docs-index.json
+          test -f ../server/dist/packages.json
+          echo "7 pages and the API bundle present"
