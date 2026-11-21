@@ -64,7 +64,6 @@ src-tauri/target/
 *.pid
 *.seed
 *.tgz
-.vercel
 
 # Launch material (HN/PH drafts, runbook, screenshots) and private outreach
 # data (PII): kept local, purged from history, never published.

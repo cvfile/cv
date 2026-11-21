@@ -24,6 +24,27 @@ cd sdks/go && go test ./...
 
 The repo is a pnpm + Turborepo monorepo. JS/TS packages live under `packages/`; Python and Go SDKs live under `sdks/` (their toolchains do not compose with Turbo).
 
+## The site and its AI mode
+
+`docs/` is cvfile.org: a static Astro site, and the API of its AI mode in `docs/server/` (a stateless MCP server
+at `/api/mcp` with the docs tools, and the two anonymous counters of `/api/events`). The AI mode runs on each
+visitor's own AI account through AI Connect; the tools that read a dropped file run in the page
+(`docs/src/features/ai-mode/tools/`), so the file never reaches the server.
+
+```bash
+pnpm --filter @cvfile/sdk build && pnpm --filter @cvfile/viewer-web build
+cd docs
+pnpm build                    # the site, the docs index of the API, and the API bundle
+pnpm dev:server               # the API on port 6736 (PORT, SITE_DATA_DIR, SITE_ORIGINS: see .env.example)
+pnpm dev                      # the site on port 6737, which sends /api/ to the API
+pnpm test && pnpm lint && pnpm typecheck
+pnpm pentest --unit           # the guards with the page's policy; --mcp <url> checks a running API
+```
+
+`docs/Dockerfile` builds one image with nginx and the static pages, and Node with the API;
+`docs/vps/compose.yaml` runs one container of each. cvfile.org deploys from `main`, so a merged pull request
+reaches the site with the next deploy.
+
 ## Spec changes
 
 Edits to anything under `spec/` require:
