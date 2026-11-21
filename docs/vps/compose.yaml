@@ -1,21 +1,24 @@
-# cvfile.org on the VPS: one container run by the cvfile account, reachable only
-# through Caddy on its loopback port. Deployed by that account with
-# vps-automation's containers/deploy-app.sh, as the cvfile app.
+# cvfile.org on the VPS: two containers of one image, run by the cvfile account
+# and deployed by that account from the main branch of this repository, as the
+# cvfile app. `site` is nginx with the static pages, reachable only
+# through Caddy on its loopback port. `api` is the AI mode's API (MCP server
+# and event counters), reachable only from `site`, which sends it /api/.
 #
-# The root filesystem is read only. nginx writes its pid and temp files under
-# /tmp, the tmpfs of the hardened service. The site is static and has no
-# volume. Its .env is empty: nothing reads it, and deploy-app.sh requires it.
+# Root filesystems are read only. nginx writes its pid and temp files under
+# /tmp, the tmpfs of the hardened service; the API writes nothing. The app's
+# .env holds the Cloudflare purge settings deploy-app.sh reads on the host, so
+# no container loads it.
 services:
   site:
     extends:
       file: /opt/vps-automation/containers/hardened-service.yaml
       service: hardened
     image: cvfile:${RELEASE:?}
-    env_file:
-      - path: .env
-        format: raw
     ports:
       - 127.0.0.1:9524:8080
+    depends_on:
+      api:
+        condition: service_healthy
     mem_limit: 64m
     cpus: 0.25
     stop_grace_period: 15s
@@ -26,6 +29,34 @@ services:
         - --quiet
         - --spider
         - http://127.0.0.1:8080/healthz
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  api:
+    extends:
+      file: /opt/vps-automation/containers/hardened-service.yaml
+      service: hardened
+    image: cvfile:${RELEASE:?}
+    entrypoint:
+      - node
+      - /srv/api/server.mjs
+    environment:
+      PORT: '8787'
+      SITE_DATA_DIR: /srv/api
+      SITE_ORIGINS: https://cvfile.org
+      NODE_OPTIONS: --max-old-space-size=96
+    mem_limit: 160m
+    cpus: 0.25
+    stop_grace_period: 10s
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --quiet
+        - --spider
+        - http://127.0.0.1:8787/healthz
       interval: 15s
       timeout: 5s
       retries: 3

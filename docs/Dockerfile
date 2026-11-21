@@ -3,7 +3,10 @@
 # cvfile.org on the VPS, built from the repository root (docker build --file
 # docs/Dockerfile .). The site needs the root of the pnpm workspace: it bundles
 # @cvfile/viewer-web into /embed/1/cv-embed.js and renders spec/cv-1.0.md into
-# /spec/. The image holds nginx and the static output.
+# /spec/. The AI mode's API is bundled into one file with the data of its docs
+# tools, indexed from the built pages, the spec and the repository's READMEs.
+# The image holds nginx with the static output, and Node with the API: the
+# compose file runs one container of each from this image.
 #
 # The files of this deploy stay in docs/, so the repository root and the
 # published packages carry none of them. BuildKit reads the ignore file
@@ -35,11 +38,19 @@ FROM deps AS build
 COPY --link . .
 # The docs build copies the viewer's CDN bundle into public/, so the viewer is
 # built first, and the viewer's type declarations need the SDK built before it.
+# The context also holds the manifests of packages this image does not install
+# (the docs tools read their versions), so pnpm is told the filtered install
+# above is the one to run with.
+ENV pnpm_config_verify_deps_before_run=false
 RUN pnpm --filter @cvfile/sdk build \
     && pnpm --filter @cvfile/viewer-web build \
     && pnpm --filter @cvfile/docs build
 
 FROM nginxinc/nginx-unprivileged:alpine
+USER root
+RUN apk add --no-cache nodejs
+USER nginx
 COPY --link docs/vps/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --link --from=build /app/docs/dist /usr/share/nginx/cvfile
+COPY --link --from=build /app/docs/server/dist /srv/api
 EXPOSE 8080
