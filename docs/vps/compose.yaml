@@ -1,18 +1,34 @@
-# cvfile.org on the VPS: two containers of one image, run by the cvfile account
-# and deployed by that account from the main branch of this repository, as the
-# cvfile app. `site` is nginx with the static pages, reachable only
-# through Caddy on its loopback port. `api` is the AI mode's API (MCP server
-# and event counters), reachable only from `site`, which sends it /api/.
+# cvfile.org on its server: two containers of one image, deployed from the main
+# branch of this repository by the unprivileged account that runs them. `site`
+# is nginx with the static pages, reachable only through the host's reverse
+# proxy on its loopback port. `api` is the AI mode's API (MCP server and event
+# counters), reachable only from `site`, which sends it /api/.
 #
-# Root filesystems are read only. nginx writes its pid and temp files under
-# /tmp, the tmpfs of the hardened service; the API writes nothing. The app's
-# .env holds the Cloudflare purge settings deploy-app.sh reads on the host, so
-# no container loads it.
+# Both run with the posture below: a read only root filesystem with a tmpfs on
+# /tmp (where nginx writes its pid and temp files; the API writes nothing),
+# every Linux capability dropped, no privilege gained through setuid binaries,
+# and capped logs. The app's .env holds the build's public settings and the
+# host's cache purge settings, so no container loads it.
+x-hardened: &hardened
+  restart: unless-stopped
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 256
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '3'
+
 services:
   site:
-    extends:
-      file: /opt/vps-automation/containers/hardened-service.yaml
-      service: hardened
+    <<: *hardened
     image: cvfile:${RELEASE:?}
     ports:
       - 127.0.0.1:9524:8080
@@ -35,9 +51,7 @@ services:
       start_period: 10s
 
   api:
-    extends:
-      file: /opt/vps-automation/containers/hardened-service.yaml
-      service: hardened
+    <<: *hardened
     image: cvfile:${RELEASE:?}
     entrypoint:
       - node
