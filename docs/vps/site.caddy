@@ -1,6 +1,5 @@
-# cvfile.org. Published by root with vps-automation's publish-site.sh into
-# /etc/caddy/conf.d/cvfile.caddy, imported from /etc/caddy/Caddyfile. The apex
-# is the canonical host, www redirects to it.
+# cvfile.org in the host's Caddy, which imports this file beside its other
+# sites. The apex is the canonical host, www redirects to it.
 #
 # Cloudflare proxies both hosts. Caddy sets X-Real-IP itself: from
 # CF-Connecting-IP when the request comes from a Cloudflare address
