@@ -15,9 +15,9 @@ export default defineConfig({
   integrations: [react(), sitemap({ filter: (page) => !page.includes('/aiconnect/') })],
   env: {
     schema: {
-      // cvfile.org's TensorPass site key, which offers the TensorPass sign in to visitors without AI Wallet.
-      // It is public and works on cvfile.org and localhost; a build for another domain sets its own.
-      PUBLIC_TENSORPASS_SITE_KEY: envField.string({ context: 'client', access: 'public', default: 'tpk_xaWoqRg02fzJTx5rFxygmQY-' }),
+      // The TensorPass site key of the domain the pages are built for, which offers the TensorPass sign in to
+      // visitors without AI Wallet. It is public and goes into the pages; the build fails without it.
+      PUBLIC_TENSORPASS_SITE_KEY: envField.string({ context: 'client', access: 'public' }),
     },
   },
   markdown: {
