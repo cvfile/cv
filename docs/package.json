@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "astro dev --port 6737",
     "dev:server": "node --env-file=.env --watch server/main.ts",
-    "build": "node scripts/copy-embed.mjs && astro build && node scripts/build-docs-index.mjs && node scripts/bundle-server.mjs",
+    "build": "node scripts/copy-embed.mjs && astro build && node scripts/build-csp.mjs && node scripts/build-docs-index.mjs && node scripts/bundle-server.mjs",
     "preview": "astro preview --port 6737",
     "test": "vitest run",
     "lint": "eslint .",
