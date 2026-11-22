@@ -16,10 +16,12 @@ describe('inlineScriptHashes', () => {
 });
 
 describe('contentSecurityPolicy', () => {
-  it('allows the hashed scripts, the API and the web sign ins', () => {
+  it('allows the hashed scripts, the API, the web sign ins and the Cloudflare beacon', () => {
     const policy = contentSecurityPolicy([hashOf('a()')]);
-    expect(policy).toContain(`script-src 'self' ${hashOf('a()')};`);
-    expect(policy).toContain("connect-src 'self' https://openrouter.ai https://plan.tensorpass.app;");
+    expect(policy).toContain(`script-src 'self' https://static.cloudflareinsights.com ${hashOf('a()')};`);
+    expect(policy).toContain(
+      "connect-src 'self' https://openrouter.ai https://plan.tensorpass.app https://cloudflareinsights.com;",
+    );
     expect(policy).not.toMatch(/script-src[^;]*'unsafe-(inline|eval)'/);
   });
 });

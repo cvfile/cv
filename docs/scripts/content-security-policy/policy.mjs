@@ -5,8 +5,10 @@
 // its elements at run time. The PDF viewer runs pdf.js in a worker of the site, or from a blob URL when the
 // <cv-embed> bundle carries the worker inline. The AI mode calls the site's /api/mcp and /api/events, and its
 // web sign ins call OpenRouter and the TensorPass plan gateway from the page; the sign in windows themselves
-// are top level navigations, which the policy does not govern. Images and fonts of a resume come from the
-// file itself, as data or blob URLs, so a resume opened in the viewer cannot load a tracking pixel.
+// are top level navigations, which the policy does not govern. Cloudflare, which proxies the site, adds its
+// Web Analytics beacon to every page, and the beacon reports to its own host. Images and fonts of a resume
+// come from the file itself, as data or blob URLs, so a resume opened in the viewer cannot load a tracking
+// pixel.
 
 import { PLAN_GATEWAY } from '@tensorpass/aiconnect';
 
@@ -15,16 +17,18 @@ import { PLAN_GATEWAY } from '@tensorpass/aiconnect';
 const OPENROUTER = 'https://openrouter.ai';
 const GOOGLE_FONTS_CSS = 'https://fonts.googleapis.com';
 const GOOGLE_FONTS_FILES = 'https://fonts.gstatic.com';
+const WEB_ANALYTICS_SCRIPT = 'https://static.cloudflareinsights.com';
+const WEB_ANALYTICS_REPORTS = 'https://cloudflareinsights.com';
 
 /** @param {string[]} scriptHashes the hashes of the build's inline scripts */
 export function contentSecurityPolicy(scriptHashes) {
   const directives = {
     'default-src': ["'self'"],
-    'script-src': ["'self'", ...scriptHashes],
+    'script-src': ["'self'", WEB_ANALYTICS_SCRIPT, ...scriptHashes],
     'style-src': ["'self'", "'unsafe-inline'", GOOGLE_FONTS_CSS],
     'font-src': ["'self'", 'data:', GOOGLE_FONTS_FILES],
     'img-src': ["'self'", 'data:', 'blob:'],
-    'connect-src': ["'self'", OPENROUTER, PLAN_GATEWAY],
+    'connect-src': ["'self'", OPENROUTER, PLAN_GATEWAY, WEB_ANALYTICS_REPORTS],
     'worker-src': ["'self'", 'blob:'],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],

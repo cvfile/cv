@@ -15,7 +15,8 @@ export function firstHeading(markdown: string): string {
   return /^#\s+(.+)$/m.exec(markdown)?.[1]?.trim() ?? 'Resume';
 }
 
-const PAGE_STYLE = `:root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.65; }
+const PAGE_STYLE = `:root { color-scheme: light dark; line-height: 1.65;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
 body { max-width: 720px; margin: 2.5rem auto; padding: 0 1.5rem; color: #111; background: #fff; }
 @media (prefers-color-scheme: dark) { body { color: #f3f4f6; background: #0b0b0d; } }
 h1 { font-size: 2.2rem; margin: 0 0 0.5rem; }
