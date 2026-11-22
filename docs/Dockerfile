@@ -57,6 +57,7 @@ USER root
 RUN apk add --no-cache nodejs
 USER nginx
 COPY --link docs/vps/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --link --from=build /app/docs/vps/dist/content-security-policy.conf /etc/nginx/cvfile/content-security-policy.conf
 COPY --link --from=build /app/docs/dist /usr/share/nginx/cvfile
 COPY --link --from=build /app/docs/server/dist /srv/api
 EXPOSE 8080
