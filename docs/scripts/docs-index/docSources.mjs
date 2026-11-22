@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { sectionAnchor } from '../../src/lib/specAnchors.mjs';
-import { htmlToText, isNoindex, pageTitle } from './htmlText.mjs';
+import { pageContent } from './htmlText.mjs';
 
 /** @typedef {import('../../server/search/siteIndex.mjs').Page} Page */
 
@@ -17,12 +17,24 @@ const PAGES_FROM_SOURCE = new Set(['/spec/']);
 const README_FOLDERS = ['packages', 'integrations', 'sdks'];
 const TOP_LEVEL_FILES = ['README.md', 'CHANGELOG.md', 'SECURITY.md'];
 
+// HTML comments removed until none is left, so a comment written inside another one leaves no opening
+// behind.
+/** @param {string} markdown @returns {string} */
+function withoutComments(markdown) {
+  let previous;
+  let text = markdown;
+  do {
+    previous = text;
+    text = text.replace(/<!--[\s\S]*?-->/g, '');
+  } while (text !== previous);
+  return text;
+}
+
 // Markdown as the index cuts it: images and HTML comments dropped, and the blank lines inside code fences
 // removed, so a fence stays one block and a shell comment in it is never read as a heading.
 /** @param {string} markdown @returns {string} */
 export function indexableMarkdown(markdown) {
-  return markdown
-    .replace(/<!--[\s\S]*?-->/g, '')
+  return withoutComments(markdown)
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/^```[\s\S]*?^```/gm, (fence) => fence.replace(/\n\s*\n/g, '\n'));
 }
@@ -43,11 +55,11 @@ export function sitePages(distDir) {
   return htmlFiles(distDir).flatMap((file) => {
     const relative = path.relative(distDir, path.dirname(file)).split(path.sep).join('/');
     const pagePath = relative ? `/${relative}/` : '/';
-    const html = readFileSync(file, 'utf8');
-    if (PAGES_FROM_SOURCE.has(pagePath) || isNoindex(html)) {
+    if (PAGES_FROM_SOURCE.has(pagePath)) {
       return [];
     }
-    return [{ path: pagePath, url: `${SITE}${pagePath}`, title: pageTitle(html) || pagePath, text: htmlToText(html) }];
+    const { title, text, noindex } = pageContent(readFileSync(file, 'utf8'));
+    return noindex ? [] : [{ path: pagePath, url: `${SITE}${pagePath}`, title: title || pagePath, text }];
   });
 }
 
