@@ -8,6 +8,11 @@
 # The image holds nginx with the static output, and Node with the API: the
 # compose file runs one container of each from this image.
 #
+# The build reads the app's environment from the app_env build secret, which
+# the server's deploy passes from the app's .env: it holds
+# PUBLIC_TENSORPASS_SITE_KEY, which Astro puts into the pages. None of it is
+# written to a layer.
+#
 # The files of this deploy stay in docs/, so the repository root and the
 # published packages carry none of them. BuildKit reads the ignore file
 # docs/Dockerfile.dockerignore because it sits beside this Dockerfile.
@@ -42,7 +47,8 @@ COPY --link . .
 # (the docs tools read their versions), so pnpm is told the filtered install
 # above is the one to run with.
 ENV pnpm_config_verify_deps_before_run=false
-RUN pnpm --filter @cvfile/sdk build \
+RUN --mount=type=secret,id=app_env,target=/app/docs/.env.production.local,required=true \
+    pnpm --filter @cvfile/sdk build \
     && pnpm --filter @cvfile/viewer-web build \
     && pnpm --filter @cvfile/docs build
 

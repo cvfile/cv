@@ -13,6 +13,9 @@ concurrency:
 # download answered 404 on 19 November 2026. Every job runs on the CPU build the package ships.
 env:
   ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+  # cvfile.org's public TensorPass site key, which the docs build puts in its pages (docs/astro.config.mjs),
+  # kept as a repository variable.
+  PUBLIC_TENSORPASS_SITE_KEY: ${{ vars.PUBLIC_TENSORPASS_SITE_KEY }}
 
 jobs:
   js:
