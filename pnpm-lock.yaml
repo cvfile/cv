@@ -45,11 +45,11 @@ importers:
         specifier: ^1.32.2
         version: 1.32.2(zod@3.25.76)
       '@tensorpass/aiconnect':
-        specifier: 0.1.5
-        version: 0.1.5
+        specifier: 0.1.6
+        version: 0.1.6
       '@tensorpass/aiconnect-react':
-        specifier: 0.1.5
-        version: 0.1.5(react@19.3.1)
+        specifier: 0.1.6
+        version: 0.1.6(react@19.3.1)
       astro:
         specifier: ^5.0.0
         version: 5.18.1(@types/node@22.19.18)(rollup@4.60.3)(typescript@5.9.3)(yaml@2.9.1)
@@ -1524,16 +1524,16 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
-  '@tensorpass/aiconnect-design@0.1.5':
-    resolution: {integrity: sha512-c9RVOiEhy8pGpVjnDkQFhNT5obytFyBsd9Jzf7R83tEr7D7zuNPSHPD+r3PP3DKgprJXJHp15si+Xn5r9QhXyw==}
+  '@tensorpass/aiconnect-design@0.1.6':
+    resolution: {integrity: sha512-W6ccIm1iws95SoS6iWjh9+J0P84adaBGgm0qsyBzY8k6EmtfKE6C9D4H/nHyJ8VzKAe7qhDJyxgLdOWPNikgCQ==}
 
-  '@tensorpass/aiconnect-react@0.1.5':
-    resolution: {integrity: sha512-wlqMMQMY1XQKb5+fA/GGf/CRQgr3aNFnNpscpJCnb+ZSeZRAQjkQN7W0bFXuaL5qlj/5XvV6MRPaoky2JpsJeA==}
+  '@tensorpass/aiconnect-react@0.1.6':
+    resolution: {integrity: sha512-0hf2lVL65VuzpJUWe9nXt8uKRzmLfaCwo2fjAvqyQ4Bn+YDfVFcFx8HNis/bzvKIpquKDYnJz0dEAkccYwVsxw==}
     peerDependencies:
       react: '>=19'
 
-  '@tensorpass/aiconnect@0.1.5':
-    resolution: {integrity: sha512-EFZ221PwJn+gTmooUlf68mB19JirSXIDOwlsIa1Q73fygYMR+yufaTEVNIqDjyhQy9G0nZBxu/hdEQV4jQvYnw==}
+  '@tensorpass/aiconnect@0.1.6':
+    resolution: {integrity: sha512-nwr01/a+6wkSHdc5kzhZzJeik3rGaKKx9xQNU0kypxvJfVTo9wgN9iT0VEbunKmNNgM+VYiNh9AolPrQ6xMIrA==}
     hasBin: true
 
   '@turbo/darwin-64@2.10.2':
@@ -5195,15 +5195,15 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
-  '@tensorpass/aiconnect-design@0.1.5': {}
+  '@tensorpass/aiconnect-design@0.1.6': {}
 
-  '@tensorpass/aiconnect-react@0.1.5(react@19.3.1)':
+  '@tensorpass/aiconnect-react@0.1.6(react@19.3.1)':
     dependencies:
-      '@tensorpass/aiconnect': 0.1.5
-      '@tensorpass/aiconnect-design': 0.1.5
+      '@tensorpass/aiconnect': 0.1.6
+      '@tensorpass/aiconnect-design': 0.1.6
       react: 19.3.1
 
-  '@tensorpass/aiconnect@0.1.5':
+  '@tensorpass/aiconnect@0.1.6':
     dependencies:
       '@modelcontextprotocol/client': 2.4.0
 
