@@ -2,6 +2,16 @@
 import AiModeRoot from '../features/ai-mode/components/AiModeRoot.tsx';
 import '../styles/global.css';
 
+const DEFAULT_DESCRIPTION =
+  'The .cv open file format. One file packs a designed PDF, a clean Markdown copy, an HTML rendering, and ' +
+  'pre-computed BGE-M3 embeddings so every audience (humans, ATS, AI agents) reads the same source of truth.';
+const FONT_FAMILIES = [
+  'Archivo:wght@500;600;700;800',
+  'Hanken+Grotesk:wght@400;500;600;700',
+  'Spline+Sans+Mono:wght@400;500;600',
+];
+const FONTS_URL = `https://fonts.googleapis.com/css2?${FONT_FAMILIES.map((f) => `family=${f}`).join('&')}&display=swap`;
+
 interface Props {
   title: string;
   description?: string;
@@ -13,7 +23,7 @@ interface Props {
 
 const {
   title,
-  description = 'The .cv open file format. One file packs a designed PDF, a clean Markdown copy, an HTML rendering, and pre-computed BGE-M3 embeddings so every audience (humans, ATS, AI agents) reads the same source of truth.',
+  description = DEFAULT_DESCRIPTION,
   ogImage = '/og.png',
   noindex = false,
   assistant = 'docs',
@@ -39,7 +49,7 @@ const DESIGN_CREDIT_URL = 'https://laboetie.io?utm_source=cvfile&utm_medium=refe
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -65,14 +75,16 @@ const DESIGN_CREDIT_URL = 'https://laboetie.io?utm_source=cvfile&utm_medium=refe
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="alternate" type="application/rss+xml" title="cvfile.org changelog" href="https://github.com/cvfile/cv/releases.atom" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="cvfile.org changelog"
+      href="https://github.com/cvfile/cv/releases.atom"
+    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap"
-    />
+    <link rel="stylesheet" href={FONTS_URL} />
 
     <script is:inline>
       // Theme override on top of the OS preference. The palette is built on
@@ -94,13 +106,28 @@ const DESIGN_CREDIT_URL = 'https://laboetie.io?utm_source=cvfile&utm_medium=refe
         apply(current());
         document.addEventListener('DOMContentLoaded', function () {
           var btn = document.getElementById('theme-toggle');
-          if (!btn) return;
-          function render() { btn.textContent = LABEL[current()]; btn.setAttribute('aria-label', 'Theme: ' + current() + ', tap to change'); }
+          if (!btn) {
+            return;
+          }
+          function render() {
+            btn.textContent = LABEL[current()];
+            btn.setAttribute('aria-label', 'Theme: ' + current() + ', tap to change');
+          }
+          function remember(mode) {
+            try {
+              if (mode === 'auto') {
+                localStorage.removeItem(KEY);
+              } else {
+                localStorage.setItem(KEY, mode);
+              }
+            } catch (e) {}
+          }
           render();
           btn.addEventListener('click', function () {
             var next = ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length];
-            try { next === 'auto' ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, next); } catch (e) {}
-            apply(next); render();
+            remember(next);
+            apply(next);
+            render();
           });
         });
       })();
@@ -124,7 +151,9 @@ const DESIGN_CREDIT_URL = 'https://laboetie.io?utm_source=cvfile&utm_medium=refe
           <AiModeRoot client:only="react" assistant={assistant}>
             <button slot="fallback" type="button" class="theme-toggle ai-launch" disabled>Ask the spec</button>
           </AiModeRoot>
-          <button id="theme-toggle" type="button" class="theme-toggle" aria-label="Theme: auto, tap to change">◐ Auto</button>
+          <button id="theme-toggle" type="button" class="theme-toggle" aria-label="Theme: auto, tap to change">
+            ◐ Auto
+          </button>
         </nav>
       </div>
     </header>

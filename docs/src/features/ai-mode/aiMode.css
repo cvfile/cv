@@ -34,22 +34,35 @@
   gap: var(--space-xs);
 }
 .ai-card p { margin: 0; }
-.ai-card__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs) var(--space-sm); font-weight: 600; }
+.ai-card__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs) var(--space-sm); font-weight: 600;
+}
 .ai-card__head a { color: var(--ink); }
-.ai-card__meta { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--ink-faint); font-weight: 400; }
+.ai-card__meta {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--ink-faint); font-weight: 400;
+}
 .ai-card__text { font-size: 0.9rem; color: var(--ink-soft); }
-.ai-card__list { margin: 0; padding-left: 1.1rem; font-size: 0.86rem; color: var(--ink-soft); display: grid; gap: var(--space-2xs); overflow-wrap: anywhere; }
-.ai-card__warn { border-left: 2px solid var(--accent); padding-left: var(--space-sm); display: grid; gap: var(--space-2xs); }
+.ai-card__list {
+  margin: 0; padding-left: 1.1rem; font-size: 0.86rem; color: var(--ink-soft);
+  display: grid; gap: var(--space-2xs); overflow-wrap: anywhere;
+}
+.ai-card__warn {
+  border-left: 2px solid var(--accent); padding-left: var(--space-sm); display: grid; gap: var(--space-2xs);
+}
 .ai-card__command {
   display: flex; align-items: center; gap: var(--space-sm);
   background: var(--plate); color: var(--plate-ink); border-radius: var(--radius);
   padding: var(--space-xs) var(--space-sm); font-family: var(--mono); font-size: 0.8rem;
 }
-.ai-card__command code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; background: none; border: 0; color: inherit; padding: 0; }
+.ai-card__command code {
+  flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap;
+  background: none; border: 0; color: inherit; padding: 0;
+}
 .ai-card__copy, .ai-card__action {
   font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase;
   border: 1px solid var(--line-strong); border-radius: var(--radius); background: transparent;
-  color: inherit; padding: 0.3rem 0.55rem; min-height: 28px; cursor: pointer; text-decoration: none; justify-self: start;
+  color: inherit; padding: 0.3rem 0.55rem; min-height: 28px; cursor: pointer;
+  text-decoration: none; justify-self: start;
 }
 .ai-card__copy { border-color: var(--plate-line); }
 .ai-mark { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
