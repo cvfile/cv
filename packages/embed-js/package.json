@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@cvfile/sdk": "workspace:^",
-    "@huggingface/transformers": "^3.0.0"
+    "@huggingface/transformers": "^4.3.2"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
