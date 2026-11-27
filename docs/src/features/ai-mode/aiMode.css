@@ -23,6 +23,10 @@
 .ai-launch { white-space: nowrap; }
 .ai-inline { margin: 0 0 var(--space-lg); }
 
+.ai-credit { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
+.ai-credit:hover { text-decoration: underline; }
+.ai-credit__mark { width: 14px; height: 14px; flex: none; }
+
 .ai-results { display: grid; gap: var(--space-sm); margin-top: var(--space-sm); }
 .ai-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-sm); }
 .ai-card {

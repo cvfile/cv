@@ -7,6 +7,7 @@ import { ASSISTANTS } from '../assistants.ts';
 import type { AssistantName } from '../assistants.ts';
 import { chatPolicy, TOOL_LABELS } from '../chatPolicy.mjs';
 import { renderCards } from './cards/renderCards.tsx';
+import { TensorPassCredit } from './TensorPassCredit.tsx';
 
 interface AssistantPanelProps {
   assistant: AssistantName;
@@ -31,6 +32,7 @@ export default function AssistantPanel({ assistant, open, onOpenChange }: Assist
       suggestions={config.suggestions}
       toolLabels={TOOL_LABELS}
       renderToolResults={renderCards}
+      footer={<TensorPassCredit />}
     />
   );
 }

@@ -9,6 +9,7 @@ import { aiClient } from '../aiClient.ts';
 import { ASSISTANTS } from '../assistants.ts';
 import { chatPolicy, TOOL_LABELS } from '../chatPolicy.mjs';
 import { renderCards } from './cards/renderCards.tsx';
+import { TensorPassCredit } from './TensorPassCredit.tsx';
 
 const config = ASSISTANTS.create;
 
@@ -28,6 +29,7 @@ export default function CreateAssistant() {
         suggestions={config.suggestions}
         toolLabels={TOOL_LABELS}
         renderToolResults={renderCards}
+        footer={<TensorPassCredit />}
       />
     </AiConnectProvider>
   );
